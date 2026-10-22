@@ -1,6 +1,6 @@
 # Post draft (LinkedIn / Medium)
 
-Author: Vinicius Baccarini · Repository link: `<GITHUB-REPO-URL — added by Vini in T-40>` · Images: `docs/img/01-overview.png`
+Author: Vinicius Baccarini · Repository link: https://github.com/vicocbc/u2-live-analytics · Images: `docs/img/01-overview.png`
 (cover), `03-songs.png`, `04-albums.png`, `06-sphere.png`, `drill-show.gif`.
 
 All numbers come from the Gold build of 2026-10-22 and were reproduced in T-SQL and DAX (`docs/run-log.md`).

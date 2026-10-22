@@ -9,7 +9,8 @@ Data from [setlist.fm](https://www.setlist.fm) and [MusicBrainz](https://musicbr
 lakehouses (PySpark), a Gold warehouse (T-SQL), a Direct Lake semantic model and a PBIR report, all in Microsoft Fabric.
 Built by Vinicius Baccarini ([LinkedIn](https://www.linkedin.com/in/vin%C3%ADcius-baccarini/)) with Claude Code.
 
-> Repository: `<GITHUB-REPO-URL — added by Vini in T-40>`
+> Repository: <https://github.com/vicocbc/u2-live-analytics> ·
+> [![CI](https://github.com/vicocbc/u2-live-analytics/actions/workflows/ci.yml/badge.svg)](https://github.com/vicocbc/u2-live-analytics/actions/workflows/ci.yml)
 
 ---
 
