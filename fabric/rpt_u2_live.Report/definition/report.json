@@ -1,0 +1,194 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.3.0/schema.json",
+    "themeCollection": {
+        "baseTheme": {
+            "name": "Fluent2-CY26SU08",
+            "reportVersionAtImport": {
+                "visual": "2.12.0",
+                "report": "3.4.0",
+                "page": "2.3.1"
+            },
+            "type": "SharedResources"
+        },
+        "customTheme": {
+            "name": "u2-theme.json",
+            "reportVersionAtImport": {
+                "visual": "2.12.0",
+                "report": "3.4.0",
+                "page": "2.3.1"
+            },
+            "type": "RegisteredResources"
+        }
+    },
+    "objects": {
+        "section": [
+            {
+                "properties": {
+                    "verticalAlignment": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "'Top'"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "publicCustomVisuals": [
+        "deneb7E15AEF80B9E4D4F8E12924291ECE89A",
+        "htmlContent443BE3AD55E043BF878BED274D3A6865"
+    ],
+    "resourcePackages": [
+        {
+            "name": "SharedResources",
+            "type": "SharedResources",
+            "items": [
+                {
+                    "name": "Fluent2-CY26SU08",
+                    "path": "BaseThemes/Fluent2-CY26SU08.json",
+                    "type": "BaseTheme"
+                }
+            ]
+        },
+        {
+            "name": "RegisteredResources",
+            "type": "RegisteredResources",
+            "items": [
+                {
+                    "name": "u2-theme.json",
+                    "path": "u2-theme.json",
+                    "type": "CustomTheme"
+                },
+                {
+                    "name": "badge_era1_text.svg",
+                    "path": "badge_era1_text.svg",
+                    "type": "Image"
+                },
+                {
+                    "name": "badge_era2_1984_sydney.png",
+                    "path": "badge_era2_1984_sydney.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "badge_era3_1987_dublin.png",
+                    "path": "badge_era3_1987_dublin.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "badge_era4_1992_kiel.png",
+                    "path": "badge_era4_1992_kiel.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "badge_era5_2001_philadelphia.png",
+                    "path": "badge_era5_2001_philadelphia.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "badge_era6_2010_rome.png",
+                    "path": "badge_era6_2010_rome.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "badge_era7_2018_newark.png",
+                    "path": "badge_era7_2018_newark.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "badge_era8_2023_las_vegas.png",
+                    "path": "badge_era8_2023_las_vegas.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_360_2010_rome.jpg",
+                    "path": "photo_360_2010_rome.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_boy_1981_toronto.jpg",
+                    "path": "photo_boy_1981_toronto.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_elevation_2001_philadelphia.jpg",
+                    "path": "photo_elevation_2001_philadelphia.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_experience_innocence_2018_newark.jpg",
+                    "path": "photo_experience_innocence_2018_newark.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_joshua_tree_1987_dublin.jpg",
+                    "path": "photo_joshua_tree_1987_dublin.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_joshua_tree_2017_manchester_tn.jpg",
+                    "path": "photo_joshua_tree_2017_manchester_tn.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_popmart_1997_reggio_emilia.jpg",
+                    "path": "photo_popmart_1997_reggio_emilia.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_sphere_2023_las_vegas.jpg",
+                    "path": "photo_sphere_2023_las_vegas.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_sphere_2023_las_vegas_bow.jpg",
+                    "path": "photo_sphere_2023_las_vegas_bow.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_war_1983_dublin.jpg",
+                    "path": "photo_war_1983_dublin.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "photo_zoo_tv_1992_kiel.jpg",
+                    "path": "photo_zoo_tv_1992_kiel.jpg",
+                    "type": "Image"
+                },
+                {
+                    "name": "scrim_from_bottom.png",
+                    "path": "scrim_from_bottom.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "scrim_from_left.png",
+                    "path": "scrim_from_left.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "scrim_from_right.png",
+                    "path": "scrim_from_right.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "scrim_from_top.png",
+                    "path": "scrim_from_top.png",
+                    "type": "Image"
+                },
+                {
+                    "name": "tile_era1_text.svg",
+                    "path": "tile_era1_text.svg",
+                    "type": "Image"
+                }
+            ]
+        }
+    ],
+    "settings": {
+        "useStylableVisualContainerHeader": true,
+        "exportDataMode": "AllowSummarized",
+        "defaultDrillFilterOtherVisuals": true,
+        "allowChangeFilterTypes": true,
+        "useEnhancedTooltips": true,
+        "useDefaultAggregateDisplayName": true
+    }
+}

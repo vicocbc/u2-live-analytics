@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: 0.075 = 3 / 40 (Pride performed in full at 3 of 40 Sphere shows; T-SQL COUNT(DISTINCT show_key), default performances)
+EVALUATE CALCULATETABLE ( ROW ( "Share", ROUND ( [Share of Tour Shows %], 6 ) ), dim_song[song_title] = "Pride (In the Name of Love)", dim_tour[tour_name] = "U2:UV Achtung Baby Live at Sphere" )

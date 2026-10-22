@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: 22.125, 23.3861, 39, 89, 0.542373, 0.141617, -50 (Q10 section: 885/40, 4724/202)
+EVALUATE ROW ( "Res SPS", [Residency Songs per Show], "Tour SPS", ROUND ( [Touring Songs per Show], 4 ), "Res DS", [Residency Distinct Songs], "Tour DS", [Touring Distinct Songs], "Res AB", ROUND ( [Residency Achtung Baby Share %], 6 ), "Tour AB", ROUND ( [Touring Achtung Baby Share %], 6 ), "Diff DS", [Difference Distinct Songs] )

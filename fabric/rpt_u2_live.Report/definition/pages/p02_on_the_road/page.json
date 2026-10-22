@@ -1,0 +1,210 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+    "name": "p02_on_the_road",
+    "displayName": "Road",
+    "displayOption": "FitToPage",
+    "height": 720,
+    "width": 1280,
+    "objects": {
+        "background": [
+            {
+                "properties": {
+                    "color": {
+                        "solid": {
+                            "color": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'#0F1115'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    }
+                }
+            }
+        ],
+        "outspace": [
+            {
+                "properties": {
+                    "color": {
+                        "solid": {
+                            "color": {
+                                "expr": {
+                                    "Literal": {
+                                        "Value": "'#0F1115'"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "transparency": {
+                        "expr": {
+                            "Literal": {
+                                "Value": "0D"
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "visualInteractions": [
+        {
+            "source": "p02_headline",
+            "target": "p02_venues_map",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_headline",
+            "target": "p02_top_city",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_headline",
+            "target": "p02_cities_table",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_headline",
+            "target": "p02_continent_decade",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_headline",
+            "target": "p02_shows",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_venues_map",
+            "target": "p02_headline",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_venues_map",
+            "target": "p02_top_city",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_venues_map",
+            "target": "p02_cities_table",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_venues_map",
+            "target": "p02_continent_decade",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_venues_map",
+            "target": "p02_shows",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_top_city",
+            "target": "p02_headline",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_top_city",
+            "target": "p02_venues_map",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_top_city",
+            "target": "p02_cities_table",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_top_city",
+            "target": "p02_continent_decade",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_top_city",
+            "target": "p02_shows",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_cities_table",
+            "target": "p02_headline",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_cities_table",
+            "target": "p02_venues_map",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_cities_table",
+            "target": "p02_top_city",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_cities_table",
+            "target": "p02_continent_decade",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_cities_table",
+            "target": "p02_shows",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_continent_decade",
+            "target": "p02_headline",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_continent_decade",
+            "target": "p02_venues_map",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_continent_decade",
+            "target": "p02_top_city",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_continent_decade",
+            "target": "p02_cities_table",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_continent_decade",
+            "target": "p02_shows",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_shows",
+            "target": "p02_headline",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_shows",
+            "target": "p02_venues_map",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_shows",
+            "target": "p02_top_city",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_shows",
+            "target": "p02_cities_table",
+            "type": "DataFilter"
+        },
+        {
+            "source": "p02_shows",
+            "target": "p02_continent_decade",
+            "type": "DataFilter"
+        }
+    ]
+}

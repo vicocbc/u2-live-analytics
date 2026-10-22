@@ -1,0 +1,129 @@
+/// Small report photos for HTML Content Secure blocks (presentation asset, not analytic data).
+table report_image
+	isHidden
+	lineageTag: eb511b2c-76b2-40f9-952a-493ec5bb4b93
+	sourceLineageTag: [dbo].[report_image]
+
+	/// Photo id used to pick the photo in a visual filter, e.g. photo_zoo_tv_1992_kiel.
+	column image_id
+		dataType: string
+		isHidden
+		isKey
+		isAvailableInMdx: false
+		lineageTag: 13af5b86-98f6-423f-85b7-4d30b3de2ce9
+		sourceLineageTag: image_id
+		summarizeBy: none
+		sourceColumn: image_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Source file in docs/design/images/report/.
+	column file_name
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: dd7416de-aaea-4dd5-a270-01aa9bbeead7
+		sourceLineageTag: file_name
+		summarizeBy: none
+		sourceColumn: file_name
+
+		annotation SummarizationSetBy = Automatic
+
+	/// image/jpeg or image/png.
+	column mime_type
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: d3f02231-74e4-4cfe-b7fb-371ed293b536
+		sourceLineageTag: mime_type
+		summarizeBy: none
+		sourceColumn: mime_type
+
+		annotation SummarizationSetBy = Automatic
+
+	/// File size in bytes.
+	column bytes
+		dataType: int64
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 52dd37fa-0efb-4839-8a2d-de65033adf75
+		sourceLineageTag: bytes
+		summarizeBy: none
+		sourceColumn: bytes
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Length of the base64 text (sum of chunk lengths).
+	column base64_length
+		dataType: int64
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: e1e90aed-a90d-4357-ad94-2c8e5067b891
+		sourceLineageTag: base64_length
+		summarizeBy: none
+		sourceColumn: base64_length
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Number of 8,000-character chunks.
+	column chunk_count
+		dataType: int64
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 2f95a792-b930-4dd8-bbd0-7db5c6524349
+		sourceLineageTag: chunk_count
+		summarizeBy: none
+		sourceColumn: chunk_count
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Attribution shown with the photo (author, licence, source).
+	column credit_text
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: e4e4eeb3-e45a-45ce-bc8b-a210208cb7d5
+		sourceLineageTag: credit_text
+		summarizeBy: none
+		sourceColumn: credit_text
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Licence, e.g. CC BY-SA 4.0.
+	column license
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: 37d44a84-f041-47d1-9dff-e04572293337
+		sourceLineageTag: license
+		summarizeBy: none
+		sourceColumn: license
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Wikimedia Commons file page.
+	column source_url
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: f7d32a74-2dda-48ac-802f-e7a553f67d27
+		sourceLineageTag: source_url
+		summarizeBy: none
+		sourceColumn: source_url
+
+		annotation SummarizationSetBy = Automatic
+
+	column _built_at
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		isAvailableInMdx: false
+		lineageTag: 1ac572b5-8a1c-44c2-bd86-52d0be996ea3
+		sourceLineageTag: _built_at
+		summarizeBy: none
+		sourceColumn: _built_at
+
+		annotation SummarizationSetBy = Automatic
+
+	partition report_image = entity
+		mode: directLake
+		source
+			entityName: report_image
+			schemaName: dbo
+			expressionSource: 'DirectLake - wh_gold'
+

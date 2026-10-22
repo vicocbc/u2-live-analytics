@@ -1,0 +1,3 @@
+-- Run through the powerbi-modeling MCP on sm_u2_live. T-SQL: SELECT COUNT(DISTINCT album_label) FROM dbo.dim_album; etc.
+-- Expected: 187 distinct album_label = 187 albums; 1875 distinct show_label = 1875 dim_show rows; show_type Residency / Touring (+ blank on Unknown); 6 release_decade_group values
+EVALUATE ROW ( "labels", DISTINCTCOUNT ( dim_album[album_label] ), "albums", COUNTROWS ( dim_album ), "show labels", DISTINCTCOUNT ( dim_show[show_label] ), "shows", COUNTROWS ( dim_show ), "types", CONCATENATEX ( VALUES ( dim_tour[show_type] ), dim_tour[show_type], "," ), "decade groups", DISTINCTCOUNT ( dim_album[release_decade_group] ) )

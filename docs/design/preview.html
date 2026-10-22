@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>U2 report preview</title>
+<style>
+  :root {
+    --bg: #0F1115; --surface: #181B21; --surface-2: #20242C; --border: #2A2F38;
+    --text: #ECEDEF; --muted: #A3A9B3; --accent: #F2A93B; --neutral: #6E7581;
+    --d1: #6FA8DC; --d2: #93C47D; --d3: #E06666; --d4: #B4A7D6; --d5: #76D7C4; --d6: #F6B26B;
+    /* DIN is in Power BI's font list; Bahnschrift is Windows' DIN, used so the browser shows the same face */
+    --display: "DIN", "Bahnschrift", "DIN Alternate", "Arial Narrow", sans-serif;
+    --body: "Segoe UI", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #07080A; color: var(--text); font-family: var(--body); }
+  .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 12px 16px; }
+  .bar h1 { font-size: 14px; font-weight: 600; margin: 0 16px 0 0; color: var(--muted); }
+  .bar button { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 6px;
+    padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .bar button[aria-selected="true"], .bar button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+  .note { color: var(--muted); font-size: 12px; padding: 0 16px 8px; margin: 0; max-width: 1280px; }
+  .stage { padding: 0 16px 24px; }
+  .scaler { transform-origin: 0 0; }
+  .page { position: relative; width: 1280px; height: 720px; background: var(--bg); overflow: hidden; display: none; }
+  .page.on { display: block; }
+  .a { position: absolute; }
+  img.fill { object-fit: cover; display: block; }
+  img.scrim { object-fit: fill; display: block; pointer-events: none; }
+  .head { font-family: var(--display); font-weight: 600; font-size: 34px; line-height: 1.08; }
+  .p { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .p b { color: var(--text); font-weight: 600; }
+  .p em { color: var(--accent); font-style: normal; font-weight: 600; }
+  .kick { font-size: 11px; letter-spacing: 1.6px; text-transform: uppercase; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+  .kick.m { color: var(--muted); }
+  .num { font-family: var(--display); font-weight: 600; font-size: 52px; line-height: 1; }
+  .num.m { font-size: 40px; } .num.s { font-size: 28px; }
+  .lab { font-size: 10pt; color: var(--muted); margin-top: 2px; }
+  .lab.t { color: var(--text); }
+  .hand { font-style: italic; font-weight: 600; color: var(--accent); font-size: 14px; line-height: 1.3; }
+  .vt { font-size: 13px; font-weight: 600; margin: 0 0 4px; display: flex; align-items: center; gap: 6px; }
+  .info { display: inline-grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--muted);
+    color: var(--muted); font-size: 10px; font-weight: 700; font-style: normal; cursor: help; flex: none; }
+  .tabs { display: flex; gap: 2px; font-size: 12px; }
+  .tabs span { padding: 6px 12px; color: var(--muted); border-bottom: 2px solid var(--border); }
+  .tabs span.on { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+  .footer { font-size: 9pt; color: var(--muted); }
+  .tile { display: flex; gap: 12px; align-items: flex-start; }
+  .tile img { width: 28px; height: 28px; margin-top: 6px; opacity: .9; }
+  .delta { font-size: 11px; font-weight: 600; margin-top: 4px; }
+  .up { color: var(--d2); } .down { color: var(--d3); } .flat { color: var(--muted); }
+  .badge { width: 48px; height: 48px; border-radius: 50%; cursor: pointer; border: 0; padding: 0; background: none; position: absolute; }
+  .badge img { width: 48px; height: 48px; display: block; border-radius: 50%; }
+  .badge[aria-pressed="true"] img { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .badge span { position: absolute; top: 52px; left: -8px; width: 64px; text-align: center; font-size: 10px; color: var(--muted); }
+  .pick { font-size: 11px; display: flex; gap: 4px; }
+  .pick span { padding: 3px 8px; border-radius: 12px; border: 1px solid var(--border); color: var(--muted); }
+  .pick span.on { border-color: var(--accent); color: var(--accent); }
+  svg text { font-family: var(--body); }
+  table.t { border-collapse: collapse; font-size: 10pt; width: 100%; }
+  table.t td { padding: 0 6px; height: 24px; }
+  /* ticket stub (HTML measure on page 8) */
+  .ticket { display: flex; background: var(--surface-2); border-radius: 10px; overflow: hidden; height: 100%; }
+  .stub { width: 230px; padding: 18px 18px; border-right: 2px dashed var(--bg); position: relative; background: #262A33; }
+  .stub:before, .stub:after { content: ""; position: absolute; right: -11px; width: 20px; height: 20px; border-radius: 50%; background: var(--bg); }
+  .stub:before { top: -10px; } .stub:after { bottom: -10px; }
+  .setlist { flex: 1; padding: 16px 20px; columns: 2; column-gap: 28px; font-size: 12px; }
+  .setlist div { break-inside: avoid; padding: 2px 0; display: flex; gap: 8px; }
+  .setlist .n { color: var(--muted); width: 18px; text-align: right; font-family: var(--display); }
+  .setlist .set { color: var(--accent); font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 700; padding-top: 8px; }
+  .tag { font-size: 10px; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 0 5px; margin-left: auto; white-space: nowrap; }
+  .tag.a { color: var(--accent); border-color: var(--accent); position: static; }
+  /* build labels (toggle) */
+  [data-build]::after { content: attr(data-build); display: none; position: absolute; top: -2px; right: -2px; z-index: 50;
+    font: 600 10px/1 var(--body); padding: 3px 6px; border-radius: 4px; background: #F2A93B; color: #0F1115; pointer-events: none; }
+  body.labels [data-build]::after { display: block; }
+  body.labels [data-build] { outline: 1px dashed rgba(242,169,59,.7); }
+  /* images tab */
+  #images { width: auto; height: auto; max-width: 1280px; padding: 8px 24px 32px; }
+  #images h2 { font-family: var(--display); font-weight: 600; font-size: 24px; margin: 24px 0 4px; }
+  #images p { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  .glyphs { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 20px 12px; }
+  .glyphs figure { margin: 0; text-align: center; }
+  .glyphs img { width: 48px; height: 48px; object-fit: contain; }
+  .glyphs figcaption { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .row { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-end; }
+  .row figure { margin: 0; text-align: center; font-size: 11px; color: var(--muted); }
+  .photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+  .photos figure { margin: 0; }
+  .photos img { width: 100%; height: 150px; object-fit: cover; display: block; }
+  .photos figcaption { font-size: 12px; color: var(--muted); padding: 6px 0; }
+  .photos b { color: var(--text); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <h1>U2 Live Analytics · design preview, revision 3 (T-29)</h1>
+  <div role="tablist" style="display:flex;gap:8px;flex-wrap:wrap">
+    <button role="tab" data-p="p1" aria-selected="true">1 · Overview</button>
+    <button role="tab" data-p="p2" aria-selected="false">2 · On the road</button>
+    <button role="tab" data-p="p3" aria-selected="false">3 · The songs</button>
+    <button role="tab" data-p="p4" aria-selected="false">4 · Albums on stage</button>
+    <button role="tab" data-p="p5" aria-selected="false">5 · Setlist evolution</button>
+    <button role="tab" data-p="p6" aria-selected="false">6 · Sphere vs. touring</button>
+    <button role="tab" data-p="p7" aria-selected="false">7 · Song detail</button>
+    <button role="tab" data-p="p8" aria-selected="false">8 · Show detail</button>
+    <button role="tab" data-p="p9" aria-selected="false">9 · About</button>
+    <button role="tab" data-p="images" aria-selected="false">Images and tour icons</button>
+  </div>
+  <button id="lbl" aria-pressed="false">Show how each block is built</button>
+</div>
+<p class="note">Target look at 1280 × 720, using only elements Power BI can render (wireframes §1–2). All numbers, headlines,
+song rankings and setlists are placeholders, not results. Page 1: click an era badge (a bookmark in Power BI).
+"Show how each block is built" labels every block: native visual, image, SVG measure, HTML measure (HTML Content Secure) or Deneb.</p>
+
+<div class="stage"><div class="scaler" id="scaler">
+
+<!-- ============ Page 1 · Overview ============ -->
+<section class="page on" id="p1" aria-label="Page 1 Overview">
+  <div class="a" data-build="image visual + 8 bookmarks" style="left:640px;top:0;width:640px;height:392px;pointer-events:none;z-index:5"></div>
+  <img id="hero" class="a fill" src="images/photo_360_2010_rome.jpg" alt="Decorative: U2 360° Tour, Rome 2010, by Blackcat (CC BY-SA 3.0)" style="left:640px;top:0;width:640px;height:392px">
+  <img class="a scrim" src="images/scrim_from_left.png" alt="" style="left:640px;top:0;width:300px;height:392px">
+  <img class="a scrim" src="images/scrim_from_bottom.png" alt="" style="left:640px;top:112px;width:640px;height:280px">
+  <img class="a scrim" src="images/scrim_from_top.png" alt="" style="left:640px;top:0;width:640px;height:96px">
+  <div class="a tabs" data-build="native page navigator" style="left:40px;top:12px"><span class="on">Overview</span><span>On the road</span><span>Songs</span><span>Albums</span><span>Setlists</span><span>Sphere</span><span>Shows</span><span>About</span></div>
+
+  <div class="a head" data-build="native card (text measure, DIN)" style="left:40px;top:60px;width:580px">Fifty years on the road, and the hits never left the set</div>
+  <div class="a" data-build="HTML measure" style="left:40px;top:142px;width:560px">
+    <div class="kick">First glimpse</div>
+    <div class="p" id="intro">From Dublin clubs in 1976 to a sphere in the desert: <b>1,875 shows</b> in <b>61 countries</b>.
+      Most nights were built on the same spine of songs, and <em>Pride</em> has been there for four decades.</div>
+  </div>
+
+  <div class="a" data-build="HTML measure (KPI tiles: icon, number, delta)" style="left:40px;top:236px;width:576px;display:flex;gap:28px">
+    <div class="tile"><img src="images/icon_kpi_shows.svg" alt=""><div><div class="num" id="k1" style="color:var(--accent)">1,875</div><div class="lab t">shows</div><div class="delta flat" id="d1">all eras</div></div></div>
+    <div class="tile"><img src="images/icon_kpi_songs.svg" alt=""><div><div class="num" id="k2">388</div><div class="lab t">different songs</div><div class="delta flat" id="d2">all eras</div></div></div>
+    <div class="tile"><img src="images/icon_kpi_countries.svg" alt=""><div><div class="num" id="k3">61</div><div class="lab t">countries</div><div class="delta flat" id="d3">all eras</div></div></div>
+  </div>
+
+  <div class="a kick m" style="left:40px;top:340px">Pick an era <span class="info" title="Each badge filters the page to one era and swaps the photo. Click again to see all eras.">i</span></div>
+  <div class="a" id="badges" data-build="image buttons → bookmarks" style="left:40px;top:362px;width:520px;height:72px"></div>
+
+  <div class="a" data-build="Deneb (bars + tour glyph paths)" style="left:28px;top:448px;width:844px;height:244px">
+    <svg id="c_spy" width="844" height="244" role="img" aria-label="Column chart: shows per year 1976 to 2026 with tour icons at each tour start; busiest year highlighted"></svg>
+  </div>
+  <img class="a" src="images/arrow_curve_down_left.svg" alt="" style="left:132px;top:440px;width:96px;height:64px">
+  <div class="a hand" data-build="native card (text measure)" style="left:228px;top:440px;width:300px">1981: 150 shows, most of them from the back of a van</div>
+  <div class="a p" data-build="native text box" style="left:560px;top:452px;width:300px">Each bar is a year, shaded by era. Icons mark where each tour began. <span class="info" title="Shows = concerts with a date on setlist.fm, cancelled shows removed.">i</span></div>
+
+  <div class="a" data-build="native bar chart (Top N 10)" style="left:904px;top:288px;width:340px">
+    <div class="kick m" style="color:var(--text)">The ten songs played most</div>
+    <svg id="c_top" width="340" height="380" role="img" aria-label="Ranked bar list: ten most performed songs, number one highlighted"></svg>
+  </div>
+  <div class="a footer" style="left:904px;top:700px">Data: setlist.fm, MusicBrainz · refreshed &lt;date&gt; · credits p. 9</div>
+</section>
+
+<!-- ============ Page 4 · Albums on stage ============ -->
+<section class="page" id="p4" aria-label="Page 4 Albums on stage">
+  <div class="a tabs" data-build="native page navigator" style="left:40px;top:12px"><span>Overview</span><span>On the road</span><span>Songs</span><span class="on">Albums</span><span>Setlists</span><span>Sphere</span><span>Shows</span><span>About</span></div>
+  <div class="a head" data-build="native card (text measure, DIN)" style="left:40px;top:60px;width:720px">The eighties never left the setlist</div>
+  <div class="a p" data-build="HTML measure" style="left:40px;top:104px;width:720px">Every new album gets its moment, then the 1980s songs take the stage back.
+    Even on the 2017 anniversary tour, <b>half of every night</b> came from records made before 1990.</div>
+
+  <div class="a" data-build="native 100% stacked area" style="left:40px;top:164px;width:736px;height:288px">
+    <div class="vt">Share of songs played, by the decade their album came out <span class="info" title="Album = first studio album with the song. Covers and non-album songs are grey.">i</span></div>
+    <svg id="c_area" width="736" height="264" role="img" aria-label="100% stacked area: share of performances by album release decade, per year"></svg>
+  </div>
+  <div class="a hand" style="left:470px;top:164px;width:300px">↘ 2017: the 80s still took half the night</div>
+
+  <div class="a" data-build="native matrix (conditional format)" style="left:40px;top:470px;width:500px">
+    <div class="vt">Which albums stay <span class="info" title="Share of all performances in each decade.">i</span></div><div id="c_matrix"></div></div>
+  <div class="a p" data-build="native text box" style="left:560px;top:500px;width:216px">Read across a row: <b>The Joshua Tree</b> never drops below a tenth of the set, while most 2000s albums fade within ten years.</div>
+
+  <div class="a" data-build="HTML measure (photo + number + caption, base64 photo)" style="left:808px;top:0;width:472px;height:272px">
+    <img class="fill" src="images/photo_zoo_tv_1992_kiel.jpg" alt="Decorative: Zoo TV Tour, Kiel 1992, by Jeroen Polman (CC BY-SA 4.0)" style="width:472px;height:272px;object-position:center 30%">
+    <img class="scrim a" src="images/scrim_from_bottom.png" alt="" style="left:0;top:112px;width:472px;height:160px">
+    <div class="a" style="left:20px;top:184px;width:430px">
+      <div class="num m" style="color:var(--accent)">41%</div>
+      <div class="lab t">of Zoo TV performances came from Achtung Baby, the album it promoted</div>
+    </div>
+  </div>
+  <div class="a" data-build="native table + SVG measure icons + data bars" style="left:808px;top:292px;width:448px">
+    <div class="vt">How much of each tour promoted the new album <span class="info" title="ⓐ = anniversary tour or residency: an older album played in full, so the share is high by design.">i</span></div>
+    <div id="c_promo"></div></div>
+  <div class="a footer" style="left:40px;top:700px">Data: setlist.fm, MusicBrainz · refreshed &lt;date&gt; · photo credits on page 9</div>
+</section>
+
+<!-- ============ Page 6 · Sphere vs. touring ============ -->
+<section class="page" id="p6" aria-label="Page 6 Sphere vs. touring">
+  <div class="a" data-build="image visual + scrim PNGs" style="left:0;top:0;width:520px;height:400px;pointer-events:none;z-index:5"></div>
+  <img class="a fill" src="images/photo_sphere_2023_las_vegas.jpg" alt="Decorative: U2 at Sphere, Las Vegas 2023, by lightpants (CC BY 4.0)" style="left:0;top:0;width:520px;height:720px;object-position:38% center">
+  <img class="a scrim" src="images/scrim_from_right.png" alt="" style="left:360px;top:0;width:160px;height:720px">
+  <img class="a scrim" src="images/scrim_from_bottom.png" alt="" style="left:0;top:400px;width:520px;height:320px">
+  <div class="a" data-build="native card (3 callouts)" style="left:32px;top:572px;width:470px">
+    <div class="kick" style="color:var(--text)"><img src="images/glyph_sphere.svg" alt="" width="18" height="18" style="vertical-align:-4px;margin-right:6px">Residency · Sphere, Las Vegas · 2023–24</div>
+    <div style="display:flex;gap:28px;margin-top:6px">
+      <div><div class="num m" style="color:var(--accent)">40</div><div class="lab t">shows</div></div>
+      <div><div class="num m" style="color:var(--accent)">22</div><div class="lab t">songs a night</div></div>
+      <div><div class="num m" style="color:var(--accent)">78%</div><div class="lab t">Achtung Baby</div></div>
+    </div>
+  </div>
+
+  <div class="a tabs" data-build="native page navigator" style="left:560px;top:12px"><span>Overview</span><span>Road</span><span>Songs</span><span>Albums</span><span>Setlists</span><span class="on">Sphere</span><span>Shows</span><span>About</span></div>
+  <div class="a head" data-build="native card (text measure, DIN)" style="left:560px;top:60px;width:680px">At the Sphere, one album carried the night</div>
+  <div class="a p" data-build="HTML measure" style="left:560px;top:104px;width:680px">Forty nights in one room, built around Achtung Baby played in full.
+    Compared with <b>the four 2015–2019 tours</b> <span style="color:var(--accent)">▾</span>, the residency was shorter, steadier and older.</div>
+
+  <div class="a" data-build="HTML measure (head-to-head)" style="left:560px;top:164px;width:696px;height:212px">
+    <div style="display:grid;grid-template-columns:150px 1fr 1fr 150px;align-items:center;row-gap:10px;font-size:12px">
+      <div></div><div class="kick" style="margin:0"><img src="images/glyph_sphere.svg" alt="" width="14" style="vertical-align:-2px"> Residency</div>
+      <div class="kick m" style="margin:0;display:flex;align-items:center;gap:6px"><img src="images/badge_era7_2018_newark.png" alt="" width="22" style="border-radius:50%"> Touring 2015–19</div><div class="kick m" style="margin:0">Difference</div>
+      <div class="lab t">Songs a night</div><div id="h1"></div><div id="h1b"></div><div class="num s down">−2</div>
+      <div class="lab t">Different songs</div><div id="h2"></div><div id="h2b"></div><div class="num s down">−63</div>
+      <div class="lab t">Achtung Baby share</div><div id="h3"></div><div id="h3b"></div><div class="num s" style="color:var(--accent)">+66 pp</div>
+    </div>
+  </div>
+  <div class="a hand" style="left:1000px;top:392px;width:256px">Achtung Baby, every single night</div>
+  <img class="a" src="images/arrow_curve_down_right.svg" alt="" style="left:1196px;top:340px;width:60px;height:40px;transform:scaleY(-1)">
+
+  <div class="a" data-build="native scatter (field parameter: choose the measure)" style="left:560px;top:420px;width:696px">
+    <div class="vt" style="justify-content:space-between"><span>Every show, one dot <span class="info" title="Squares = Sphere shows, circles = touring shows.">i</span></span>
+      <span class="pick" id="axis"><span class="on" data-m="songs">Songs per show</span><span data-m="rare">Rarities per show</span><span data-m="ab">Achtung Baby songs</span></span></div>
+    <svg id="c_dots" width="696" height="232" role="img" aria-label="Dot strip by date; Sphere shows as accent squares, touring shows as grey circles"></svg>
+  </div>
+  <div class="a footer" style="left:560px;top:700px">Data: setlist.fm, MusicBrainz · refreshed &lt;date&gt; · photo credits on page 9</div>
+</section>
+
+<!-- ============ Page 8 · Show detail ============ -->
+<section class="page" id="p8" aria-label="Page 8 Show detail">
+  <div class="a" data-build="image visual + scrim PNG" style="left:880px;top:0;width:400px;height:720px;pointer-events:none;z-index:5"></div>
+  <img class="a fill" src="images/photo_war_1983_dublin.jpg" alt="Decorative: War Tour, Dublin 1983, by Colm Henry (CC BY-SA 3.0)" style="left:880px;top:0;width:400px;height:720px;object-position:center 30%;filter:grayscale(1)">
+  <img class="a scrim" src="images/scrim_from_left.png" alt="" style="left:880px;top:0;width:200px;height:720px">
+  <div class="a tabs" data-build="native page navigator" style="left:40px;top:12px"><span>Overview</span><span>On the road</span><span>Songs</span><span>Albums</span><span>Setlists</span><span>Sphere</span><span class="on">Shows</span><span>About</span></div>
+  <div class="a p" style="left:40px;top:52px">← back to the list of shows</div>
+  <div class="a" data-build="HTML measure (ticket stub + setlist)" style="left:40px;top:84px;width:840px;height:520px">
+    <div class="ticket">
+      <div class="stub">
+        <img src="images/glyph_war.svg" alt="War Tour icon" width="40" height="40">
+        <div class="kick" style="margin-top:10px">War Tour</div>
+        <div class="num m" style="font-size:36px">14 AUG<br>1983</div>
+        <div class="p" style="margin-top:10px"><b>Phoenix Park</b><br>Dublin, Ireland</div>
+        <div class="p" style="margin-top:14px">Show 284 of 1,875<br>17 songs · 2 encores</div>
+        <div class="tag a" style="display:inline-block;margin-top:14px">setlist.fm ↗</div>
+      </div>
+      <div class="setlist" id="setlist"></div>
+    </div>
+  </div>
+  <div class="a" data-build="native card (callouts + notes)" style="left:40px;top:624px;width:840px;display:flex;gap:40px">
+    <div><div class="num s">17</div><div class="lab">songs, tour average 16.4</div></div>
+    <div><div class="num s" style="color:var(--accent)">1</div><div class="lab">live debut tonight ★</div></div>
+    <div><div class="num s">2</div><div class="lab">covers</div></div>
+    <div class="hand" style="align-self:center">a home-town show at the end of the War Tour</div>
+  </div>
+</section>
+
+<!-- ============ Page 2 · On the road ============ -->
+<section class="page" id="p2" aria-label="Page 2 On the road">
+  <div class="a tabs" data-nav="On the road" data-build="native page navigator" style="left:40px;top:12px"></div>
+  <div class="a head" data-build="native card (text measure, DIN)" style="left:40px;top:60px;width:720px">They kept coming back to the same cities</div>
+  <div class="a p" data-build="HTML measure" style="left:40px;top:104px;width:720px">U2 played <b>61 countries</b> and <b>412 cities</b>, but a short list of home stages
+    (Dublin, London, New York, Los Angeles) hosted <b>one show in six</b>. Europe and North America split the career almost evenly.</div>
+  <div class="a" data-build="native Azure map (bubbles = shows, grayscale dark)" style="left:24px;top:168px;width:744px;height:520px">
+    <svg id="c_map" width="744" height="520" role="img" aria-label="Map of venues: bubbles sized by number of shows"></svg></div>
+  <div class="a p" style="left:40px;top:640px;width:300px">Bubble size = shows in the city. <span class="info" title="Cities as recorded on setlist.fm; venues in the same city are added up.">i</span></div>
+
+  <div class="a" data-build="HTML measure (photo + number + caption, base64 photo)" style="left:800px;top:0;width:480px;height:216px">
+    <img class="fill" src="images/photo_innocence_experience_2015_antwerp.jpg" alt="Decorative: Innocence + Experience Tour, Antwerp 2015, by U2start (CC BY 2.0)" style="width:480px;height:216px;object-position:center 60%">
+    <img class="scrim a" src="images/scrim_from_bottom.png" alt="" style="left:0;top:56px;width:480px;height:160px">
+    <div class="a" style="left:20px;top:132px;width:440px"><div class="num m" style="color:var(--accent)">Dublin · 80</div><div class="lab t">shows in the home town, more than any other city</div></div>
+  </div>
+  <div class="a" data-build="native table (data bars, outlier accent)" style="left:800px;top:232px;width:456px">
+    <div class="vt">Most-visited cities <span class="info" title="First and last visit = first and last show date in the city.">i</span></div><div id="c_cities"></div></div>
+  <div class="a" data-build="native 100% stacked column" style="left:800px;top:504px;width:456px">
+    <div class="vt">Where the shows were, decade by decade</div><svg id="c_cont" width="456" height="168" role="img" aria-label="100% stacked columns: shows by continent per decade"></svg></div>
+  <div class="a footer" style="left:40px;top:700px">Data: setlist.fm, MusicBrainz · refreshed &lt;date&gt; · photo credits on page 9</div>
+</section>
+
+<!-- ============ Page 3 · The songs ============ -->
+<section class="page" id="p3" aria-label="Page 3 The songs">
+  <div class="a" data-build="image visual + scrim PNG" style="left:0;top:0;width:520px;height:280px;pointer-events:none;z-index:5"></div>
+  <img class="a fill" src="images/photo_joshua_tree_2017_manchester_tn.jpg" alt="Decorative: The Joshua Tree Tour 2017, Bonnaroo, by Aylish Connolly (CC BY-SA 4.0)" style="left:0;top:0;width:520px;height:280px;object-position:center 25%">
+  <img class="a scrim" src="images/scrim_from_bottom.png" alt="" style="left:0;top:100px;width:520px;height:180px">
+  <div class="a" data-build="native card (text measure)" style="left:24px;top:196px;width:480px">
+    <div class="num m" style="color:var(--accent)">Pride · 1,130×</div><div class="lab t">the song they played most, since 1984</div></div>
+  <div class="a tabs" data-nav="Songs" data-build="native page navigator" style="left:552px;top:12px"></div>
+  <div class="a head" data-build="native card (text measure, DIN)" style="left:552px;top:60px;width:704px">Some songs never miss a night</div>
+  <div class="a p" data-build="HTML measure" style="left:552px;top:104px;width:704px"><b>388 songs</b> reached a stage, but the top 20 fill <b>half of all performances</b>; <b>96 songs</b> were played twice or less.</div>
+  <div class="a" data-build="native scatter + 2 field parameters (choose your axes)" style="left:552px;top:152px;width:704px">
+    <div class="vt" style="justify-content:space-between"><span>Explore the songs <span class="info" title="Hollow dots = retired: not played for at least five years.">i</span></span>
+      <span class="pick">X: <span class="on">release year</span><span>live debut</span> &nbsp; Y: <span class="on">performances</span><span>years since last played</span></span></div>
+    <svg id="c_scatter" width="704" height="292" role="img" aria-label="Scatter: release year against performances per song; retired songs hollow; outliers labelled"></svg></div>
+  <div class="a" data-build="native table (data bars, drill-through)" style="left:24px;top:296px;width:496px">
+    <div class="vt">Every song, most played first <span class="info" title="Right-click a song → Drill through → Song detail.">i</span></div><div id="c_rank"></div></div>
+  <div class="a" data-build="native table" style="left:552px;top:472px;width:336px">
+    <div class="vt">Rarities: played twice or less</div><div id="c_rare"></div></div>
+  <div class="a" data-build="native table" style="left:904px;top:472px;width:352px">
+    <div class="vt">Other people's songs, and guests</div><div id="c_cov"></div></div>
+  <div class="a footer" style="left:552px;top:700px">Data: setlist.fm, MusicBrainz · refreshed &lt;date&gt; · photo credits on page 9</div>
+</section>
+
+<!-- ============ Page 5 · Setlist evolution ============ -->
+<section class="page" id="p5" aria-label="Page 5 Setlist evolution">
+  <div class="a tabs" data-nav="Setlists" data-build="native page navigator" style="left:40px;top:12px"></div>
+  <div class="a head" data-build="native card (text measure, DIN)" style="left:40px;top:60px;width:760px">Stadium tours run on rails</div>
+  <div class="a p" data-build="HTML measure" style="left:40px;top:104px;width:760px">Each row is a song, each column a year: the brighter the cell, the more often it was played.
+    The club years were a lucky dip; the stadium years a fixed spine of <b>Pride, Sunday Bloody Sunday and I Will Follow</b>.</div>
+  <div class="a" data-build="native matrix (heatmap, top 30, scroll for more)" style="left:24px;top:160px;width:776px;height:536px"><div id="c_heat"></div></div>
+  <div class="a" data-build="image visual + scrim PNG" style="left:832px;top:0;width:448px;height:176px;pointer-events:none;z-index:5"></div>
+  <img class="a fill" src="images/photo_elevation_2001_philadelphia.jpg" alt="Decorative: Elevation Tour, Philadelphia 2001, by Dmolavi (CC BY-SA 4.0)" style="left:832px;top:0;width:448px;height:176px">
+  <img class="a scrim" src="images/scrim_from_bottom.png" alt="" style="left:832px;top:56px;width:448px;height:120px">
+  <div class="a hand" style="left:848px;top:140px;width:400px">Elevation's heart stage: same songs, closer crowd</div>
+  <div class="a" data-build="native table + SVG measure icons + data bars" style="left:832px;top:184px;width:424px">
+    <div class="vt">Setlist variety per tour <span class="info" title="Variety = distinct songs ÷ songs per show. 1 = same set every night.">i</span></div><div id="c_var"></div></div>
+  <div class="a" data-build="native line" style="left:832px;top:400px;width:424px">
+    <div class="vt">Songs per show, by year</div><svg id="c_line" width="424" height="112" role="img" aria-label="Line: average songs per show by year"></svg></div>
+  <div class="a" data-build="native bar + field parameter toggle" style="left:832px;top:536px;width:424px">
+    <div class="vt" style="justify-content:space-between"><span>How the night starts</span><span class="pick"><span class="on">Openers</span><span>Closers</span><span>Encores</span></span></div>
+    <div id="c_open"></div></div>
+  <div class="a footer" style="left:40px;top:700px">Data: setlist.fm, MusicBrainz · refreshed &lt;date&gt; · photo credits on page 9</div>
+</section>
+
+<!-- ============ Page 7 · Song detail ============ -->
+<section class="page" id="p7" aria-label="Page 7 Song detail">
+  <div class="a" data-build="image visual + scrim PNG" style="left:760px;top:0;width:520px;height:320px;pointer-events:none;z-index:5"></div>
+  <img class="a fill" src="images/photo_popmart_1997_reggio_emilia.jpg" alt="Decorative: PopMart Tour, Reggio Emilia 1997, by Giorgio Moscardi (CC BY-SA 3.0)" style="left:760px;top:0;width:520px;height:320px">
+  <img class="a scrim" src="images/scrim_from_left.png" alt="" style="left:760px;top:0;width:260px;height:320px">
+  <div class="a tabs" data-nav="Songs" data-build="native page navigator" style="left:40px;top:12px"></div>
+  <div class="a" data-build="HTML measure (song card: title, album, KPI tiles with deltas)" style="left:40px;top:52px;width:700px;height:212px">
+    <div class="p">← back to the songs</div>
+    <div class="kick" style="margin-top:8px">Song · from The Joshua Tree (1987)</div>
+    <div class="head" style="font-size:40px">Where the Streets Have No Name</div>
+    <div style="display:flex;gap:30px;margin-top:14px">
+      <div><div class="num s" style="color:var(--accent)">930</div><div class="lab t">performances</div><div class="delta up">▲ #4 of all songs</div></div>
+      <div><div class="num s">1987-04-02</div><div class="lab t">live debut</div><div class="delta flat">Tempe, Arizona</div></div>
+      <div><div class="num s">2024-03-02</div><div class="lab t">last played</div><div class="delta flat">Sphere, Las Vegas</div></div>
+      <div><div class="num s">2</div><div class="lab t">years since</div><div class="delta up">still in the set</div></div>
+    </div>
+  </div>
+  <div class="a" data-build="Deneb (bars + tour glyph paths)" style="left:28px;top:280px;width:844px;height:200px">
+    <svg id="c_song" width="844" height="200" role="img" aria-label="Performances of the song per year with tour icons; debut year highlighted"></svg></div>
+  <div class="a hand" style="left:900px;top:340px;width:340px">↙ never left the set after its 1987 debut, opening night after night</div>
+  <div class="a" data-build="native table + SVG measure icons" style="left:40px;top:488px;width:760px">
+    <div class="vt">Tour by tour <span class="info" title="Share of tour shows = shows of the tour where the song was played ÷ tour shows with a setlist.">i</span></div><div id="c_tours"></div></div>
+  <div class="a" data-build="native 100% stacked bar" style="left:832px;top:488px;width:424px">
+    <div class="vt">Where in the night it is played</div><svg id="c_pos" width="424" height="120" role="img" aria-label="100% stacked bar: share of performances as opener, main set, encore, closer"></svg>
+    <div class="p" style="margin-top:6px">Mostly in the main set's closing stretch, rarely the opener.</div></div>
+  <div class="a footer" style="left:40px;top:700px">Data: setlist.fm, MusicBrainz · refreshed &lt;date&gt; · photo credits on page 9</div>
+</section>
+
+<!-- ============ Page 9 · About the data ============ -->
+<section class="page" id="p9" aria-label="Page 9 About the data">
+  <div class="a" id="mosaic" data-build="8 image visuals + scrim PNG" style="left:0;top:0;width:1280px;height:200px"></div>
+  <div class="a tabs" data-nav="About" data-build="native page navigator" style="left:40px;top:12px;z-index:6"></div>
+  <div class="a head" style="left:40px;top:136px;width:900px;z-index:6">About the data, and the photos</div>
+  <div class="a" data-build="native text box" style="left:40px;top:224px;width:560px">
+    <div class="kick">Sources</div>
+    <div class="p"><b>setlist.fm</b>: every U2 show and setlist, through the setlist.fm API (free for non-commercial use; data
+      contributed by fans). <b>MusicBrainz</b>: albums, tracks and songs (CC0). The pipeline loads both weekly into
+      Microsoft Fabric (Bronze → Silver → Gold) and this report reads the Gold warehouse through a Direct Lake model.</div>
+  </div>
+  <div class="a" data-build="native card (new) with (i)" style="left:40px;top:400px;width:560px">
+    <div class="kick">Limitations <span class="info" title="Numbers come from the data-quality log of the last refresh.">i</span></div>
+    <div style="display:flex;gap:30px;margin-top:6px">
+      <div><div class="num s">160</div><div class="lab">shows without a setlist</div></div>
+      <div><div class="num s">1.9%</div><div class="lab">performances not matched to a song</div></div>
+      <div><div class="num s">2026-10-21</div><div class="lab">last refresh</div></div>
+    </div>
+    <div class="p" style="margin-top:10px">Early club shows (1976–1980) are often missing. Snippets and tapes are flagged and not counted as performances.</div>
+  </div>
+  <div class="a" data-build="native text box (from credits.csv)" style="left:632px;top:224px;width:624px">
+    <div class="kick">Photo and icon credits</div><div id="credits" class="p" style="font-size:10.5px;line-height:1.45;columns:2;column-gap:20px"></div></div>
+  <div class="a" data-build="image visual" style="left:632px;top:640px;width:624px;height:48px"><img src="images/timeline_tours.svg" alt="All tour icons" style="width:624px;height:48px"></div>
+  <div class="a footer" style="left:40px;top:700px">Data: setlist.fm, MusicBrainz · refreshed &lt;date&gt;</div>
+</section>
+
+<!-- ============ Image set ============ -->
+<section class="page" id="images" aria-label="Images and tour icons">
+  <h2>Tour icons</h2>
+  <p>1 free official logo (U2 360°, PD-textlogo, background made transparent) and 23 original glyphs plus "(No tour)". Redrawn: the Joshua Tree tree (spiky leaf clusters) and PopMart (lemon with leaf).</p>
+  <div class="glyphs" id="g_list"></div>
+  <h2>Era badges (era picker on page 1)</h2>
+  <p>Circular crops of the era photos; 1976–1980 has no free photo, so its badge is a glyph.</p>
+  <div class="row" id="b_list"></div>
+  <h2>Timeline strip, arrows and scrims</h2>
+  <p>Tour icons at each tour's start year (static fallback; the Deneb chart on page 1 draws them from data) · hand-drawn arrows in accent · gradient scrims (bg 92% → 0) behind text on photos.</p>
+  <img src="images/timeline_tours.svg" alt="Tour icon timeline" style="width:844px;height:72px;display:block;margin-bottom:16px">
+  <div class="row">
+    <figure><img src="images/arrow_curve_down_right.svg" alt="" width="120"><figcaption>arrow_curve_down_right</figcaption></figure>
+    <figure><img src="images/arrow_curve_down_left.svg" alt="" width="120"><figcaption>arrow_curve_down_left</figcaption></figure>
+    <figure><img src="images/arrow_loop_right.svg" alt="" width="140"><figcaption>arrow_loop_right</figcaption></figure>
+    <figure style="position:relative;width:240px;height:100px"><img src="images/photo_zoo_tv_1992_kiel.jpg" alt="" style="width:240px;height:100px;object-fit:cover"><img src="images/scrim_from_left.png" alt="" style="position:absolute;left:0;top:0;width:240px;height:100px"><figcaption>scrim_from_left over a photo</figcaption></figure>
+  </div>
+  <h2>Concert photos (Wikimedia Commons)</h2>
+  <div class="photos" id="ph_list"></div>
+</section>
+
+</div></div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+const C = { text:'#ECEDEF', muted:'#A3A9B3', border:'#2A2F38', accent:'#F2A93B', neutral:'#6E7581', bg:'#0F1115',
+  d:['#6FA8DC','#93C47D','#E06666','#B4A7D6','#76D7C4','#F6B26B'], d1b:'#4F7FAE' };
+function el(tag, attrs, parent, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text !== undefined) e.textContent = text;
+  if (parent) parent.appendChild(e);
+  return e;
+}
+let seed = 7; const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+
+// ---------- Page 1 ----------
+const ROME = ['photo_360_2010_rome.jpg', 'U2 360° Tour, Rome 2010, by Blackcat (CC BY-SA 3.0)'];
+const ERAS = [
+  { name:'1976–1980 Beginnings', y:[1976,1980], badge:'badge_era1_glyph.svg', hero:null, k:['262','71','3'], d:['first era','',''] },
+  { name:'1980–1985 Boy to Unforgettable Fire', y:[1980,1985], badge:'badge_era2_1984_sydney.png', hero:['photo_boy_1981_toronto.jpg','Boy Tour, Toronto 1981, by P Douglas Middlemiss (CC BY-SA 4.0)'], k:['487','96','14'], d:['+225','+25','+11'] },
+  { name:'1986–1990 Joshua Tree years', y:[1986,1990], badge:'badge_era3_1987_dublin.png', hero:['photo_joshua_tree_1987_dublin.jpg','The Joshua Tree Tour, Croke Park 1987, by Damian McDonagh (CC BY-SA 4.0)'], k:['158','88','19'], d:['−329','−8','+5'] },
+  { name:'1992–1998 Zoo TV and PopMart', y:[1992,1998], badge:'badge_era4_1992_kiel.png', hero:['photo_zoo_tv_1992_foxborough_wide.jpg','Zoo TV Tour, Foxborough 1992, by Jeff Topping (CC BY-SA 4.0)'], k:['250','104','33'], d:['+92','+16','+14'] },
+  { name:'2001–2006 Elevation and Vertigo', y:[2001,2006], badge:'badge_era5_2001_philadelphia.png', hero:['photo_elevation_2001_philadelphia.jpg','Elevation Tour, Philadelphia 2001, by Dmolavi (CC BY-SA 4.0)'], k:['259','112','35'], d:['+9','+8','+2'] },
+  { name:'2009–2011 U2 360', y:[2009,2011], badge:'badge_era6_2010_rome.png', hero:ROME, k:['110','67','30'], d:['−149','−45','−5'] },
+  { name:'2015–2019 Innocence and Experience', y:[2015,2019], badge:'badge_era7_2018_newark.png', hero:['photo_innocence_experience_2015_antwerp.jpg','Innocence + Experience Tour, Antwerp 2015, by U2start (CC BY 2.0)'], k:['204','118','26'], d:['+94','+51','−4'] },
+  { name:'2023– Sphere and after', y:[2023,2026], badge:'badge_era8_2023_las_vegas.png', hero:['photo_sphere_2023_las_vegas.jpg','Sphere, Las Vegas 2023, by lightpants (CC BY 4.0)'], k:['42','49','2'], d:['−162','−69','−24'] }
+];
+const SHOWS = {1976:6,1977:18,1978:25,1979:66,1980:95,1981:150,1982:70,1983:110,1984:45,1985:65,1986:6,1987:110,1988:2,1989:30,1990:15,
+  1991:0,1992:85,1993:72,1994:0,1995:0,1996:0,1997:68,1998:25,1999:0,2000:4,2001:113,2002:2,2003:0,2004:8,2005:102,2006:30,2007:0,2008:0,
+  2009:44,2010:38,2011:30,2012:0,2013:0,2014:2,2015:76,2016:1,2017:51,2018:60,2019:16,2020:0,2021:0,2022:1,2023:25,2024:15,2025:0,2026:2};
+let era = -1;
+function drawShows() {
+  const svg = document.getElementById('c_spy'); svg.innerHTML = '';
+  const X = yr => 12 + (yr - 1976) / 51 * 820, top = 0, B = 92, H = 244, max = 150, bw = 820 / 51 - 3;
+  Object.keys(SHOWS).map(Number).forEach(yr => {
+    const eIdx = ERAS.findIndex(e => yr >= e.y[0] && yr <= e.y[1]);
+    let fill = eIdx < 0 ? C.neutral : (eIdx % 2 ? C.d1b : C.d[0]);
+    if (yr === 1981) fill = C.accent;
+    const inEra = era < 0 || (yr >= ERAS[era].y[0] && yr <= ERAS[era].y[1]);
+    const h = (H - B - 40) * SHOWS[yr] / max;
+    el('rect', {x:X(yr) + 1.5, y:H - B - h, width:bw, height:Math.max(h, SHOWS[yr] ? 1 : 0), fill, rx:1, opacity:inEra ? 1 : .25}, svg);
+    if (yr % 10 === 0) el('text', {x:X(yr) + bw / 2, y:H - B + 14, 'text-anchor':'middle', fill:C.muted, 'font-size':11}, svg, yr);
+  });
+  // tour icons, drawn by the same chart (Deneb image/path marks), below the axis
+  const img = el('image', {href:'images/timeline_tours.svg', x:0, y:H - 72, width:844, height:72}, svg);
+}
+function drawTop() {
+  const svg = document.getElementById('c_top');
+  const songs = ['Pride (In the Name of Love)','Sunday Bloody Sunday','I Will Follow','Where the Streets Have No Name','With or Without You',
+    'Bad','Beautiful Day','Vertigo','One','Elevation'];
+  const vals = songs.map((s, i) => Math.round(1150 - i * 70 - rnd() * 40));
+  songs.forEach((s, i) => {
+    const y = 8 + i * 37;
+    el('text', {x:0, y:y + 14, fill:i ? C.muted : C.accent, 'font-size':20, 'font-weight':600, style:'font-family:Bahnschrift,DIN,sans-serif'}, svg, i + 1);
+    el('text', {x:30, y:y + 12, fill:C.text, 'font-size':12}, svg, s);
+    const w = 240 * vals[i] / vals[0];
+    el('rect', {x:30, y:y + 18, width:w, height:8, fill:i ? C.d[0] : C.accent, rx:2}, svg);
+    el('text', {x:36 + w, y:y + 26, fill:C.text, 'font-size':11}, svg, vals[i].toLocaleString('en-US'));
+  });
+}
+function selectEra(i) {
+  era = (era === i) ? -1 : i;
+  document.querySelectorAll('.badge').forEach((b, j) => b.setAttribute('aria-pressed', j === era));
+  const hero = document.getElementById('hero');
+  const h = era < 0 ? ROME : (ERAS[era].hero || ROME);
+  hero.src = 'images/' + h[0]; hero.alt = 'Decorative: ' + h[1];
+  const k = era < 0 ? ['1,875','388','61'] : ERAS[era].k;
+  ['k1','k2','k3'].forEach((id, j) => document.getElementById(id).textContent = k[j]);
+  ['d1','d2','d3'].forEach((id, j) => { const e = document.getElementById(id);
+    const v = era < 0 ? 'all eras' : (era === 0 ? (j ? '' : 'first era') : ERAS[era].d[j] + ' vs previous era');
+    e.textContent = v.startsWith('+') ? '▲ ' + v : v.startsWith('−') ? '▼ ' + v : v;
+    e.className = 'delta ' + (v.startsWith('+') ? 'up' : v.startsWith('−') ? 'down' : 'flat'); });
+  document.getElementById('intro').innerHTML = era < 0
+    ? 'From Dublin clubs in 1976 to a sphere in the desert: <b>1,875 shows</b> in <b>61 countries</b>. Most nights were built on the same spine of songs, and <em>Pride</em> has been there for four decades.'
+    : `<b>${ERAS[era].name}</b>: <b>${k[0]} shows</b> in <b>${k[2]} countries</b>, with <b>${k[1]} different songs</b> on the setlists.`;
+  drawShows();
+}
+(function () {
+  const box = document.getElementById('badges');
+  ERAS.forEach((e, i) => {
+    const b = document.createElement('button'); b.className = 'badge'; b.setAttribute('aria-pressed', 'false');
+    b.style.left = (i * 64) + 'px'; b.style.top = '0';
+    b.title = e.name; b.innerHTML = `<img src="images/${e.badge}" alt="${e.name}"><span>${e.y[0]}</span>`;
+    b.addEventListener('click', () => selectEra(i)); box.appendChild(b);
+  });
+  drawShows(); drawTop();
+})();
+
+// ---------- Page 4 ----------
+(function () {
+  const svg = document.getElementById('c_area');
+  const W = 736, H = 264, R = 124, T = 4, B = 20;
+  const groups = ['1980s albums','1990s albums','2000s albums','2010s albums','2020s albums','not on an album'];
+  const colors = [C.d[0], C.d[1], C.d[2], C.d[3], C.d[4], C.neutral];
+  const years = []; for (let y = 1980; y <= 2026; y++) years.push(y);
+  const share = years.map(y => {
+    const g = (c, s) => Math.exp(-((y - c) * (y - c)) / s);
+    const w = [Math.max(.3, 1 - Math.max(0, y - 1990) * .02) + (y === 2017 || y === 2019 ? .6 : 0), y >= 1991 ? .5 * g(1993, 40) + .12 + (y >= 2023 ? .7 : 0) : 0,
+      y >= 2000 ? .45 * g(2003, 30) + .08 : 0, y >= 2009 ? .4 * g(2016, 20) + .05 : 0, y >= 2026 ? .3 : 0, .08];
+    const s = w.reduce((a, b) => a + b, 0); return w.map(v => v / s);
+  });
+  const x = i => (W - R) * i / (years.length - 1), y = v => T + (H - T - B) * (1 - v);
+  let base = years.map(() => 0);
+  groups.forEach((gname, gi) => {
+    const top = base.map((b, i) => b + share[i][gi]);
+    let d = 'M' + years.map((_, i) => x(i) + ',' + y(top[i])).join('L');
+    d += 'L' + years.map((_, i) => years.length - 1 - i).map(i => x(i) + ',' + y(base[i])).join('L') + 'Z';
+    el('path', {d, fill:colors[gi], stroke:C.bg, 'stroke-width':1.5}, svg);
+    const last = years.length - 1, mid = (top[last] + base[last]) / 2;
+    if (top[last] - base[last] > .03) el('text', {x:W - R + 8, y:y(mid) + 4, fill:colors[gi], 'font-size':12, 'font-weight':600}, svg, gname);
+    base = top;
+  });
+  [1980, 1990, 2000, 2010, 2020].forEach(yr => el('text', {x:x(yr - 1980), y:H - 4, 'text-anchor':yr === 1980 ? 'start' : 'middle', fill:C.muted, 'font-size':11}, svg, yr));
+})();
+(function () {
+  const albums = ['Boy','War','The Joshua Tree','Achtung Baby','All That You Can’t Leave Behind'];
+  const rel = [1980,1983,1987,1991,2000];
+  const dec = ['80s','90s','00s','10s','20s'];
+  const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+  const col = t => `rgb(${lerp(0x1E,0x6F,t)},${lerp(0x2A,0xA8,t)},${lerp(0x3A,0xDC,t)})`;
+  let h = '<table class="t" style="border-collapse:separate;border-spacing:3px"><tr><td></td>' + dec.map(d => `<td style="color:#A3A9B3;text-align:center">${d}</td>`).join('') + '</tr>';
+  albums.forEach((a, i) => {
+    h += `<tr><td style="width:190px">${a}</td>` + dec.map((d, j) => {
+      const dy = 1980 + j * 10; if (dy + 9 < rel[i]) return '<td></td>';
+      let v = Math.max(1, Math.round(26 * Math.exp(-(dy - rel[i]) / 30) * (.6 + rnd() * .8)));
+      if (a === 'The Joshua Tree') v = Math.max(v, 12 + j);
+      const t = Math.min(1, v / 30);
+      return `<td style="background:${col(t)};color:${t > .55 ? '#0F1115' : '#ECEDEF'};text-align:center;border-radius:3px;width:52px">${v}%</td>`;
+    }).join('') + '</tr>';
+  });
+  document.getElementById('c_matrix').innerHTML = h + '<tr><td colspan="6" style="color:#A3A9B3;font-size:9pt">+ 11 more albums (scroll)</td></tr></table>';
+})();
+(function () {
+  const tours = [['joshua_tree_2017','The Joshua Tree Tour 2017',62,1],['joshua_tree_2019','The Joshua Tree Tour 2019',58,1],['sphere','Sphere residency',54,1],
+    ['boy','Boy Tour',52],['joshua_tree_1987','The Joshua Tree Tour 1987',49],['popmart','PopMart Tour',45],['zoo_tv','Zoo TV Tour',41,0,1],
+    ['war','War Tour',38],['elevation','Elevation Tour',34],['unforgettable_fire','The Unforgettable Fire Tour',32],['vertigo','Vertigo Tour',29],
+    ['360','U2 360° Tour',25],['innocence_experience','iNNOCENCE + eXPERIENCE',22],['experience_innocence','eXPERIENCE + iNNOCENCE',18]];
+  let h = '<table class="t">';
+  tours.forEach(([g, n, v, anniv, sel]) => {
+    const icon = g === '360' ? 'icon_360_tour_logo.png' : `glyph_${g}.svg`;
+    h += `<tr><td style="width:24px;padding:0"><img src="images/${icon}" alt="" width="20" height="20" style="display:block;object-fit:contain"></td>
+      <td style="width:190px;color:${sel ? '#F2A93B' : '#ECEDEF'}">${n}</td>
+      <td><div style="height:8px;width:${v * 2.6}px;background:${sel ? '#F2A93B' : anniv ? '#4F7FAE' : '#6FA8DC'};border-radius:2px;display:inline-block"></div>
+      <span style="margin-left:6px">${v}%${anniv ? ' ⓐ' : ''}</span></td></tr>`;
+  });
+  document.getElementById('c_promo').innerHTML = h + '</table>';
+})();
+
+// ---------- Page 6 ----------
+(function () {
+  const bar = (id, v, max, color, label) => document.getElementById(id).innerHTML =
+    `<div style="display:flex;align-items:center;gap:8px"><div style="height:10px;width:${Math.round(150 * v / max)}px;background:${color};border-radius:2px"></div><span class="num s" style="font-size:22px;color:${color === '#F2A93B' ? '#F2A93B' : '#ECEDEF'}">${label}</span></div>`;
+  bar('h1', 22, 26, '#F2A93B', '22'); bar('h1b', 24, 26, '#6E7581', '24');
+  bar('h2', 49, 120, '#F2A93B', '49'); bar('h2b', 112, 120, '#6E7581', '112');
+  bar('h3', 78, 80, '#F2A93B', '78%'); bar('h3b', 12, 80, '#6E7581', '12%');
+})();
+function drawDots(m) {
+  const svg = document.getElementById('c_dots'); svg.innerHTML = ''; seed = 11;
+  const cfg = { songs:[15, 30, 22, 5, 21, 2, 'songs per show'], rare:[0, 6, 1, 3, .3, .6, 'rarities per show'], ab:[0, 14, 2, 3, 12.5, 1, 'Achtung Baby songs per show'] }[m];
+  const W = 696, H = 232, L = 28, B = 22, T = 8, x0 = 2015, x1 = 2024.6;
+  const x = d => L + (W - L - 8) * (d - x0) / (x1 - x0), y = v => T + (H - T - B) * (1 - (v - cfg[0]) / (cfg[1] - cfg[0]));
+  [0, .5, 1].forEach(f => { const v = cfg[0] + f * (cfg[1] - cfg[0]); el('text', {x:L - 6, y:y(v) + 4, 'text-anchor':'end', fill:C.muted, 'font-size':11}, svg, Math.round(v)); });
+  for (let i = 0; i < 186; i++) { const d = [2015.4, 2017.4, 2018.4, 2019.85][i % 4] + rnd() * .45;
+    el('circle', {cx:x(d), cy:y(cfg[2] + rnd() * cfg[3]), r:3, fill:C.neutral}, svg); }
+  for (let i = 0; i < 40; i++) { const d = 2023.75 + rnd() * .45;
+    el('rect', {x:x(d) - 3, y:y(cfg[4] + rnd() * cfg[5]) - 3, width:6, height:6, fill:C.accent}, svg); }
+  [2015, 2017, 2019, 2021, 2023].forEach(yr => el('text', {x:x(yr), y:H - 4, 'text-anchor':'middle', fill:C.muted, 'font-size':11}, svg, yr));
+  el('text', {x:x(2023.95), y:16, fill:C.accent, 'font-size':12, 'font-weight':600, 'text-anchor':'middle'}, svg, '■ Sphere');
+  el('text', {x:x(2016.2), y:16, fill:C.muted, 'font-size':12}, svg, '● touring shows · ' + cfg[6]);
+}
+document.querySelectorAll('#axis span').forEach(s => s.addEventListener('click', () => {
+  document.querySelectorAll('#axis span').forEach(t => t.classList.toggle('on', t === s)); drawDots(s.dataset.m); }));
+drawDots('songs');
+
+// ---------- Page 8 ----------
+(function () {
+  const sl = [['Main set'],['Out of Control'],['Twilight'],['An Cat Dubh'],['Into the Heart'],['Surrender'],['Two Hearts Beat as One'],['Seconds','★ debut'],
+    ['Sunday Bloody Sunday'],['The Electric Co.','snippet'],['I Threw a Brick Through a Window'],['A Day Without Me'],['Gloria'],['New Year’s Day'],
+    ['Encore 1'],['Party Girl'],['I Will Follow'],['Encore 2'],['40'],['Send in the Clowns','cover'],['Knockin’ on Heaven’s Door','cover · with guest']];
+  let n = 0;
+  document.getElementById('setlist').innerHTML = sl.map(([s, t]) => /^(Main set|Encore)/.test(s)
+    ? `<div class="set">${s}</div>`
+    : `<div><span class="n">${++n}</span><span>${s}</span>${t ? `<span class="tag${t.startsWith('★') ? ' a' : ''}">${t}</span>` : ''}</div>`).join('');
+})();
+
+// ---------- Shared: tab navigation for the new pages ----------
+const NAV = ['Overview','On the road','Songs','Albums','Setlists','Sphere','Shows','About'];
+document.querySelectorAll('[data-nav]').forEach(d => d.innerHTML = NAV.map(n => `<span${n === d.dataset.nav ? ' class="on"' : ''}>${n}</span>`).join(''));
+const bars = (rows, opt) => '<table class="t">' + rows.map(r => {
+  const [icon, name, v, label, hi, extra] = r;
+  return `<tr>${icon !== undefined ? `<td style="width:24px;padding:0">${icon ? `<img src="images/${icon}" alt="" width="20" height="20" style="display:block;object-fit:contain">` : ''}</td>` : ''}
+    <td style="width:${opt.nameW}px;white-space:nowrap;color:${hi ? '#F2A93B' : '#ECEDEF'}">${name}</td>
+    <td><div style="height:8px;width:${Math.round(v * opt.scale)}px;background:${hi ? '#F2A93B' : '#6FA8DC'};border-radius:2px;display:inline-block"></div>
+    <span style="margin-left:6px">${label}</span></td>${extra ? `<td style="color:#A3A9B3;white-space:nowrap">${extra}</td>` : ''}</tr>`; }).join('') + '</table>';
+
+// ---------- Page 2 ----------
+(function () {
+  const svg = document.getElementById('c_map'), W = 744, H = 520;
+  const X = lon => (lon + 170) / 340 * W, Y = lat => (75 - lat) / 125 * H;
+  for (let lon = -150; lon <= 180; lon += 30) el('line', {x1:X(lon), x2:X(lon), y1:0, y2:H, stroke:'#1A1D23'}, svg);
+  for (let lat = -40; lat <= 70; lat += 20) el('line', {x1:0, x2:W, y1:Y(lat), y2:Y(lat), stroke:'#1A1D23'}, svg);
+  const cities = [['Dublin',53.3,-6.3,80,1],['London',51.5,-0.1,62],['New York',40.7,-74,58],['Los Angeles',34,-118.2,44],['Paris',48.9,2.4,30],
+    ['Chicago',41.9,-87.6,34],['Boston',42.4,-71.1,28],['Toronto',43.7,-79.4,26],['Amsterdam',52.4,4.9,18],['Berlin',52.5,13.4,16],['Milan',45.5,9.2,14],
+    ['Madrid',40.4,-3.7,12],['Sydney',-33.9,151.2,16],['Melbourne',-37.8,145,14],['Tokyo',35.7,139.7,12],['Mexico City',19.4,-99.1,12],['São Paulo',-23.5,-46.6,10],
+    ['Buenos Aires',-34.6,-58.4,9],['Johannesburg',-26.2,28,4],['Las Vegas',36.2,-115.1,44,0,'Sphere'],['Philadelphia',40,-75.2,24],['Glasgow',55.9,-4.3,14],
+    ['Belfast',54.6,-5.9,10],['Cork',51.9,-8.5,8],['Rome',41.9,12.5,10],['Seattle',47.6,-122.3,12],['Vancouver',49.3,-123.1,10],['Auckland',-36.8,174.8,8],['Singapore',1.3,103.8,3],['Seoul',37.6,127,2]];
+  seed = 3;
+  for (let i = 0; i < 160; i++) { const c = cities[Math.floor(rnd() * cities.length)];
+    el('circle', {cx:X(c[2] + (rnd() - .5) * 18), cy:Y(c[1] + (rnd() - .5) * 10), r:1.6, fill:'#6FA8DC', opacity:.35}, svg); }
+  cities.forEach(([n, lat, lon, v, hi, alt]) => {
+    el('circle', {cx:X(lon), cy:Y(lat), r:Math.sqrt(v) * 2.1, fill:hi ? C.accent : C.d[0], 'fill-opacity':hi ? .9 : .55, stroke:hi ? C.accent : C.d[0]}, svg);
+    if (v >= 50 || hi) el('text', {x:X(lon) + Math.sqrt(v) * 2.1 + 4, y:Y(lat) + 4, fill:hi ? C.accent : C.text, 'font-size':11, 'font-weight':600}, svg, alt || n);
+  });
+  document.getElementById('c_cities').innerHTML = bars([[undefined,'Dublin, Ireland',80,'80',1,'1976–2018'],[undefined,'London, UK',62,'62',0,'1979–2018'],
+    [undefined,'New York, USA',58,'58',0,'1980–2018'],[undefined,'Los Angeles, USA',44,'44',0,'1980–2017'],[undefined,'Las Vegas, USA',44,'44',0,'1987–2024'],
+    [undefined,'Chicago, USA',34,'34',0,'1981–2018'],[undefined,'Paris, France',30,'30',0,'1980–2018'],[undefined,'Boston, USA',28,'28',0,'1981–2018'],
+    [undefined,'Toronto, Canada',26,'26',0,'1981–2018']], {nameW:150, scale:2.2});
+  const svg2 = document.getElementById('c_cont'), dec = ['70s','80s','90s','00s','10s','20s'];
+  const sh = [[.97,.03,0,0,0,0],[.58,.38,.04,0,0,0],[.52,.37,.06,.05,0,0],[.5,.4,.04,.04,.02,0],[.43,.38,.08,.07,.03,.01],[.1,.88,.02,0,0,0]];
+  const names = ['Europe','N. America','Oceania','S. America','Asia','Africa'];
+  dec.forEach((d, i) => { let y = 0; const x = 8 + i * 54;
+    sh[i].forEach((v, j) => { const h = v * 130; if (h > 0) el('rect', {x, y:y, width:40, height:h - 1, fill:C.d[j], rx:1}, svg2); y += h; });
+    el('text', {x:x + 20, y:146, 'text-anchor':'middle', fill:C.muted, 'font-size':11}, svg2, d); });
+  names.forEach((n, j) => el('text', {x:344, y:14 + j * 20, fill:C.d[j], 'font-size':11, 'font-weight':600}, svg2, '■ ' + n));
+})();
+
+// ---------- Page 3 ----------
+(function () {
+  const svg = document.getElementById('c_scatter'), W = 704, H = 292, L = 36, B = 22;
+  const x = yr => L + (W - L - 10) * (yr - 1978) / 50, y = v => 8 + (H - 8 - B) * (1 - Math.sqrt(v) / Math.sqrt(1200));
+  [0, 100, 400, 900].forEach(v => el('text', {x:L - 6, y:y(v) + 4, 'text-anchor':'end', fill:C.muted, 'font-size':11}, svg, v));
+  [1980, 1990, 2000, 2010, 2020].forEach(yr => el('text', {x:x(yr), y:H - 4, 'text-anchor':'middle', fill:C.muted, 'font-size':11}, svg, yr));
+  seed = 21;
+  for (let i = 0; i < 230; i++) { const yr = 1979 + Math.floor(rnd() * 47), age = 2026 - yr;
+    const v = Math.max(1, Math.round(Math.pow(rnd(), 3.2) * (age > 30 ? 700 : age > 15 ? 300 : 120))), retired = rnd() < .45 && yr < 2015;
+    el('circle', {cx:x(yr + rnd()), cy:y(v), r:3.2, fill:retired ? 'none' : C.d[0], stroke:retired ? C.neutral : 'none', 'stroke-width':1.3, opacity:.85}, svg); }
+  [['Pride',1984.7,1130,1],['Sunday Bloody Sunday',1983.2,1058],['I Will Follow',1980.8,1005],['With or Without You',1987.2,852],['Vertigo',2004.8,625],['Beautiful Day',2000.8,727]]
+    .forEach(([n, yr, v, hi]) => { el('circle', {cx:x(yr), cy:y(v), r:5, fill:hi ? C.accent : C.d[0]}, svg);
+      el('text', {x:x(yr) + 8, y:y(v) + 4, fill:hi ? C.accent : C.text, 'font-size':11, 'font-weight':hi ? 600 : 400}, svg, n); });
+  el('text', {x:W - 10, y:16, 'text-anchor':'end', fill:C.muted, 'font-size':11}, svg, '● still played   ○ retired');
+  document.getElementById('c_rank').innerHTML = bars([['Pride (In the Name of Love)',1130,'1,130',1,'1984 → 2024'],['Sunday Bloody Sunday',1058,'1,058',0,'1982 → 2024'],
+    ['I Will Follow',1005,'1,005',0,'1979 → 2023'],['Where the Streets Have No Name',930,'930',0,'1987 → 2024'],['With or Without You',852,'852',0,'1987 → 2024'],
+    ['Bad',780,'780',0,'1984 → 2019'],['Beautiful Day',727,'727',0,'2000 → 2024'],['Vertigo',625,'625',0,'2004 → 2024'],['One',566,'566',0,'1992 → 2024'],
+    ['Elevation',504,'504',0,'2000 → 2024'],['New Year’s Day',498,'498',0,'1982 → 2019'],['Out of Control',470,'470',0,'1978 → 2015'],
+    ['Gloria',452,'452',0,'1981 → 2018'],['Bullet the Blue Sky',441,'441',0,'1987 → 2019'],['Desire',405,'405',0,'1988 → 2019']].map(r => [undefined, ...r]), {nameW:210, scale:.11})
+    .replace(/<td style="width:24px;padding:0"><\/td>/g, '');
+  const small = (rows) => '<table class="t">' + rows.map(r => `<tr>${r.map((c, i) => `<td style="color:${i ? '#A3A9B3' : '#ECEDEF'}">${c}</td>`).join('')}</tr>`).join('') + '</table>';
+  document.getElementById('c_rare').innerHTML = small([['Love Comes Tumbling','1×','1985'],['Lady with the Spinning Head','1×','1993'],['Stay','2×','1993'],
+    ['Drowning Man','1×','1983'],['Hallelujah Here She Comes','2×','1988'],['Your Song Saved My Life','1×','2022'],['Sweetest Thing','2×','1998']]);
+  document.getElementById('c_cov').innerHTML = small([['Helter Skelter · The Beatles','212×','cover'],['All Along the Watchtower · Dylan','140×','cover'],
+    ['Dancing Barefoot · Patti Smith','46×','cover'],['People Get Ready · Curtis Mayfield','30×','cover'],['with B.B. King','24×','guest'],
+    ['with Bruce Springsteen','11×','guest'],['with Patti Smith','9×','guest']]);
+})();
+
+// ---------- Page 5 ----------
+(function () {
+  const songs = ['Pride (In the Name of Love)','Sunday Bloody Sunday','I Will Follow','Where the Streets Have No Name','With or Without You','Bad',
+    'Beautiful Day','Vertigo','One','Elevation','New Year’s Day','Out of Control','Gloria','Bullet the Blue Sky','Desire','I Still Haven’t Found…',
+    'Mysterious Ways','Until the End of the World','Even Better Than the Real Thing','City of Blinding Lights','Twilight','An Cat Dubh','The Electric Co.',
+    'Party Girl','40','The Unforgettable Fire','Running to Stand Still','Zoo Station','Ultraviolet','Walk On'];
+  const debut = [1984,1982,1979,1987,1987,1984,2000,2004,1992,2000,1982,1978,1981,1987,1988,1987,1992,1992,1992,2005,1979,1979,1980,1981,1983,1984,1987,1992,1992,2001];
+  const tourYears = Object.keys(SHOWS).map(Number);
+  const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+  const col = t => `rgb(${lerp(0x1E,0x6F,t)},${lerp(0x2A,0xA8,t)},${lerp(0x3A,0xDC,t)})`;
+  seed = 5;
+  let h = '<table style="border-collapse:separate;border-spacing:1px;font-size:10px">';
+  songs.forEach((s, i) => {
+    h += `<tr><td style="width:178px;color:${i === 0 ? '#F2A93B' : '#ECEDEF'};white-space:nowrap;overflow:hidden;max-width:178px;padding-right:4px">${s}</td>`;
+    tourYears.forEach(yr => {
+      const on = SHOWS[yr] > 0 && yr >= debut[i] && (i < 6 || rnd() > Math.min(.85, (yr - debut[i]) / 30));
+      const t = on ? Math.min(1, (SHOWS[yr] / 110) * (.5 + rnd() * .6)) : 0;
+      h += `<td title="${s} · ${yr}" style="width:9px;height:13px;background:${on ? col(t) : 'transparent'}"></td>`;
+    });
+    h += '</tr>';
+  });
+  h += '<tr><td></td>' + tourYears.map(yr => `<td style="color:#A3A9B3;font-size:9px;text-align:left;overflow:visible;white-space:nowrap">${yr % 10 === 0 ? yr : ''}</td>`).join('') + '</tr>';
+  document.getElementById('c_heat').innerHTML = h + '</table>';
+  document.getElementById('c_var').innerHTML = bars([['glyph_sphere.svg','Sphere residency',1.2,'1.2',1],['glyph_joshua_tree_2017.svg','The Joshua Tree Tour 2017',1.6,'1.6'],
+    ['glyph_vertigo.svg','Vertigo Tour',2.9,'2.9'],['icon_360_tour_logo.png','U2 360° Tour',3.1,'3.1'],['glyph_zoo_tv.svg','Zoo TV Tour',2.1,'2.1'],
+    ['glyph_war.svg','War Tour',3.6,'3.6'],['glyph_boy.svg','Boy Tour',3.2,'3.2']].sort((a, b) => a[2] - b[2]), {nameW:180, scale:48});
+  const svg = document.getElementById('c_line'), yrs = [1980,1983,1985,1987,1989,1992,1993,1997,2001,2005,2009,2011,2015,2017,2018,2019,2023,2024];
+  const vals = [12,14,15,17,18,22,23,24,22,23,24,23,25,22,24,22,22,22];
+  const x = yr => 28 + 390 * (yr - 1980) / 44, y = v => 100 - (v - 10) * 5.4;
+  el('path', {d:'M' + yrs.map((yr, i) => x(yr) + ',' + y(vals[i])).join('L'), fill:'none', stroke:C.d[0], 'stroke-width':2}, svg);
+  el('circle', {cx:x(2024), cy:y(22), r:3.5, fill:C.accent}, svg);
+  el('text', {x:x(2024) - 4, y:y(22) - 8, 'text-anchor':'end', fill:C.accent, 'font-size':11, 'font-weight':600}, svg, '22 at the Sphere');
+  [12, 24].forEach(v => el('text', {x:22, y:y(v) + 4, 'text-anchor':'end', fill:C.muted, 'font-size':11}, svg, v));
+  [1980, 2000, 2020].forEach(yr => el('text', {x:x(yr), y:111, 'text-anchor':'middle', fill:C.muted, 'font-size':10}, svg, yr));
+  document.getElementById('c_open').innerHTML = bars([['Zoo Station',150,'150',1],['Elevation',120,'120'],['Out of Control',96,'96'],['Gloria',70,'70'],['City of Blinding Lights',58,'58']].map(r => [undefined, ...r]), {nameW:170, scale:1.1})
+    .replace(/<td style="width:24px;padding:0"><\/td>/g, '');
+})();
+
+// ---------- Page 7 ----------
+(function () {
+  const svg = document.getElementById('c_song');
+  const X = yr => 12 + (yr - 1976) / 51 * 820, bw = 820 / 51 - 3, H = 200, B = 86;
+  const plays = {1987:110,1989:30,1990:15,1992:80,1993:70,1997:65,1998:24,2001:110,2005:100,2006:28,2009:44,2010:38,2011:30,2015:74,2017:51,2018:58,2019:16,2023:25,2024:15};
+  Object.keys(SHOWS).map(Number).forEach(yr => { const v = plays[yr] || 0; if (!v) return;
+    const h = (H - B - 20) * v / 115;
+    el('rect', {x:X(yr) + 1.5, y:H - B - h, width:bw, height:h, fill:yr === 1987 ? C.accent : C.d[0], rx:1}, svg); });
+  el('text', {x:X(1987) + bw / 2, y:H - B - (H - B - 20) * 110 / 115 - 4, 'text-anchor':'middle', fill:C.accent, 'font-size':11, 'font-weight':600}, svg, 'debut');
+  [1980, 1990, 2000, 2010, 2020].forEach(yr => el('text', {x:X(yr) + bw / 2, y:H - B + 13, 'text-anchor':'middle', fill:C.muted, 'font-size':11}, svg, yr));
+  el('image', {href:'images/timeline_tours.svg', x:0, y:H - 68, width:844, height:68}, svg);
+  document.getElementById('c_tours').innerHTML = bars([['glyph_joshua_tree_1987.svg','The Joshua Tree Tour 1987',98,'98% of shows',1],['glyph_zoo_tv.svg','Zoo TV Tour',97,'97%'],
+    ['glyph_popmart.svg','PopMart Tour',100,'100%'],['glyph_elevation.svg','Elevation Tour',100,'100%'],['icon_360_tour_logo.png','U2 360° Tour',100,'100%'],
+    ['glyph_sphere.svg','Sphere residency',100,'100%']], {nameW:220, scale:3.2});
+  const pos = document.getElementById('c_pos'); let x = 0;
+  [['opener',.06,C.d[1]],['main set',.74,C.d[0]],['encore',.14,C.d[3]],['closer',.06,C.d[5]]].forEach(([n, v, c]) => {
+    const w = 424 * v; el('rect', {x, y:10, width:w - 2, height:30, fill:c, rx:2}, pos);
+    if (w > 50) { el('text', {x:x + 4, y:62, fill:c, 'font-size':11, 'font-weight':600}, pos, n);
+      el('text', {x:x + 4, y:78, fill:C.text, 'font-size':11}, pos, Math.round(v * 100) + '%'); } x += w; });
+  el('text', {x:0, y:100, fill:C.muted, 'font-size':11}, pos, 'opener 6% (green) · closer 6% (orange)');
+})();
+
+// ---------- Page 9 ----------
+(function () {
+  const tiles = [['badge_era1_glyph.svg','1976–80',1],['photo_boy_1981_toronto.jpg','1980–85'],['photo_joshua_tree_1987_dublin.jpg','1986–90'],
+    ['photo_zoo_tv_1992_kiel.jpg','1992–98'],['photo_elevation_2001_philadelphia.jpg','2001–06'],['photo_360_2010_rome.jpg','2009–11'],
+    ['photo_experience_innocence_2018_newark.jpg','2015–19'],['photo_sphere_2023_las_vegas_bow.jpg','2023–']];
+  document.getElementById('mosaic').innerHTML = tiles.map(([f, n, g], i) =>
+    `<div class="a" style="left:${i * 160}px;top:0;width:160px;height:200px;background:#181B21;overflow:hidden">
+      <img src="images/${f}" alt="" style="width:${g ? '64px' : '160px'};height:${g ? '64px' : '200px'};object-fit:cover;${g ? 'margin:40px 48px' : ''}display:block"></div>`).join('') +
+    '<img class="a scrim" src="images/scrim_from_top.png" alt="" style="left:0;top:0;width:1280px;height:72px"><img class="a scrim" src="images/scrim_from_bottom.png" alt="" style="left:0;top:80px;width:1280px;height:120px">';
+  const cr = [['Boy Tour, Toronto 1981','P Douglas Middlemiss','CC BY-SA 4.0'],['War Tour, Dublin 1983','Colm Henry','CC BY-SA 3.0'],
+    ['Unforgettable Fire Tour, Sydney 1984','Michael Richardson','CC BY-SA 4.0'],['Joshua Tree Tour, Croke Park 1987','Damian McDonagh','CC BY-SA 4.0'],
+    ['Lovetown Tour, Rotterdam 1990','Jeroen Polman','CC BY-SA 4.0'],['Zoo TV Tour, Kiel 1992','Jeroen Polman','CC BY-SA 4.0'],
+    ['Zoo TV Tour, Foxborough 1992','Jeff Topping','CC BY-SA 4.0'],['PopMart Tour, Reggio Emilia 1997','Giorgio Moscardi','CC BY-SA 3.0'],
+    ['Elevation Tour, Philadelphia 2001','Dmolavi','CC BY-SA 4.0'],['Vertigo Tour, New York 2005','Zachary Gillman','CC BY 2.5'],
+    ['U2 360° Tour, Rome 2010','Blackcat','CC BY-SA 3.0'],['Innocence + Experience, Antwerp 2015','U2start','CC BY 2.0'],
+    ['Joshua Tree Tour 2017, Bonnaroo','Aylish Connolly','CC BY-SA 4.0'],['Experience + Innocence, Newark 2018','Jonathan Schilling','CC BY-SA 4.0'],
+    ['Joshua Tree Tour 2019, Singapore','U2mike','CC BY-SA 4.0'],['Sphere, Las Vegas 2023','lightpants','CC BY 4.0'],
+    ['Sphere, Las Vegas 2023','bridonohue','CC BY-SA 4.0'],['U2 360° Tour logo','Live Nation','public domain (text logo)']];
+  document.getElementById('credits').innerHTML = cr.map(([t, a, l]) => `<div style="break-inside:avoid"><b>${t}</b> · ${a} · ${l} ↗</div>`).join('') +
+    '<div style="break-inside:avoid;margin-top:6px">All photos from Wikimedia Commons, cropped and resized; CC BY-SA images remain CC BY-SA. Tour glyphs, era badges, arrows and scrims: original, project licence.</div>';
+})();
+
+// ---------- Images tab ----------
+(function () {
+  const glyphs = [['icon_360_tour_logo.png','U2 360° · official logo'],['glyph_early_days.svg','Early Days'],['glyph_u2_3.svg','U2-3'],
+    ['glyph_11_oclock_tick_tock.svg','11 O’Clock Tick Tock'],['glyph_boy.svg','Boy'],['glyph_october.svg','October Tour'],['glyph_pre_war.svg','Pre-War Tour'],
+    ['glyph_war.svg','War'],['glyph_unforgettable_fire.svg','The Unforgettable Fire'],['glyph_conspiracy_of_hope.svg','A Conspiracy of Hope'],
+    ['glyph_joshua_tree_promo.svg','Joshua Tree promo shows'],['glyph_joshua_tree_1987.svg','The Joshua Tree 1987'],['glyph_lovetown.svg','Lovetown'],
+    ['glyph_zoo_tv.svg','Zoo TV'],['glyph_popmart.svg','PopMart'],['glyph_elevation.svg','Elevation'],['glyph_atomic_bomb_promo.svg','Atomic Bomb promo shows'],
+    ['glyph_vertigo.svg','Vertigo'],['glyph_innocence_experience.svg','iNNOCENCE + eXPERIENCE'],['glyph_joshua_tree_2017.svg','The Joshua Tree 2017'],
+    ['glyph_experience_innocence.svg','eXPERIENCE + iNNOCENCE'],['glyph_joshua_tree_2019.svg','The Joshua Tree 2019'],['glyph_sphere.svg','Sphere residency'],
+    ['glyph_carnaval_de_luz_promo.svg','Carnival De Luz promo'],['glyph_no_tour.svg','(No tour)']];
+  document.getElementById('g_list').innerHTML = glyphs.map(([f, n]) =>
+    `<figure><img src="images/${f}" alt="${n} icon"><figcaption>${n}</figcaption></figure>`).join('');
+  document.getElementById('b_list').innerHTML = ERAS.map(e =>
+    `<figure><img src="images/${e.badge}" alt="${e.name}" width="96" height="96"><figcaption>${e.name}</figcaption></figure>`).join('');
+  const photos = [['photo_boy_1981_toronto.jpg','Boy Tour · Toronto 1981','P Douglas Middlemiss · CC BY-SA 4.0'],
+    ['photo_war_1983_dublin.jpg','War Tour · Dublin 1983','Colm Henry · CC BY-SA 3.0'],
+    ['photo_unforgettable_fire_1984_sydney.jpg','The Unforgettable Fire Tour · Sydney 1984','Michael Richardson · CC BY-SA 4.0'],
+    ['photo_joshua_tree_1987_dublin.jpg','The Joshua Tree Tour · Croke Park 1987','Damian McDonagh · CC BY-SA 4.0'],
+    ['photo_lovetown_1990_rotterdam.jpg','Lovetown Tour · Rotterdam 1990 (small tile only)','Jeroen Polman · CC BY-SA 4.0'],
+    ['photo_zoo_tv_1992_kiel.jpg','Zoo TV Tour · Kiel 1992','Jeroen Polman · CC BY-SA 4.0'],
+    ['photo_zoo_tv_1992_foxborough_wide.jpg','Zoo TV Tour · Foxborough 1992','Jeff Topping · CC BY-SA 4.0'],
+    ['photo_popmart_1997_reggio_emilia.jpg','PopMart Tour · Reggio Emilia 1997','Giorgio Moscardi · CC BY-SA 3.0'],
+    ['photo_elevation_2001_philadelphia.jpg','Elevation Tour · Philadelphia 2001','Dmolavi · CC BY-SA 4.0'],
+    ['photo_vertigo_2005_new_york.jpg','Vertigo Tour · Madison Square Garden 2005','Zachary Gillman · CC BY 2.5'],
+    ['photo_360_2010_rome.jpg','U2 360° Tour · Rome 2010','Blackcat · CC BY-SA 3.0'],
+    ['photo_innocence_experience_2015_antwerp.jpg','iNNOCENCE + eXPERIENCE · Antwerp 2015','U2start · CC BY 2.0'],
+    ['photo_joshua_tree_2017_manchester_tn.jpg','The Joshua Tree Tour 2017 · Bonnaroo','Aylish Connolly · CC BY-SA 4.0'],
+    ['photo_experience_innocence_2018_newark.jpg','eXPERIENCE + iNNOCENCE · Newark 2018','Jonathan Schilling · CC BY-SA 4.0'],
+    ['photo_joshua_tree_2019_singapore.jpg','The Joshua Tree Tour 2019 · Singapore','U2mike · CC BY-SA 4.0'],
+    ['photo_sphere_2023_las_vegas.jpg','Sphere · Las Vegas 2023','lightpants · CC BY 4.0'],
+    ['photo_sphere_2023_las_vegas_bow.jpg','Sphere · Las Vegas 2023','bridonohue · CC BY-SA 4.0']];
+  document.getElementById('ph_list').innerHTML = photos.map(([f, t, a]) =>
+    `<figure><img src="images/${f}" alt="${t}"><figcaption><b>${t}</b><br>${a} · Wikimedia Commons</figcaption></figure>`).join('');
+})();
+
+// ---------- Tabs, labels, scaling ----------
+const scaler = document.getElementById('scaler');
+function fit() {
+  const on = document.querySelector('.page.on');
+  if (on.id === 'images') { scaler.style.transform = ''; scaler.style.height = ''; return; }
+  const s = Math.min(1, (window.innerWidth - 32) / 1280);
+  scaler.style.transform = `scale(${s})`; scaler.style.height = (720 * s) + 'px';
+}
+document.querySelectorAll('[role=tab]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[role=tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === b.dataset.p));
+  fit();
+}));
+document.getElementById('lbl').addEventListener('click', e => {
+  const on = document.body.classList.toggle('labels'); e.target.setAttribute('aria-pressed', on);
+});
+const h = location.hash.slice(1).split('-');
+const start = document.querySelector(`[data-p="${h[0]}"]`); if (start) start.click();
+if (h.includes('labels')) document.getElementById('lbl').click();
+const eraHash = location.hash.match(/era(\d)/); if (eraHash) selectEra(Number(eraHash[1]));
+window.addEventListener('resize', fit); fit();
+</script>
+</body>
+</html>

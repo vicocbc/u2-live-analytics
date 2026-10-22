@@ -1,0 +1,141 @@
+/// Venues with city, country, continent and coordinates.
+table dim_venue
+	lineageTag: 628c3f5a-8f65-4831-9f7b-a88deddff09a
+	sourceLineageTag: [dbo].[dim_venue]
+
+	/// Surrogate key; -1 = Unknown.
+	column venue_key
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: b904f40f-22ed-40c5-8012-8f2354c7478d
+		sourceLineageTag: venue_key
+		summarizeBy: none
+		sourceColumn: venue_key
+
+		annotation SummarizationSetBy = Automatic
+
+	/// setlist.fm venue id.
+	column venue_id
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: a2946080-1566-499e-8e22-d2f093d3627e
+		sourceLineageTag: venue_id
+		summarizeBy: none
+		sourceColumn: venue_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Venue name from setlist.fm.
+	column venue_name
+		dataType: string
+		lineageTag: da36d96f-dd9c-4bee-bbb5-7f14999cf087
+		sourceLineageTag: venue_name
+		summarizeBy: none
+		sourceColumn: venue_name
+
+		annotation SummarizationSetBy = Automatic
+
+	/// City.
+	column city_name
+		dataType: string
+		lineageTag: 2d051653-c104-4bb1-acae-01c4a1a24715
+		sourceLineageTag: city_name
+		dataCategory: City
+		summarizeBy: none
+		sourceColumn: city_name
+
+		annotation SummarizationSetBy = Automatic
+
+	/// State or province code where setlist.fm has one.
+	column state_code
+		dataType: string
+		lineageTag: e585132c-051c-433c-a429-550ec7e40241
+		sourceLineageTag: state_code
+		dataCategory: StateOrProvince
+		summarizeBy: none
+		sourceColumn: state_code
+
+		annotation SummarizationSetBy = Automatic
+
+	/// ISO country code.
+	column country_code
+		dataType: string
+		lineageTag: ef341fcf-d997-4126-a22a-7b852a7c6651
+		sourceLineageTag: country_code
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: country_code
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Country.
+	column country_name
+		dataType: string
+		lineageTag: fc477788-032e-442f-ac61-98451bc02215
+		sourceLineageTag: country_name
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: country_name
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Continent from the country code (u2lib).
+	column continent
+		dataType: string
+		lineageTag: d465e2e3-8a7d-405a-976d-9650effadc2d
+		sourceLineageTag: continent
+		dataCategory: Continent
+		summarizeBy: none
+		sourceColumn: continent
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Latitude of the city (setlist.fm).
+	column latitude
+		dataType: double
+		lineageTag: 9fdbfc15-f6d9-44e6-aea6-004e44c4c961
+		sourceLineageTag: latitude
+		dataCategory: Latitude
+		summarizeBy: none
+		sourceColumn: latitude
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Longitude of the city (setlist.fm).
+	column longitude
+		dataType: double
+		lineageTag: b33196f3-2c3e-485e-a3d4-b4c46af2656f
+		sourceLineageTag: longitude
+		dataCategory: Longitude
+		summarizeBy: none
+		sourceColumn: longitude
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column _built_at
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		isAvailableInMdx: false
+		lineageTag: 0a1fa9bb-6676-47cc-920f-6d43da54f83f
+		sourceLineageTag: _built_at
+		summarizeBy: none
+		sourceColumn: _built_at
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_venue = entity
+		mode: directLake
+		source
+			entityName: dim_venue
+			schemaName: dbo
+			expressionSource: 'DirectLake - wh_gold'
+

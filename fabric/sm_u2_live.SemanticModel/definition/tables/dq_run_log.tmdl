@@ -1,0 +1,80 @@
+/// Data quality checks of every run (all layers); shown only on the About page.
+table dq_run_log
+	isHidden
+	lineageTag: af4cc186-5874-4caa-872a-272178d1bfe4
+	sourceLineageTag: [dbo].[dq_run_log]
+
+	/// Run id (UTC yyyyMMddTHHmmssZ) of the notebook or Gold build.
+	column run_id
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: f188a67f-2c4f-4e02-b1f7-85a981b9459f
+		sourceLineageTag: run_id
+		summarizeBy: none
+		sourceColumn: run_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// bronze, silver or gold.
+	column layer
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: 9544c40f-b084-4f67-aa2e-4ee97eecce65
+		sourceLineageTag: layer
+		summarizeBy: none
+		sourceColumn: layer
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Name of the data quality check.
+	column check_name
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: 899009d1-90f3-4e6d-b1cb-20b9ce9b2c7e
+		sourceLineageTag: check_name
+		summarizeBy: none
+		sourceColumn: check_name
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Measured value as text.
+	column value
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: 71a74d2e-0b24-486c-a470-63604f28ee6e
+		sourceLineageTag: value
+		summarizeBy: none
+		sourceColumn: value
+
+		annotation SummarizationSetBy = Automatic
+
+	/// pass, warning or fail.
+	column status
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: 436f709d-b7bc-4b15-bac4-2248c6faddbe
+		sourceLineageTag: status
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	/// UTC time of the check.
+	column checked_at
+		dataType: dateTime
+		formatString: yyyy-mm-dd hh:nn:ss
+		isAvailableInMdx: false
+		lineageTag: 98c97e5d-86c3-4c86-809d-b75aa2c1e9a4
+		sourceLineageTag: checked_at
+		summarizeBy: none
+		sourceColumn: checked_at
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dq_run_log = entity
+		mode: directLake
+		source
+			entityName: dq_run_log
+			schemaName: dbo
+			expressionSource: 'DirectLake - wh_gold'
+

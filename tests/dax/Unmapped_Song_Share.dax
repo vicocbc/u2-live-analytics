@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: 0.000341 = ROUND(10 / 29366, 6) (T-SQL decimal cast shows 0.000340) (Totals: unmapped_share)
+EVALUATE ROW ( "Unmapped Song Share %", ROUND ( [Unmapped Song Share %], 6 ) )

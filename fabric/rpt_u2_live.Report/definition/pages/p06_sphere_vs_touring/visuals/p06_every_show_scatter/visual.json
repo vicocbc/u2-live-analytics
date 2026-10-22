@@ -1,0 +1,260 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+    "name": "p06_every_show_scatter",
+    "position": {
+        "x": 560,
+        "y": 448,
+        "z": 11000,
+        "height": 240,
+        "width": 696,
+        "tabOrder": 11000
+    },
+    "visual": {
+        "visualType": "scatterChart",
+        "query": {
+            "queryState": {
+                "Category": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dim_show"
+                                        }
+                                    },
+                                    "Property": "show_label"
+                                }
+                            },
+                            "queryRef": "dim_show.show_label",
+                            "nativeQueryRef": "show_label"
+                        }
+                    ]
+                },
+                "X": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Schema": "extension",
+                                            "Entity": "fact_show"
+                                        }
+                                    },
+                                    "Property": "Show Year Decimal"
+                                }
+                            },
+                            "queryRef": "fact_show.Show Year Decimal",
+                            "nativeQueryRef": "Show Year Decimal",
+                            "displayName": "Year"
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Schema": "extension",
+                                            "Entity": "fact_show"
+                                        }
+                                    },
+                                    "Property": "Songs in Show p06"
+                                }
+                            },
+                            "queryRef": "fact_show.Songs in Show p06",
+                            "nativeQueryRef": "Songs in Show p06",
+                            "displayName": "Songs in the show"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Measure": {
+                                            "Expression": {
+                                                "SourceRef": {
+                                                    "Schema": "extension",
+                                                    "Entity": "fact_show"
+                                                }
+                                            },
+                                            "Property": "Show Dot Colour p06"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "selector": {
+                        "data": [
+                            {
+                                "dataViewWildcard": {
+                                    "matchingOption": 1
+                                }
+                            }
+                        ]
+                    }
+                }
+            ],
+            "valueAxis": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "gridlineShow": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "labelColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#A3A9B3'"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "showAxisTitle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "categoryAxis": [
+                {
+                    "properties": {
+                        "gridlineShow": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "labelDisplayUnits": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        },
+                        "labelColor": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#A3A9B3'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualHeader": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "text": {
+                            "expr": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Schema": "extension",
+                                            "Entity": "fact_show"
+                                        }
+                                    },
+                                    "Property": "Title p06 every show"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "altText": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Every show as a dot: songs per show by date; Sphere residency shows in amber, compared tours in grey'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

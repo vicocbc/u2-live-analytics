@@ -1,0 +1,996 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json",
+    "name": "extension",
+    "entities": [
+        {
+            "name": "fact_show",
+            "measures": [
+                {
+                    "name": "Header p01",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>\" & [Headline p01] & \"</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>\" & [First Glimpse p01] & \"</div>\"",
+                    "description": "HTML: page headline and intro paragraph from the model text measures (T-35).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Headline p01"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "First Glimpse p01"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Header p01 · p01_headline",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:144px;overflow:hidden'>\" & [Header p01] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Header p01"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "KPI Tiles p01",
+                    "dataType": "Text",
+                    "expression": "\"<div style='display:flex;gap:28px'>\" & \"<div style='display:flex;gap:10px;align-items:flex-start'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='28' height='28' aria-hidden='true'><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 16h36v6a4 4 0 000 8v6H6v-6a4 4 0 000-8z'/><path d='M30 16v20' stroke-dasharray='2 3'/></g></svg><div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:46px;line-height:1;color:#F2A93B'>\" & FORMAT ( [Shows], \"#,0\", \"en-US\" ) & \"</div><div style='color:#ECEDEF;font-size:13px'>shows</div><div style='font-size:11px;font-weight:600;color:\" & IF ( [Shows vs Previous Era] > 0, \"#93C47D\", IF ( [Shows vs Previous Era] < 0, \"#E06666\", \"#A3A9B3\" ) ) & \"'>\" & IF ( ISBLANK ( [Shows vs Previous Era] ), \"all eras\", IF ( [Shows vs Previous Era] > 0, \"▲ +\", \"▼ \" ) & FORMAT ( [Shows vs Previous Era], \"#,0\", \"en-US\" ) & \" vs previous era\" ) & \"</div></div></div>\" & \"<div style='display:flex;gap:10px;align-items:flex-start'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='28' height='28' aria-hidden='true'><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M18 36V12l20-4v24'/><circle cx='13' cy='36' r='5'/><circle cx='33' cy='32' r='5'/></g></svg><div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:46px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Distinct Songs], \"#,0\", \"en-US\" ) & \"</div><div style='color:#ECEDEF;font-size:13px'>different songs</div><div style='font-size:11px;font-weight:600;color:\" & IF ( [Distinct Songs vs Previous Era] > 0, \"#93C47D\", IF ( [Distinct Songs vs Previous Era] < 0, \"#E06666\", \"#A3A9B3\" ) ) & \"'>\" & IF ( ISBLANK ( [Distinct Songs vs Previous Era] ), \"all eras\", IF ( [Distinct Songs vs Previous Era] > 0, \"▲ +\", \"▼ \" ) & FORMAT ( [Distinct Songs vs Previous Era], \"#,0\", \"en-US\" ) & \" vs previous era\" ) & \"</div></div></div>\" & \"<div style='display:flex;gap:10px;align-items:flex-start'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='28' height='28' aria-hidden='true'><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 42s-13-12-13-23a13 13 0 0126 0c0 11-13 23-13 23z'/><circle cx='24' cy='19' r='5'/></g></svg><div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:46px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Countries], \"#,0\", \"en-US\" ) & \"</div><div style='color:#ECEDEF;font-size:13px'>countries</div><div style='font-size:11px;font-weight:600;color:\" & IF ( [Countries vs Previous Era] > 0, \"#93C47D\", IF ( [Countries vs Previous Era] < 0, \"#E06666\", \"#A3A9B3\" ) ) & \"'>\" & IF ( ISBLANK ( [Countries vs Previous Era] ), \"all eras\", IF ( [Countries vs Previous Era] > 0, \"▲ +\", \"▼ \" ) & FORMAT ( [Countries vs Previous Era], \"#,0\", \"en-US\" ) & \" vs previous era\" ) & \"</div></div></div>\" & \"</div>\"",
+                    "description": "HTML: three KPI tiles (icon, number, delta vs previous era) for HTML Content Secure.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Shows"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Distinct Songs"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "Countries"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "Shows vs Previous Era"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Distinct Songs vs Previous Era"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "Countries vs Previous Era"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "KPI Tiles p01 · p01_kpi_tiles",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:88px;overflow:hidden'>\" & [KPI Tiles p01] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "KPI Tiles p01"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Top Song Bar Color",
+                    "dataType": "Text",
+                    "expression": "IF ( RANKX ( ALLSELECTED ( dim_song[song_title] ), [Performances] ) = 1, \"#F2A93B\", \"#6FA8DC\" )",
+                    "description": "Hex colour for conditional formatting (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Performances"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p01 top10",
+                    "dataType": "Text",
+                    "expression": "\"The ten songs played most, of \" & FORMAT ( CALCULATE ( [Distinct Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \"\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Distinct Songs"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Rank 1 song_title by Performances",
+                    "dataType": "Integer",
+                    "expression": "VAR Cur = CALCULATE ( [Performances], REMOVEFILTERS ( dim_date ) ) VAR Me = SELECTEDVALUE ( dim_song[song_title] ) RETURN IF ( NOT ISBLANK ( Cur ) && NOT ISBLANK ( Me ), COUNTROWS ( FILTER ( ALLSELECTED ( dim_song[song_title] ), VAR V = CALCULATE ( [Performances], REMOVEFILTERS ( dim_date ) ) RETURN NOT ISBLANK ( V ) && ( V > Cur || ( V = Cur && dim_song[song_title] < Me ) ) ) ) + 1 )",
+                    "description": "Rank of song_title by [Performances] for an exact Top N (ties broken alphabetically)."
+                },
+                {
+                    "name": "Header p02",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>\" & [Headline p02] & \"</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>\" & [First Glimpse p02] & \"</div>\"",
+                    "description": "HTML: page headline and intro paragraph from the model text measures (T-35).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Headline p02"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "First Glimpse p02"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Header p02 · p02_headline",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:88px;overflow:hidden'>\" & [Header p02] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Header p02"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Top City Card p02",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:Segoe UI'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>\" & MAXX ( TOPN ( 1, VALUES ( dim_venue[city_name] ), [Shows] ), dim_venue[city_name] ) & \" · \" & FORMAT ( MAXX ( TOPN ( 1, VALUES ( dim_venue[city_name] ), [Shows] ), [Shows] ), \"#,0\", \"en-US\" ) & \"</div><div style='color:#ECEDEF;font-size:13px;margin-top:4px'>shows in the most-visited city (photo: Croke Park, Dublin, 1987)</div></div>\"",
+                    "description": "HTML: the most-visited city and its number of shows.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Shows"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Top City Card p02 · p02_top_city",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:68px;overflow:hidden'>\" & [Top City Card p02] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Top City Card p02"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p02 cities",
+                    "dataType": "Text",
+                    "expression": "\"All \" & FORMAT ( CALCULATE ( [Cities], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" cities, most shows first\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Cities"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p02 shows",
+                    "dataType": "Text",
+                    "expression": "\"\" & FORMAT ( CALCULATE ( [Shows], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" shows · right-click one for its setlist\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Shows"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ph Top Song Text",
+                    "dataType": "Text",
+                    "expression": "[Top Song Text]",
+                    "description": "Bound to model measure [Top Song Text] (T-35); kept so the text cards keep their binding.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Top Song Text"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ph Top Song Text · p03_top_song_callout",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:DIN, Bahnschrift, Segoe UI, sans-serif;font-size:28px;line-height:1.1;color:#F2A93B;font-weight:600;max-height:68px;overflow:hidden'>\" & [ph Top Song Text] & \"</div>\"",
+                    "description": "Typography wrapper (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "ph Top Song Text"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Header p03",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>\" & [Headline p03] & \"</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>\" & [First Glimpse p03] & \"</div>\"",
+                    "description": "HTML: page headline and intro paragraph from the model text measures (T-35).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Headline p03"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "First Glimpse p03"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Header p03 · p03_headline",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:144px;overflow:hidden'>\" & [Header p03] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Header p03"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p03 songs",
+                    "dataType": "Text",
+                    "expression": "\"All \" & FORMAT ( CALCULATE ( [Distinct Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" songs, most played first · right-click for the story\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Distinct Songs"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p03 rarities",
+                    "dataType": "Text",
+                    "expression": "\"All \" & FORMAT ( CALCULATE ( [Rarities], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" rarities (played twice or less), most recent first\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Rarities"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p03 covers",
+                    "dataType": "Text",
+                    "expression": "\"All \" & FORMAT ( CALCULATE ( [Cover Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" other people's songs, most played first\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Distinct Songs"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p03 guests",
+                    "dataType": "Text",
+                    "expression": "\"All \" & FORMAT ( CALCULATE ( [Guest Artists], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" guests on stage, most frequent first\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only)."
+                },
+                {
+                    "name": "Header p04",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>\" & [Headline p04] & \"</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>\" & [First Glimpse p04] & \"</div>\"",
+                    "description": "HTML: page headline and intro paragraph from the model text measures (T-35).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Headline p04"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "First Glimpse p04"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Header p04 · p04_headline",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:144px;overflow:hidden'>\" & [Header p04] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Header p04"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ph Annotation p04",
+                    "dataType": "Text",
+                    "expression": "[Annotation p04]",
+                    "description": "Bound to model measure [Annotation p04] (T-35); kept so the text cards keep their binding.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Annotation p04"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ph Annotation p04 · p04_area_note",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:Segoe UI;font-size:13px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:16px;overflow:hidden'>\" & [ph Annotation p04] & \"</div>\"",
+                    "description": "Typography wrapper (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "ph Annotation p04"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p04 albums",
+                    "dataType": "Text",
+                    "expression": "\"Which albums stay: all \" & FORMAT ( CALCULATE ( [Studio Albums], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" studio albums, share of songs per decade\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only)."
+                },
+                {
+                    "name": "Photo Card p04",
+                    "dataType": "Text",
+                    "expression": "VAR Img = [Image Data URI] RETURN \"<div style='position:relative;width:100%;height:240px;overflow:hidden;background:#0F1115'>\" & IF ( NOT ISBLANK ( Img ), \"<img src='\" & Img & \"' style='width:100%;height:240px;object-fit:cover;display:block'>\" ) & \"<div style='position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(to bottom, rgba(15,17,21,0), rgba(15,17,21,.92) 55%)'></div><div style='position:absolute;left:20px;right:20px;bottom:12px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>\" & FORMAT ( CALCULATE ( [Promoted Album Share %], dim_tour[tour_name] = \"Zoo TV\" ), \"0%\", \"en-US\" ) & \"</div><div style='color:#ECEDEF;font-size:13px;margin-top:4px'>\" & \"of the songs on Zoo TV came from Achtung Baby\" & \"</div><div style='color:#A3A9B3;font-size:9px;margin-top:4px'>\" & [Image Credit] & \"</div></div></div>\"",
+                    "description": "HTML photo card (photo_zoo_tv_1992_kiel): base64 photo, gradient, number, caption, credit.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Image Data URI"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "Image Credit"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Promoted Album Share %"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Promoted Album Label",
+                    "dataType": "Text",
+                    "expression": "VAR K = SELECTEDVALUE ( dim_tour[album_promoted_key] ) RETURN IF ( NOT ISBLANK ( K ) && K <> -1, LOOKUPVALUE ( dim_album[album_label], dim_album[album_key], K ) )",
+                    "description": "Short name of the album the tour promoted (inactive relationship, looked up by key)."
+                },
+                {
+                    "name": "Has Promoted Album",
+                    "dataType": "Integer",
+                    "expression": "VAR K = SELECTEDVALUE ( dim_tour[album_promoted_key] ) RETURN IF ( NOT ISBLANK ( K ) && K <> -1, 1, 0 )",
+                    "description": "1 for tours with a promoted album (table filter)."
+                },
+                {
+                    "name": "Title p04 tours",
+                    "dataType": "Text",
+                    "expression": "\"All \" & FORMAT ( CALCULATE ( [Tours with Promoted Album], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" tours with a new album: share from it\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only)."
+                },
+                {
+                    "name": "Header p05",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>\" & [Headline p05] & \"</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>\" & [First Glimpse p05] & \"</div>\"",
+                    "description": "HTML: page headline and intro paragraph from the model text measures (T-35).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Headline p05"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "First Glimpse p05"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Header p05 · p05_headline",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:144px;overflow:hidden'>\" & [Header p05] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Header p05"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p05 heatmap",
+                    "dataType": "Text",
+                    "expression": "\"All \" & FORMAT ( CALCULATE ( [Distinct Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" songs by decade, most played first (scroll for more)\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Distinct Songs"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p05 variety",
+                    "dataType": "Text",
+                    "expression": "\"All \" & FORMAT ( CALCULATE ( CALCULATE ( DISTINCTCOUNT ( fact_show[tour_key] ), REMOVEFILTERS ( dim_tour ) ), REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" tours, most fixed setlist first\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only)."
+                },
+                {
+                    "name": "Title p05 openers",
+                    "dataType": "Text",
+                    "expression": "\"Top openers: 3 of \" & FORMAT ( CALCULATE ( [Opener Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" openers\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only)."
+                },
+                {
+                    "name": "Rank 2 song_title by Opener Count",
+                    "dataType": "Integer",
+                    "expression": "VAR Cur = CALCULATE ( [Opener Count], REMOVEFILTERS ( dim_date ) ) VAR Me = SELECTEDVALUE ( dim_song[song_title] ) RETURN IF ( NOT ISBLANK ( Cur ) && NOT ISBLANK ( Me ), COUNTROWS ( FILTER ( ALLSELECTED ( dim_song[song_title] ), VAR V = CALCULATE ( [Opener Count], REMOVEFILTERS ( dim_date ) ) RETURN NOT ISBLANK ( V ) && ( V > Cur || ( V = Cur && dim_song[song_title] < Me ) ) ) ) + 1 )",
+                    "description": "Rank of song_title by [Opener Count] for an exact Top N (ties broken alphabetically)."
+                },
+                {
+                    "name": "Residency Callouts p06",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#ECEDEF'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='16' height='16' role='img' aria-label='Sphere residency: globe'><title>Sphere residency: globe</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='24' cy='24' r='17'/><path d='M8 19h32M8 29h32'/><ellipse cx='24' cy='24' rx='7' ry='17'/></g></svg> RESIDENCY · SPHERE, LAS VEGAS · 2023-24</div><div style='display:flex;gap:28px;margin-top:8px'>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>\" & FORMAT ( CALCULATE ( [Shows], REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ), \"#,0\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>shows</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>\" & FORMAT ( [Residency Songs per Show], \"0\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>songs a night</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>\" & FORMAT ( [Residency Achtung Baby Share %], \"0%\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>from Achtung Baby</div></div>\" & \"</div></div>\"",
+                    "description": "HTML: residency callouts on the Sphere photo.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Shows"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Residency Songs per Show"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Residency Achtung Baby Share %"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Residency Callouts p06 · p06_residency_callouts",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:120px;overflow:hidden'>\" & [Residency Callouts p06] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Residency Callouts p06"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Header p06",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>\" & [Headline p06] & \"</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>\" & [First Glimpse p06] & \"</div>\"",
+                    "description": "HTML: page headline and intro paragraph from the model text measures (T-35).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Headline p06"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "First Glimpse p06"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Header p06 · p06_headline",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:144px;overflow:hidden'>\" & [Header p06] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Header p06"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Head to Head p06",
+                    "dataType": "Text",
+                    "expression": "\"<div style='display:grid;grid-template-columns:140px 1fr 1fr 110px;row-gap:12px;align-items:center;font-family:Segoe UI'><div></div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;color:#F2A93B'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='14' height='14' role='img' aria-label='Sphere residency: globe'><title>Sphere residency: globe</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='24' cy='24' r='17'/><path d='M8 19h32M8 29h32'/><ellipse cx='24' cy='24' rx='7' ry='17'/></g></svg> RESIDENCY</div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;color:#A3A9B3'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='14' height='14' role='img' aria-label='Innocence + Experience: light bulb'><title>Innocence + Experience: light bulb</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M18 30c-4-3-6-7-6-11a12 12 0 0124 0c0 4-2 8-6 11v4H18z'/><path d='M19 39h10'/></g></svg> TOURING</div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;color:#A3A9B3'>DIFFERENCE</div>\" & \"<div style='color:#ECEDEF;font-size:13px'>Songs a night</div>\" & \"<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#F2A93B;width:\" & INT ( 140 * DIVIDE ( COALESCE ( [Residency Songs per Show], 0 ), 30 ) ) & \"px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#F2A93B'>\" & FORMAT ( COALESCE ( [Residency Songs per Show], 0 ), \"0.0\", \"en-US\" ) & \"</span></div>\" & \"<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#6E7581;width:\" & INT ( 140 * DIVIDE ( COALESCE ( [Touring Songs per Show], 0 ), 30 ) ) & \"px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#ECEDEF'>\" & FORMAT ( COALESCE ( [Touring Songs per Show], 0 ), \"0.0\", \"en-US\" ) & \"</span></div>\" & \"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;color:\" & IF ( COALESCE ( [Difference Songs per Show], 0 ) >= 0, \"#F2A93B\", \"#E06666\" ) & \"'>\" & IF ( COALESCE ( [Difference Songs per Show], 0 ) > 0, \"+\", \"\" ) & FORMAT ( COALESCE ( [Difference Songs per Show], 0 ), \"0.0\", \"en-US\" ) & \"</div>\" & \"<div style='color:#ECEDEF;font-size:13px'>Different songs</div>\" & \"<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#F2A93B;width:\" & INT ( 140 * DIVIDE ( COALESCE ( [Residency Distinct Songs], 0 ), MAX ( [Residency Distinct Songs], [Touring Distinct Songs] ) ) ) & \"px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#F2A93B'>\" & FORMAT ( COALESCE ( [Residency Distinct Songs], 0 ), \"#,0\", \"en-US\" ) & \"</span></div>\" & \"<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#6E7581;width:\" & INT ( 140 * DIVIDE ( COALESCE ( [Touring Distinct Songs], 0 ), MAX ( [Residency Distinct Songs], [Touring Distinct Songs] ) ) ) & \"px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#ECEDEF'>\" & FORMAT ( COALESCE ( [Touring Distinct Songs], 0 ), \"#,0\", \"en-US\" ) & \"</span></div>\" & \"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;color:\" & IF ( COALESCE ( [Difference Distinct Songs], 0 ) >= 0, \"#F2A93B\", \"#E06666\" ) & \"'>\" & IF ( COALESCE ( [Difference Distinct Songs], 0 ) > 0, \"+\", \"\" ) & FORMAT ( COALESCE ( [Difference Distinct Songs], 0 ), \"#,0\", \"en-US\" ) & \"</div>\" & \"<div style='color:#ECEDEF;font-size:13px'>Achtung Baby share</div>\" & \"<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#F2A93B;width:\" & INT ( 140 * DIVIDE ( COALESCE ( [Residency Achtung Baby Share %], 0 ), 1 ) ) & \"px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#F2A93B'>\" & FORMAT ( COALESCE ( [Residency Achtung Baby Share %], 0 ), \"0%\", \"en-US\" ) & \"</span></div>\" & \"<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#6E7581;width:\" & INT ( 140 * DIVIDE ( COALESCE ( [Touring Achtung Baby Share %], 0 ), 1 ) ) & \"px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#ECEDEF'>\" & FORMAT ( COALESCE ( [Touring Achtung Baby Share %], 0 ), \"0%\", \"en-US\" ) & \"</span></div>\" & \"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;color:\" & IF ( COALESCE ( [Difference Achtung Baby Share (pp)], 0 ) >= 0, \"#F2A93B\", \"#E06666\" ) & \"'>\" & IF ( COALESCE ( [Difference Achtung Baby Share (pp)], 0 ) > 0, \"+\", \"\" ) & FORMAT ( COALESCE ( [Difference Achtung Baby Share (pp)], 0 ), \"0\", \"en-US\" ) & \" pp</div>\" & \"</div>\"",
+                    "description": "HTML: residency vs touring head-to-head with bars and differences.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Residency Songs per Show"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Touring Songs per Show"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Difference Songs per Show"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Residency Distinct Songs"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Touring Distinct Songs"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Difference Distinct Songs"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Residency Achtung Baby Share %"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Touring Achtung Baby Share %"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Difference Achtung Baby Share (pp)"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Head to Head p06 · p06_head_to_head",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:180px;overflow:hidden'>\" & [Head to Head p06] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Head to Head p06"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ph Annotation p06",
+                    "dataType": "Text",
+                    "expression": "[Annotation p06]",
+                    "description": "Bound to model measure [Annotation p06] (T-35); kept so the text cards keep their binding.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Annotation p06"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "ph Annotation p06 · p06_note",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:Segoe UI;font-size:13px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:20px;overflow:hidden'>\" & [ph Annotation p06] & \"</div>\"",
+                    "description": "Typography wrapper (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "ph Annotation p06"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Show Year Decimal",
+                    "dataType": "Double",
+                    "expression": "IF ( CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0, CALCULATE ( VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 ), REMOVEFILTERS ( dim_tour ) ), IF ( ISFILTERED ( dim_tour[tour_name_display] ), VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 ), CALCULATE ( VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 ), KEEPFILTERS ( dim_tour[era] = \"2015-2019 Innocence and Experience\" ) ) ) )",
+                    "description": "Show date as a decimal year: residency shows always, other shows of the compared tours.",
+                    "formatString": "0"
+                },
+                {
+                    "name": "Songs in Show p06",
+                    "dataType": "Integer",
+                    "expression": "IF ( CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0, CALCULATE ( [Performances], REMOVEFILTERS ( dim_tour ) ), IF ( ISFILTERED ( dim_tour[tour_name_display] ), [Performances], CALCULATE ( [Performances], KEEPFILTERS ( dim_tour[era] = \"2015-2019 Innocence and Experience\" ) ) ) )",
+                    "description": "Songs in the show: residency shows always, other shows of the compared tours (default 2015-2019).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Performances"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Show Dot Colour p06",
+                    "dataType": "Text",
+                    "expression": "IF ( CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0, \"#F2A93B\", \"#6E7581\" )",
+                    "description": "Accent for residency shows, grey for touring shows (presentation only)."
+                },
+                {
+                    "name": "Title p06 every show",
+                    "dataType": "Text",
+                    "expression": "\"Every show, one dot: Sphere (amber) vs \" & IF ( ISFILTERED ( dim_tour[tour_name_display] ), IF ( COUNTROWS ( VALUES ( dim_tour[tour_name_display] ) ) <= 2, CONCATENATEX ( VALUES ( dim_tour[tour_name_display] ), dim_tour[tour_name_display], \" and \" ), COUNTROWS ( VALUES ( dim_tour[tour_name_display] ) ) & \" tours\" ), \"the 2015-2019 tours\" ) & \" (grey) · right-click a dot for its setlist\"",
+                    "description": "Dynamic title of the p06 every-show chart."
+                },
+                {
+                    "name": "Song Card p07",
+                    "dataType": "Text",
+                    "expression": "IF ( HASONEVALUE ( dim_song[song_title] ), \"<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>SONG · \" & UPPER ( COALESCE ( CALCULATE ( SELECTEDVALUE ( dim_album[album_label] ), dim_song ), \"not on a studio album\" ) ) & IF ( NOT ISBLANK ( SELECTEDVALUE ( dim_song[first_release_year] ) ), \" (\" & SELECTEDVALUE ( dim_song[first_release_year] ) & \")\" ) & \"</div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:36px;line-height:1.05;color:#ECEDEF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>\" & [Selected Song] & \"</div><div style='display:flex;gap:30px;margin-top:12px'>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#F2A93B'>\" & FORMAT ( [Performances], \"#,0\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>performances</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [First Played Date], \"yyyy-mm-dd\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>live debut</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Last Played Date], \"yyyy-mm-dd\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>last played</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Years Since Last Played], \"0\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>years since</div></div>\" & \"</div></div>\", \"<div style='font-family:Segoe UI;color:#A3A9B3;font-size:14px;padding-top:8px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;color:#ECEDEF'>Nothing selected yet</div>Right-click a song on the Songs page and choose Drill through → Song to see its story.</div>\" )",
+                    "description": "HTML: song drill-through card, or a prompt when no single song is in context.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Selected Song"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Performances"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "First Played Date"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Last Played Date"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Years Since Last Played"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Is One Song",
+                    "dataType": "Integer",
+                    "expression": "IF ( HASONEVALUE ( dim_song[song_title] ), 1, 0 )",
+                    "description": "1 when exactly one song is in context (drill-through page filter)."
+                },
+                {
+                    "name": "Song Card p07 · p07_song_card",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:136px;overflow:hidden'>\" & [Song Card p07] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Song Card p07"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Title p07 shows",
+                    "dataType": "Text",
+                    "expression": "\"Every time it was played: \" & FORMAT ( CALCULATE ( [Shows Played], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), \"#,0\", \"en-US\" ) & \" shows · right-click one for its setlist\"",
+                    "description": "Visual title with the Top N cut and the total (presentation only)."
+                },
+                {
+                    "name": "Position p07",
+                    "dataType": "Text",
+                    "expression": "IF ( HASONEVALUE ( dim_song[song_title] ), \"<div style='font-family:Segoe UI'>\" & \"<div style='display:grid;grid-template-columns:90px 1fr 56px;align-items:center;gap:8px;margin:6px 0'><span style='color:#ECEDEF;font-size:13px'>Opener</span><div style='height:12px;border-radius:2px;background:#93C47D;width:\" & FORMAT ( MAX ( 100 * COALESCE ( DIVIDE ( [Opener Count], [Performances] ), 0 ), IF ( [Opener Count] > 0, 1, 0 ) ), \"0.0\", \"en-US\" ) & \"%'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:18px;color:#ECEDEF'>\" & FORMAT ( COALESCE ( DIVIDE ( [Opener Count], [Performances] ), 0 ), \"0%\", \"en-US\" ) & \"</span></div>\" & \"<div style='display:grid;grid-template-columns:90px 1fr 56px;align-items:center;gap:8px;margin:6px 0'><span style='color:#ECEDEF;font-size:13px'>Encore</span><div style='height:12px;border-radius:2px;background:#B4A7D6;width:\" & FORMAT ( MAX ( 100 * COALESCE ( DIVIDE ( [Encore Count], [Performances] ), 0 ), IF ( [Encore Count] > 0, 1, 0 ) ), \"0.0\", \"en-US\" ) & \"%'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:18px;color:#ECEDEF'>\" & FORMAT ( COALESCE ( DIVIDE ( [Encore Count], [Performances] ), 0 ), \"0%\", \"en-US\" ) & \"</span></div>\" & \"<div style='display:grid;grid-template-columns:90px 1fr 56px;align-items:center;gap:8px;margin:6px 0'><span style='color:#ECEDEF;font-size:13px'>Closer</span><div style='height:12px;border-radius:2px;background:#F6B26B;width:\" & FORMAT ( MAX ( 100 * COALESCE ( DIVIDE ( [Closer Count], [Performances] ), 0 ), IF ( [Closer Count] > 0, 1, 0 ) ), \"0.0\", \"en-US\" ) & \"%'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:18px;color:#ECEDEF'>\" & FORMAT ( COALESCE ( DIVIDE ( [Closer Count], [Performances] ), 0 ), \"0%\", \"en-US\" ) & \"</span></div>\" & \"<div style='color:#A3A9B3;font-size:11px;margin-top:6px'>Share of the song's performances; the rest were in the main set.</div></div>\", \"\" )",
+                    "description": "HTML: where in the night the song is played (opener, encore, closer shares).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Opener Count"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Encore Count"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Closer Count"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Performances"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Position p07 · p07_position",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:180px;overflow:hidden'>\" & [Position p07] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Position p07"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Ticket p08",
+                    "dataType": "Text",
+                    "expression": "VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) VAR SetRows = CALCULATETABLE ( SUMMARIZE ( fact_performance, fact_performance[setlist_position], fact_performance[set_name], dim_song[song_title], fact_performance[is_live_debut], fact_performance[is_cover], fact_performance[guest_artist], fact_performance[is_snippet], fact_performance[is_tape] ) ) VAR Tapes = COUNTROWS ( FILTER ( SetRows, fact_performance[is_tape] ) ) VAR Snips = COUNTROWS ( FILTER ( SetRows, fact_performance[is_snippet] && NOT fact_performance[is_tape] ) ) VAR Extras = Tapes + Snips VAR NoTour = CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name] ), fact_show ) = \"(No tour)\" RETURN IF ( HASONEVALUE ( dim_show[show_label] ), \"<div style='display:flex;background:#20242C;border-radius:10px;overflow:hidden;height:600px;font-family:Segoe UI'><div style='width:230px;padding:18px;border-right:2px dashed #0F1115;background:#262A33'>\" & SUBSTITUTE ( SUBSTITUTE ( CALCULATE ( [Tour Icon SVG], fact_show ), \"width='48'\", \"width='40'\" ), \"height='48'\", \"height='40'\" ) & \"<div style='color:#F2A93B;font-size:11px;letter-spacing:1.5px;font-weight:700;margin-top:10px'>\" & UPPER ( CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name_display] ), fact_show ) ) & \"</div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:36px;line-height:1.05;color:#ECEDEF'>\" & UPPER ( FORMAT ( D, \"d mmm\", \"en-US\" ) ) & \"<br>\" & YEAR ( D ) & \"</div><div style='margin-top:10px;font-size:12.5px;color:#A3A9B3'><b style='color:#ECEDEF'>\" & CALCULATE ( SELECTEDVALUE ( dim_venue[venue_name] ), fact_show ) & \"</b><br>\" & CALCULATE ( SELECTEDVALUE ( dim_venue[city_name] ), fact_show ) & \", \" & CALCULATE ( SELECTEDVALUE ( dim_venue[country_name] ), fact_show ) & \"</div>\" & \"<div style='margin-top:14px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Performances], \"#,0\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#A3A9B3'>songs\" & IF ( Extras > 0, \" + \" & Extras & IF ( Tapes > 0 && Snips = 0, IF ( Tapes = 1, \" tape\", \" tapes\" ), IF ( Snips > 0 && Tapes = 0, IF ( Snips = 1, \" snippet\", \" snippets\" ), \" tapes/snippets\" ) ) ) & \"</div></div>\" & IF ( NoTour, \"<div style='margin-top:14px;font-size:12px;color:#A3A9B3'>One-off show, outside a tour</div>\", \"<div style='margin-top:14px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Tour Avg Songs per Show], \"0.0\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#A3A9B3'>songs a night on this tour</div></div>\" ) & \"<div style='margin-top:14px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#F2A93B'>\" & FORMAT ( COALESCE ( [Live Debuts], 0 ), \"#,0\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#A3A9B3'>live debuts ★</div></div>\" & \"<div style='margin-top:14px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>\" & FORMAT ( COALESCE ( [Covers Played], 0 ), \"#,0\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#A3A9B3'>covers</div></div>\" & \"</div><div style='flex:1;padding:16px 20px;columns:2;column-gap:28px;font-size:12px'>\" & CONCATENATEX ( SetRows, VAR P = fact_performance[setlist_position] VAR S = fact_performance[set_name] VAR PrevP = MAXX ( FILTER ( SetRows, fact_performance[setlist_position] < P ), fact_performance[setlist_position] ) VAR PrevS = MAXX ( FILTER ( SetRows, fact_performance[setlist_position] = PrevP ), fact_performance[set_name] ) RETURN IF ( ISBLANK ( PrevP ) || S <> PrevS, \"<div style='color:#F2A93B;font-size:10px;letter-spacing:1.4px;font-weight:700;padding-top:8px'>\" & UPPER ( S ) & \"</div>\" ) & ( VAR Dim = fact_performance[is_snippet] || fact_performance[is_tape] RETURN \"<div style='display:flex;align-items:center;gap:8px;padding:2px 0;opacity:\" & IF ( Dim, \"0.55\", \"1\" ) & \"'><span style='color:#A3A9B3;width:20px;text-align:right;flex:none'>\" & P & \"</span><span style='color:#ECEDEF;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>\" & dim_song[song_title] & \"</span><span style='margin-left:auto;display:flex;gap:4px;flex:none'>\" & IF ( fact_performance[is_live_debut], \"<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#F2A93B;border:1px solid #F2A93B'>★ debut</span>\" ) & IF ( fact_performance[is_cover], \"<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#A3A9B3;border:1px solid #2A2F38'>cover</span>\" ) & IF ( NOT ISBLANK ( fact_performance[guest_artist] ), \"<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#A3A9B3;border:1px solid #2A2F38'>with \" & fact_performance[guest_artist] & \"</span>\" ) & IF ( fact_performance[is_tape], \"<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#A3A9B3;border:1px dashed #6E7581'>tape</span>\" ) & IF ( fact_performance[is_snippet], \"<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#A3A9B3;border:1px dashed #6E7581'>snippet</span>\" ) & \"</span></div>\" ), \"\", fact_performance[setlist_position], ASC ) & \"</div></div>\", \"<div style='font-family:Segoe UI;color:#A3A9B3;font-size:14px;padding-top:8px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;color:#ECEDEF'>Nothing selected yet</div>Right-click a show in a shows list (Road page, Sphere dots, or a song's list) and choose Drill through → Show.</div>\" )",
+                    "description": "HTML: show ticket stub with the setlist in position order, or a prompt when no show is selected.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Tour Icon SVG"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Performances"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Tour Avg Songs per Show"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Live Debuts"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Covers Played"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Ticket p08 · p08_ticket",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:608px;overflow:hidden'>\" & [Ticket p08] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Ticket p08"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Setlist URL p08",
+                    "dataType": "Text",
+                    "expression": "IF ( HASONEVALUE ( dim_show[show_label] ), SELECTEDVALUE ( dim_show[setlist_url] ) )",
+                    "description": "Web link of the selected show on setlist.fm."
+                },
+                {
+                    "name": "Setlist Link p08",
+                    "dataType": "Text",
+                    "expression": "IF ( NOT ISBLANK ( [Setlist URL p08] ), \"<a href='\" & [Setlist URL p08] & \"' target='_blank' style='font-family:Segoe UI;font-size:15px;color:#F2A93B;text-decoration:none;font-weight:600'>Open this show on setlist.fm ↗</a>\" )",
+                    "description": "HTML: link to the selected show on setlist.fm.",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Setlist URL p08"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Setlist Link p08 · p08_setlist_link",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:20px;overflow:hidden'>\" & [Setlist Link p08] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Setlist Link p08"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Author p09",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:Segoe UI;font-size:16px;color:#ECEDEF'>Built by <b>Vinicius Baccarini</b> · <a href='https://www.linkedin.com/in/vin%C3%ADcius-baccarini/' target='_blank' style='color:#F2A93B;text-decoration:none;font-weight:600'>LinkedIn ↗</a></div>\"",
+                    "description": "HTML: author line with LinkedIn link."
+                },
+                {
+                    "name": "Author p09 · p09_author",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:20px;overflow:hidden'>\" & [Author p09] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Author p09"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Limitations p09",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>LIMITATIONS</div><div style='display:flex;gap:30px;margin-top:6px'>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Shows] - [Shows with Setlist], \"#,0\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#A3A9B3;margin-top:4px'>shows without a setlist</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;line-height:1;color:#ECEDEF'>\" & IF ( [Unmapped Song Share %] < 0.001, \"< 0.1%\", FORMAT ( [Unmapped Song Share %], \"0.0%\", \"en-US\" ) ) & \"</div><div style='font-size:12px;color:#A3A9B3;margin-top:4px'>performances not matched to a song</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Last Refresh Date], \"yyyy-mm-dd\", \"en-US\" ) & \"</div><div style='font-size:12px;color:#A3A9B3;margin-top:4px'>last refresh</div></div>\" & \"</div><div style='font-size:12px;color:#A3A9B3;margin-top:10px'>Early club shows (1976-1980) are often missing. Snippets and tapes are flagged and not counted as performances.</div></div>\"",
+                    "description": "HTML: data limitations with numbers from the model.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Shows"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "Shows with Setlist"
+                            },
+                            {
+                                "entity": "fact_performance",
+                                "name": "Unmapped Song Share %"
+                            },
+                            {
+                                "entity": "fact_show",
+                                "name": "Last Refresh Date"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Limitations p09 · p09_limitations",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:192px;overflow:hidden'>\" & [Limitations p09] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Limitations p09"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Spike HTML",
+                    "dataType": "Text",
+                    "expression": "\"<div style='font-family:Segoe UI;color:#ECEDEF;font-size:13px'><p><b>1 · inline SVG:</b> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48' height='48' role='img' aria-label='Zoo TV: television set'><title>Zoo TV: television set</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><rect x='8' y='16' width='32' height='22' rx='3'/><path d='M18 8l6 8 6-8'/><path d='M14 22h14'/></g></svg></p><p><b>2 · SVG data URI in img:</b> <img width='48' src='data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48' height='48' role='img' aria-label='Zoo TV: television set'><title>Zoo TV: television set</title><g fill='none' stroke='%23ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><rect x='8' y='16' width='32' height='22' rx='3'/><path d='M18 8l6 8 6-8'/><path d='M14 22h14'/></g></svg>'></p><p><b>3 · base64 JPEG literal in img:</b><br><img width='160' src='data:image/jpeg;base64,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'></p><p><b>4 · photo from the model ([Image Data URI]):</b><br>\" & IF ( ISBLANK ( [Image Data URI] ), \"<i>report_image is empty: load seeds/report_images.csv first</i>\", \"<img width='240' src='\" & [Image Data URI] & \"'>\" ) & \"</p></div>\"",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_show",
+                                "name": "Image Data URI"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "name": "Spike HTML · p00_html_spike",
+                    "dataType": "Text",
+                    "expression": "\"<div style='height:492px;overflow:hidden'>\" & [Spike HTML] & \"</div>\"",
+                    "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+                    "references": {
+                        "measures": [
+                            {
+                                "schema": "extension",
+                                "entity": "fact_show",
+                                "name": "Spike HTML"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "fact_performance",
+            "measures": [
+                {
+                    "name": "Album Share (no zeros)",
+                    "dataType": "Double",
+                    "expression": "VAR S = [Album Share %] RETURN IF ( S >= 0.0005, S )",
+                    "description": "Album Share % with blanks instead of 0.0% (matrix).",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Album Share %"
+                            }
+                        ]
+                    },
+                    "formatString": "0.0%"
+                },
+                {
+                    "name": "Album Share Cell",
+                    "dataType": "Text",
+                    "expression": "VAR S = [Album Share %] VAR Dec = VALUE ( LEFT ( SELECTEDVALUE ( dim_date[decade] ), 4 ) ) VAR Rel = SELECTEDVALUE ( dim_album[release_year] ) RETURN IF ( S > 0, IF ( S < 0.0005, \"< 0.1%\", FORMAT ( S, \"0.0%\", \"en-US\" ) ), IF ( NOT ISBLANK ( Dec ) && NOT ISBLANK ( Rel ) && Dec + 9 >= Rel, \"0%\" ) )",
+                    "description": "Matrix cell text: blank before the album existed, 0% when not played, < 0.1% when tiny.",
+                    "references": {
+                        "measures": [
+                            {
+                                "entity": "fact_performance",
+                                "name": "Album Share %"
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+    ]
+}

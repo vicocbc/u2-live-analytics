@@ -1,0 +1,536 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+    "name": "p09_credits",
+    "position": {
+        "x": 632,
+        "y": 272,
+        "z": 14000,
+        "height": 416,
+        "width": 624,
+        "tabOrder": 99014
+    },
+    "visual": {
+        "visualType": "textbox",
+        "objects": {
+            "general": [
+                {
+                    "properties": {
+                        "paragraphs": [
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "PHOTO AND ICON CREDITS",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "9pt",
+                                            "color": "#F2A93B",
+                                            "fontWeight": "bold"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Bono performing with U2 in Toronto on May 19 1981",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · P Douglas Middlemiss · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Vinnie performing with U2 War Tour 1983 RDS Dublin",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Colm Henry · CC BY-SA 3.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2 on Unforgettable Fire Tour 09-09-1984",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Michael Richardson · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2 performing at Croke Park on Joshua Tree Tour on June 27 1987 (3)",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Damian McDonagh · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2 performing in Rotterdam on Lovetown Tour Jan 6 1990",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Jeroen Polman · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2 Kiel 13 juni 1992 - Jeroen Polman",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Jeroen Polman · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2 performing in Foxborough on Zoo TV Tour 8-20-1992 (10)",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Jeff Topping · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2-LiveInReggioEmilia-19970920-BStage",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Giorgio Moscardi · CC BY-SA 3.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "HeartWideShot jpg",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Dmolavi · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "2005-10-10 U2 @ MSG by ZG",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Zachary Gillman · CC BY 2.5 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "2010-10-08 U2 Live at Stadio Olimpico Rome 1",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Blackcat · CC BY-SA 3.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2 in Antwerp, Oct 14 2015 (22713908710)",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · U2start · CC BY 2.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2 at Bonnaroo on Joshua Tree Tour 2017 6-9-17",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Aylish Connolly · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "City of Blinding Lights on Experience and Innocence Tour in Newark 6-29-2018",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Jonathan Schilling · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Backstage view of U2 Joshua Tree Tour 2019 stage in Singapore Nov 30 2019",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · U2mike · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2 performing at Sphere in Las Vegas on Oct 13 2023 (3)",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · lightpants · CC BY 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2 performing at Sphere in Las Vegas on Oct 7 2023 (12)",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · bridonohue · CC BY-SA 4.0 · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "U2-360-tour-logo",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#ECEDEF",
+                                            "fontWeight": "bold"
+                                        }
+                                    },
+                                    {
+                                        "value": " · Live Nation (text logo) · Public domain (PD-textlogo; trademarked) · Wikimedia Commons",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            },
+                            {
+                                "textRuns": [
+                                    {
+                                        "value": "Photos resized and cropped; CC BY-SA images remain CC BY-SA. Tour glyphs, era badges, arrows and gradients: original drawings, project licence. Fan-made portfolio project, not affiliated with U2, their management or their label.",
+                                        "textStyle": {
+                                            "fontFamily": "Segoe UI",
+                                            "fontSize": "8pt",
+                                            "color": "#A3A9B3"
+                                        }
+                                    }
+                                ],
+                                "horizontalTextAlignment": "left"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "padding": [
+                {
+                    "properties": {
+                        "top": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        },
+                        "bottom": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        },
+                        "left": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        },
+                        "right": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "0D"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualHeader": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

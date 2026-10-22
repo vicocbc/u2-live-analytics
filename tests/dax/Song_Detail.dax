@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: I Will Follow 1065 / 1004 / 1980-05-31 / 2026-09-25 / 25 / 68 / 169; Pride 1025 / 1023 / 1984-08-29 / 2023-12-15 / 2 / 6 / 40 (Songs section)
+EVALUATE SUMMARIZECOLUMNS ( dim_song[song_title], TREATAS ( { "I Will Follow", "Pride (In the Name of Love)" }, dim_song[song_title] ), "Perf", [Performances], "Shows Played", [Shows Played], "First", [First Show Date], "Last", [Last Show Date], "Open", [Opener Count], "Close", [Closer Count], "Enc", [Encore Count] )

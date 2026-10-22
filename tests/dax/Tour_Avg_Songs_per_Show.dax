@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: 3.5686 = Early Days avg (Per tour: Early Days), first show bd6f156 is on Early Days
+EVALUATE CALCULATETABLE ( ROW ( "Tour Avg", ROUND ( [Tour Avg Songs per Show], 4 ) ), dim_show[setlist_id] = "bd6f156" )

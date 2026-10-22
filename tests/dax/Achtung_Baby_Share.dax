@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: 0.142614 (= ROUND(4188 / 29366, 6); T-SQL cast shows 0.142613) and 4188 (Totals: achtung_baby_share; Album share by album)
+EVALUATE ROW ( "Achtung Baby Share %", ROUND ( [Achtung Baby Share %], 6 ), "Achtung Baby Performances", [Achtung Baby Performances] )

@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: SELECT COUNT(*), LEN(...) on wh_gold.dbo.report_image / report_image_chunk, Gold run of 2026-10-21 20:02:55 UTC.
+-- Expected: 3 images; URI length = base64_length + len('data:<mime>;base64,'): photo_zoo_tv_1992_kiel 32772 + 23 = 32795 (5 chunks), photo_innocence_experience_2015_antwerp 24076 + 23 = 24099 (4), badge_era7_2018_newark 11936 + 22 = 11958 (2)
+EVALUATE ADDCOLUMNS ( VALUES ( report_image[image_id] ), "b64", CALCULATE ( SUM ( report_image[base64_length] ) ), "chunks", CALCULATE ( COUNTROWS ( report_image_chunk ) ), "uri length", LEN ( [Image Data URI] ), "start", LEFT ( [Image Data URI], 23 ) )

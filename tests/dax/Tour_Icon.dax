@@ -1,0 +1,3 @@
+-- Run through the powerbi-modeling MCP on sm_u2_live. Source: docs/design/images/glyph_*.svg (incl. glyph_u2_360.svg, degree sign written as &#176;).
+-- Expected: all 25 tours incl. (No tour) return SVG markup and a data:image/svg+xml;utf8, URI (U2 360° 465 characters); only the Unknown member is blank.
+EVALUATE ADDCOLUMNS ( VALUES ( dim_tour[tour_name] ), "svg length", LEN ( [Tour Icon SVG] ), "uri start", LEFT ( [Tour Icon], 26 ) )

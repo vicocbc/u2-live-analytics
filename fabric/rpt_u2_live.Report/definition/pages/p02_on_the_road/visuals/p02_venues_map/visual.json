@@ -1,0 +1,241 @@
+{
+    "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
+    "name": "p02_venues_map",
+    "position": {
+        "x": 24,
+        "y": 152,
+        "z": 3000,
+        "height": 536,
+        "width": 480,
+        "tabOrder": 3000
+    },
+    "visual": {
+        "visualType": "azureMap",
+        "query": {
+            "queryState": {
+                "Size": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Measure": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "fact_show"
+                                        }
+                                    },
+                                    "Property": "Shows"
+                                }
+                            },
+                            "queryRef": "fact_show.Shows",
+                            "nativeQueryRef": "Shows"
+                        }
+                    ]
+                },
+                "Y": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dim_venue"
+                                        }
+                                    },
+                                    "Property": "latitude"
+                                }
+                            },
+                            "queryRef": "dim_venue.latitude",
+                            "nativeQueryRef": "latitude"
+                        }
+                    ]
+                },
+                "X": {
+                    "projections": [
+                        {
+                            "field": {
+                                "Column": {
+                                    "Expression": {
+                                        "SourceRef": {
+                                            "Entity": "dim_venue"
+                                        }
+                                    },
+                                    "Property": "longitude"
+                                }
+                            },
+                            "queryRef": "dim_venue.longitude",
+                            "nativeQueryRef": "longitude"
+                        }
+                    ]
+                }
+            }
+        },
+        "objects": {
+            "mapControls": [
+                {
+                    "properties": {
+                        "defaultStyle": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'grayscale_dark'"
+                                }
+                            }
+                        },
+                        "autoZoom": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "showLabels": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showStylePicker": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        },
+                        "showNavigationControls": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "dataPoint": [
+                {
+                    "properties": {
+                        "fill": {
+                            "solid": {
+                                "color": {
+                                    "expr": {
+                                        "Literal": {
+                                            "Value": "'#6FA8DC'"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "bubbleLayer": [
+                {
+                    "properties": {
+                        "minBubbleRadius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "2D"
+                                }
+                            }
+                        },
+                        "maxRadius": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "14D"
+                                }
+                            }
+                        },
+                        "bubbleStrokeWidth": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "1D"
+                                }
+                            }
+                        },
+                        "borderShow": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "true"
+                                }
+                            }
+                        },
+                        "autoStrokeColor": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "visualContainerObjects": {
+            "background": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "subTitle": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "visualHeader": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "title": [
+                {
+                    "properties": {
+                        "show": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "false"
+                                }
+                            }
+                        }
+                    }
+                }
+            ],
+            "general": [
+                {
+                    "properties": {
+                        "altText": {
+                            "expr": {
+                                "Literal": {
+                                    "Value": "'Map of the cities U2 played, bubbles sized by number of shows'"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    }
+}

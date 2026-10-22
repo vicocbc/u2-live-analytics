@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: 1976-10-01 and 2026-09-25 (gold_validation.sql section 13)
+EVALUATE ROW ( "First", [First Show Date], "Last", [Last Show Date] )

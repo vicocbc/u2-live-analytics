@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: 1119 and 187: Covers Played uses dim_song[is_original] = false since 2026-10-22 (T-SQL: default performances joined to dim_song with is_original = 0 -> 1,119; setlist.fm's is_cover flag gives 1,316 because it also tags Miss Sarajevo, Your Blue Room, Silver and Gold, North and South of the River); guests 187
+EVALUATE ROW ( "Covers Played", [Covers Played], "Guest Appearances", [Guest Appearances] )

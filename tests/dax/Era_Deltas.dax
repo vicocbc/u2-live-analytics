@@ -1,0 +1,4 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: 1980-1985 era 489 shows, +304 vs 1976-1980 (185); sums of Per tour shows by era
+EVALUATE SUMMARIZECOLUMNS ( dim_tour[era], "Shows", [Shows], "dShows", [Shows vs Previous Era] )

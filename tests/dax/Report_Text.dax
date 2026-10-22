@@ -1,0 +1,16 @@
+-- Run through the powerbi-modeling MCP on sm_u2_live (T-35). Numbers cross-checked in T-SQL (scratch t35_checks.sql values below) and sql/review/measure_checks.sql.
+-- All FORMAT calls use the en-US culture; headlines <= 65 characters.
+-- Expected (all shows, Gold 2026-10-21 20:02:55 UTC):
+--   Headline p01: 1,874 shows in 50 years; I Will Follow played 1,065 times
+--   Busiest Year Text: 1981: 152 shows, the busiest year
+--   Headline p02: Dublin hosted 150 shows, more than any other city (T-SQL Dublin 150, US 774 = 41%)
+--   Headline p03: Ten songs make up 29% of everything they played (T-SQL top 10 = 8,624 / 29,366)
+--   First Glimpse p03: 304 songs, 111 played 50+ times, 80 once, 216 not played for 10+ years (T-SQL 111, 216)
+--   Top Song Text: I Will Follow · 1,065 times
+--   Headline p04: The 1980s albums still filled 43% of the 2015-2019 setlists (T-SQL 0.4253); career 54% (0.5381)
+--   Annotation p04: 2017: 70% of the set came from the 1980s albums (T-SQL 0.7043)
+--   Headline p05: The Joshua Tree Tour 2017 ran on rails: 31 songs, 21.7 a night
+--   First Glimpse p05: about 22 songs a night (18,727 / 833), 31 to 61 songs per tour
+--   Headline p06: At the Sphere, Achtung Baby was 54% of each night vs 14% touring
+--   Annotation p06: +40 points of Achtung Baby compared with touring
+EVALUATE ROW ( "H1", [Headline p01], "BY", [Busiest Year Text], "H2", [Headline p02], "H3", [Headline p03], "G3", [First Glimpse p03], "TS", [Top Song Text], "H4", [Headline p04], "A4", [Annotation p04], "H5", [Headline p05], "G5", [First Glimpse p05], "H6", [Headline p06], "A6", [Annotation p06] )

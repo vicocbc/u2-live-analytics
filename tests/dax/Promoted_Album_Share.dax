@@ -1,0 +1,5 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (section named below), Gold run 20261021T155954Z.
+-- Expected: 
+EVALUATE CALCULATETABLE ( ROW ( "Zoo TV", ROUND ( [Promoted Album Share %], 6 ) ), dim_tour[tour_name] = "Zoo TV" )
+EVALUATE ROW ( "Promoted Album Share %", ROUND ( [Promoted Album Share %], 6 ) )

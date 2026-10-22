@@ -1,0 +1,3 @@
+-- Run through the powerbi-modeling MCP on sm_u2_live. T-SQL on wh_gold, default performances (no tape/snippet/fragment), 2026-10-22 Gold.
+-- Expected: Cover Songs 123, Guest Artists 62 (64 when snippets/tapes are counted), Opener Songs 119 (122 incl. snippets/tapes/unmapped), Tours with Promoted Album 20, Studio Albums 15; Years Since Last Played blank at total, Pride 3
+EVALUATE ROW ( "Cover Songs", [Cover Songs], "Guest Artists", [Guest Artists], "Opener Songs", [Opener Songs], "Tours with Promoted Album", [Tours with Promoted Album], "Studio Albums", [Studio Albums], "YSLP total", [Years Since Last Played], "YSLP Pride", CALCULATE ( [Years Since Last Played], dim_song[song_title] = "Pride (In the Name of Love)" ) )
