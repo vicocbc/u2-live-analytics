@@ -55,7 +55,7 @@ flowchart LR
     SD[seeds/*.csv<br/>curated by hand]
   end
 
-  subgraph Fabric workspace "U2 Live Analytics"
+  subgraph WS["Fabric workspace: U2 Live Analytics"]
     subgraph BR[lk_bronze · Lakehouse]
       B1[bronze_setlistfm_* tables<br/>+ raw JSON in Files/bronze]
       B2[bronze_musicbrainz_* tables<br/>+ raw JSON in Files/bronze]
@@ -102,7 +102,7 @@ flowchart LR
 | Orchestration | Fabric Data Pipeline `pl_refresh` | [`fabric/pl_refresh.DataPipeline/`](fabric/pl_refresh.DataPipeline/) |
 | Semantic model | Direct Lake, TMDL (PBIP) | [`fabric/sm_u2_live.SemanticModel/`](fabric/sm_u2_live.SemanticModel/) |
 | Report | Power BI, PBIR (PBIP), HTML Content Secure and Deneb (certified visuals) | [`fabric/rpt_u2_live.Report/`](fabric/rpt_u2_live.Report/), [`scripts/gen_report.py`](scripts/gen_report.py) |
-| CI | GitHub Actions: ruff + pytest | `.github/workflows/` (added in T-40) |
+| CI | GitHub Actions: ruff + pytest on Python 3.11 and 3.12 | [`.github/workflows/ci.yml`](.github/workflows/ci.yml) |
 
 Details: [`docs/architecture.md`](docs/architecture.md) and one spec per layer in [`docs/specs/`](docs/specs/).
 

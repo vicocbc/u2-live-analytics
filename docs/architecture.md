@@ -10,7 +10,7 @@ flowchart LR
     SD[seeds/*.csv<br/>curated by us]
   end
 
-  subgraph Fabric workspace "U2 Live Analytics"
+  subgraph WS["Fabric workspace: U2 Live Analytics"]
     subgraph BR[lk_bronze · Lakehouse]
       B1[bronze_setlistfm_* tables<br/>+ raw JSON in Files/bronze]
       B2[bronze_musicbrainz_* tables<br/>+ raw JSON in Files/bronze]
