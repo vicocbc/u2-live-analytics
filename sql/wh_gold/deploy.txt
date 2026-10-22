@@ -1,0 +1,21 @@
+# Apply in this order with:
+#   sqlcmd -S $env:U2_SQL_SERVER -d wh_gold --authentication-method ActiveDirectoryDefault -b -i <file>
+# Every script is idempotent. Tables first, then procedures (callees before callers).
+tables/dq_run_log.sql
+tables/dim_date.sql
+tables/dim_album.sql
+tables/dim_song.sql
+tables/dim_tour.sql
+tables/dim_venue.sql
+tables/dim_show.sql
+tables/fact_performance.sql
+tables/fact_show.sql
+tables/report_image.sql
+tables/report_image_chunk.sql
+tables/alter_001_t27_t28_columns.sql
+tables/alter_002_dim_venue_coordinates_decimal.sql
+procedures/usp_build_dimensions.sql
+procedures/usp_build_facts.sql
+procedures/usp_dq_gold.sql
+procedures/usp_build_gold.sql
+procedures/usp_assert_gold.sql

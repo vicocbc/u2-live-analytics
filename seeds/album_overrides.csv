@@ -1,0 +1,4 @@
+release_group_id,title,album_type,note
+f8d10640-6e3a-49df-9786-1f741d672ce0,Songs of Surrender,re-recording,"2023 re-recordings of 40 earlier songs. MusicBrainz types it as a plain Album with no secondary type, so without this row it would count as a new studio album; re-recording keeps it out of is_studio and out of first_album_id"
+bf965ead-7c91-3a9b-93c8-cf941242ee65,Rattle and Hum,studio,"1988 release (MusicBrainz: Album + Soundtrack). Part studio, part live; counted as a studio album in the band's discography and promoted on the Lovetown tour, so treated as studio"
+fa236320-8ab3-3d4c-8c63-c4a35f76f4b2,Rattle and Hum,compilation,"Second MusicBrainz release group with the same title (first release 1997-03-12, 20 tracks); a later edition, not a new album. Typed explicitly so it never competes with the 1988 release group"
