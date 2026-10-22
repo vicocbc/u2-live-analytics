@@ -1,0 +1,35 @@
+# Secrets and local config
+.env
+*.key
+**/config/*.txt
+.claude/settings.local.json
+
+# Data extracts (never commit API data)
+data/
+*.parquet
+*.csv
+!seeds/*.csv
+!docs/design/images/*.csv
+*.json.gz
+
+# Power BI Desktop local files
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Notebooks outside Fabric format
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
