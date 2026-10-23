@@ -1,0 +1,210 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "p04_albums_on_stage",
+  "displayName": "Albums",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#0F1115'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "outspace": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#0F1115'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "p04_headline",
+      "target": "p04_album_share_columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_headline",
+      "target": "p04_area_note",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_headline",
+      "target": "p04_album_decade_matrix",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_headline",
+      "target": "p04_photo_card",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_headline",
+      "target": "p04_promoted_share_table",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_share_columns",
+      "target": "p04_headline",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_share_columns",
+      "target": "p04_area_note",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_share_columns",
+      "target": "p04_album_decade_matrix",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_share_columns",
+      "target": "p04_photo_card",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_share_columns",
+      "target": "p04_promoted_share_table",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_area_note",
+      "target": "p04_headline",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_area_note",
+      "target": "p04_album_share_columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_area_note",
+      "target": "p04_album_decade_matrix",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_area_note",
+      "target": "p04_photo_card",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_area_note",
+      "target": "p04_promoted_share_table",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_decade_matrix",
+      "target": "p04_headline",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_decade_matrix",
+      "target": "p04_album_share_columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_decade_matrix",
+      "target": "p04_area_note",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_decade_matrix",
+      "target": "p04_photo_card",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_album_decade_matrix",
+      "target": "p04_promoted_share_table",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_photo_card",
+      "target": "p04_headline",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_photo_card",
+      "target": "p04_album_share_columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_photo_card",
+      "target": "p04_area_note",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_photo_card",
+      "target": "p04_album_decade_matrix",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_photo_card",
+      "target": "p04_promoted_share_table",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_promoted_share_table",
+      "target": "p04_headline",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_promoted_share_table",
+      "target": "p04_album_share_columns",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_promoted_share_table",
+      "target": "p04_area_note",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_promoted_share_table",
+      "target": "p04_album_decade_matrix",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p04_promoted_share_table",
+      "target": "p04_photo_card",
+      "type": "DataFilter"
+    }
+  ]
+}

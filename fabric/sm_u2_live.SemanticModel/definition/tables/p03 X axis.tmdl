@@ -1,0 +1,42 @@
+/// Field parameter: x-axis choice of the p03 song scatter (year first released or live debut).
+table 'p03 X axis'
+	lineageTag: c54f6589-0f18-4343-a5ae-deadde13c0f0
+
+	column 'p03 X axis Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a027c8aa-2f27-42f8-9b2a-62412bcf0c95
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+	column 'p03 X axis Fields'
+		dataType: string
+		isHidden
+		lineageTag: c4cfa7cd-9fb0-4413-a658-c38e97c395be
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'p03 X axis Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+	/// Display name of the selected x-axis field.
+	column 'p03 X axis'
+		dataType: string
+		lineageTag: 1475a191-a0d7-4774-8e63-32323948b025
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'p03 X axis Order'
+
+	partition 'p03 X axis' = calculated
+		mode: import
+		source =
+				{
+				    ("Year first released", NAMEOF('dim_song'[first_release_year]), 0),
+				    ("Live debut", NAMEOF('dim_song'[live_debut_date]), 1)
+				}
+

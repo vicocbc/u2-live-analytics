@@ -1,0 +1,44 @@
+relationship fact_performance_date_key_dim_date_date_key
+	fromColumn: fact_performance.date_key
+	toColumn: dim_date.date_key
+
+relationship fact_performance_song_key_dim_song_song_key
+	fromColumn: fact_performance.song_key
+	toColumn: dim_song.song_key
+
+relationship fact_performance_tour_key_dim_tour_tour_key
+	fromColumn: fact_performance.tour_key
+	toColumn: dim_tour.tour_key
+
+relationship fact_performance_venue_key_dim_venue_venue_key
+	fromColumn: fact_performance.venue_key
+	toColumn: dim_venue.venue_key
+
+relationship fact_performance_show_key_dim_show_show_key
+	fromColumn: fact_performance.show_key
+	toColumn: dim_show.show_key
+
+relationship fact_show_date_key_dim_date_date_key
+	fromColumn: fact_show.date_key
+	toColumn: dim_date.date_key
+
+relationship fact_show_tour_key_dim_tour_tour_key
+	fromColumn: fact_show.tour_key
+	toColumn: dim_tour.tour_key
+
+relationship fact_show_venue_key_dim_venue_venue_key
+	fromColumn: fact_show.venue_key
+	toColumn: dim_venue.venue_key
+
+relationship fact_show_show_key_dim_show_show_key
+	fromColumn: fact_show.show_key
+	toColumn: dim_show.show_key
+
+relationship dim_song_album_key_dim_album_album_key
+	fromColumn: dim_song.album_key
+	toColumn: dim_album.album_key
+
+relationship report_image_chunk_image_id_report_image_image_id
+	fromColumn: report_image_chunk.image_id
+	toColumn: report_image.image_id
+

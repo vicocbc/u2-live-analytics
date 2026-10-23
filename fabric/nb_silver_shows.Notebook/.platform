@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_silver_shows",
+    "description": "Silver show, show_excluded and performance (SPEC-03 3.1)"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "b04a7e27-9dfc-904d-442e-516e50ac4229"
+  }
+}

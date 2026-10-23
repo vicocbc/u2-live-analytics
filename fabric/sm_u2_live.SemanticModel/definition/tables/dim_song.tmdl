@@ -1,0 +1,140 @@
+/// Songs: MusicBrainz works by U2, U2 songs without a work, and covers.
+table dim_song
+	lineageTag: a60f57df-eb58-4409-ad20-ba802f07b568
+	sourceLineageTag: [dbo].[dim_song]
+
+	/// Surrogate key (SHA2_256 of song_id); -1 = Unknown (unmapped setlist names).
+	column song_key
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 6affc0c5-7db9-4214-b1c7-51e84723bcda
+		sourceLineageTag: song_key
+		summarizeBy: none
+		sourceColumn: song_key
+
+		annotation SummarizationSetBy = Automatic
+
+	/// MusicBrainz work id, or u2:<key> for U2 songs without a work, or cover:<song>:<artist> for covers.
+	column song_id
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: a0c9c1d9-fb8e-464c-8d32-c6a19c80105e
+		sourceLineageTag: song_id
+		summarizeBy: none
+		sourceColumn: song_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Song title (MusicBrainz work title, else the most frequent setlist.fm name).
+	column song_title
+		dataType: string
+		lineageTag: 9d253834-9f92-4610-9bac-62c233e719f2
+		sourceLineageTag: song_title
+		summarizeBy: none
+		sourceColumn: song_title
+
+		annotation SummarizationSetBy = Automatic
+
+	/// First album with a recording of the song (studio first).
+	column album_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 754d4f78-69fb-4fd3-8842-af5d543fc2b8
+		sourceLineageTag: album_key
+		summarizeBy: none
+		sourceColumn: album_key
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Year of the first release with a recording of the song (re-recordings excluded).
+	column first_release_year
+		dataType: int64
+		formatString: 0
+		lineageTag: 75de325f-11a8-4fc5-bcc2-ae88c3863b1f
+		sourceLineageTag: first_release_year
+		summarizeBy: none
+		sourceColumn: first_release_year
+
+		annotation SummarizationSetBy = Automatic
+
+	/// False for songs written by other artists (setlist.fm cover flag); Passengers, Silver and Gold and North and South of the River count as originals.
+	column is_original
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: c7eb4c7b-7545-464a-b4d5-5b1190cee113
+		sourceLineageTag: is_original
+		summarizeBy: none
+		sourceColumn: is_original
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Original artist for covers.
+	column cover_artist
+		dataType: string
+		lineageTag: 9e20045f-f5c4-4d6e-b387-d58950c06bf9
+		sourceLineageTag: cover_artist
+		summarizeBy: none
+		sourceColumn: cover_artist
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Date of the first full performance.
+	column live_debut_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: ac569b98-62bb-420c-b4fc-21be72cf86a4
+		sourceLineageTag: live_debut_date
+		summarizeBy: none
+		sourceColumn: live_debut_date
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Date of the last full performance.
+	column last_played_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: a3004441-9f17-4232-9d80-9e7de2ee825a
+		sourceLineageTag: last_played_date
+		summarizeBy: none
+		sourceColumn: last_played_date
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Sort helper only (includes the fragment The Cry); never sum it, use the Performances measure.
+	column full_performances
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 8fbc907c-4e82-47fb-99c2-937a7f154dec
+		sourceLineageTag: full_performances
+		summarizeBy: none
+		sourceColumn: full_performances
+
+		annotation SummarizationSetBy = Automatic
+
+	column _built_at
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		isAvailableInMdx: false
+		lineageTag: e1c8262a-e63f-4374-8256-ab557374211a
+		sourceLineageTag: _built_at
+		summarizeBy: none
+		sourceColumn: _built_at
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_song = entity
+		mode: directLake
+		source
+			entityName: dim_song
+			schemaName: dbo
+			expressionSource: 'DirectLake - wh_gold'
+

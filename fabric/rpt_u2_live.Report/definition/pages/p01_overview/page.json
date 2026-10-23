@@ -1,0 +1,160 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "p01_overview",
+  "displayName": "Overview",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#0F1115'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "outspace": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#0F1115'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "p01_headline",
+      "target": "p01_kpi_tiles",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_headline",
+      "target": "p01_era_buttons",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_headline",
+      "target": "p01_shows_per_year",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_headline",
+      "target": "p01_top_songs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_kpi_tiles",
+      "target": "p01_headline",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_kpi_tiles",
+      "target": "p01_era_buttons",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_kpi_tiles",
+      "target": "p01_shows_per_year",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_kpi_tiles",
+      "target": "p01_top_songs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_era_buttons",
+      "target": "p01_headline",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_era_buttons",
+      "target": "p01_kpi_tiles",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_era_buttons",
+      "target": "p01_shows_per_year",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_era_buttons",
+      "target": "p01_top_songs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_shows_per_year",
+      "target": "p01_headline",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_shows_per_year",
+      "target": "p01_kpi_tiles",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_shows_per_year",
+      "target": "p01_era_buttons",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_shows_per_year",
+      "target": "p01_top_songs",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_top_songs",
+      "target": "p01_headline",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_top_songs",
+      "target": "p01_kpi_tiles",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_top_songs",
+      "target": "p01_era_buttons",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p01_top_songs",
+      "target": "p01_shows_per_year",
+      "type": "DataFilter"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_bronze_seeds",
+    "description": "Bronze copy of the curated seed CSVs (SPEC-02 2.3)"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "fc0eeba6-b897-9f50-45b4-5531ad2725ef"
+  }
+}

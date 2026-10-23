@@ -1,0 +1,60 @@
+/// 8,000-character base64 slices of report_image, reassembled by the Image Data URI measure.
+table report_image_chunk
+	isHidden
+	lineageTag: 65266cfd-716d-4104-84d6-9b07c53161cf
+	sourceLineageTag: [dbo].[report_image_chunk]
+
+	/// Photo id (report_image).
+	column image_id
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 8761f9df-9288-4dd3-bd4f-fca15755a039
+		sourceLineageTag: image_id
+		summarizeBy: none
+		sourceColumn: image_id
+
+		annotation SummarizationSetBy = Automatic
+
+	/// 1-based chunk order.
+	column chunk_no
+		dataType: int64
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: ae600ab1-5846-42dc-8119-7dc93e5c38c2
+		sourceLineageTag: chunk_no
+		summarizeBy: none
+		sourceColumn: chunk_no
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Up to 8,000 characters of the photo's base64 text.
+	column chunk
+		dataType: string
+		isAvailableInMdx: false
+		lineageTag: 08a92217-4974-41d9-a8a9-57d7177c3106
+		sourceLineageTag: chunk
+		summarizeBy: none
+		sourceColumn: chunk
+
+		annotation SummarizationSetBy = Automatic
+
+	column _built_at
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		isAvailableInMdx: false
+		lineageTag: 56965511-3d84-4f10-9be2-5294087607e9
+		sourceLineageTag: _built_at
+		summarizeBy: none
+		sourceColumn: _built_at
+
+		annotation SummarizationSetBy = Automatic
+
+	partition report_image_chunk = entity
+		mode: directLake
+		source
+			entityName: report_image_chunk
+			schemaName: dbo
+			expressionSource: 'DirectLake - wh_gold'
+

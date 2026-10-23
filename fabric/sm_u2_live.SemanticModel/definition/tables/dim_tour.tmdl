@@ -1,0 +1,136 @@
+/// setlist.fm tours with display names, era, promoted album and residency flag (seeds/tours.csv), plus (No tour).
+table dim_tour
+	lineageTag: 4d659585-bedf-4388-b5a7-8621e451d4d7
+	sourceLineageTag: [dbo].[dim_tour]
+
+	/// Surrogate key; -1 = Unknown.
+	column tour_key
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: fecaa70a-2b1e-496a-80bf-5660cf5bd8a0
+		sourceLineageTag: tour_key
+		summarizeBy: none
+		sourceColumn: tour_key
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Tour name exactly as on setlist.fm, or (No tour).
+	column tour_name
+		dataType: string
+		isHidden
+		lineageTag: 10463e45-a349-43dd-8794-df26947941fd
+		sourceLineageTag: tour_name
+		summarizeBy: none
+		sourceColumn: tour_name
+		sortByColumn: tour_order
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Tour name for display (seeds/tours.csv).
+	column tour_name_display
+		dataType: string
+		lineageTag: b432d05b-ead2-499e-a66f-610de3e79f6e
+		sourceLineageTag: tour_name_display
+		summarizeBy: none
+		sourceColumn: tour_name_display
+		sortByColumn: tour_order
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Album the tour promoted (inactive relationship to dim_album, used with USERELATIONSHIP).
+	column album_promoted_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: dbfec525-661b-42f5-8ce4-9f72dc1f9904
+		sourceLineageTag: album_promoted_key
+		summarizeBy: none
+		sourceColumn: album_promoted_key
+
+		annotation SummarizationSetBy = Automatic
+
+	/// True only for U2:UV Achtung Baby Live at Sphere (2023-24).
+	column is_residency
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 258fa4df-3614-48b1-ad11-56cbe567b079
+		sourceLineageTag: is_residency
+		summarizeBy: none
+		sourceColumn: is_residency
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Career era (seeds/tours.csv); labels start with the years so they sort chronologically. Blank for (No tour).
+	column era
+		dataType: string
+		lineageTag: c6d939f8-fd49-4999-8e6f-2ae8dfd4bafb
+		sourceLineageTag: era
+		summarizeBy: none
+		sourceColumn: era
+
+		annotation SummarizationSetBy = Automatic
+
+	/// First show of the tour.
+	column first_show_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 519704fc-d5e4-4c79-b379-abc7d7394587
+		sourceLineageTag: first_show_date
+		summarizeBy: none
+		sourceColumn: first_show_date
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Last show of the tour.
+	column last_show_date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 21cbfa0c-7de6-4b62-82b5-5e2237ffe056
+		sourceLineageTag: last_show_date
+		summarizeBy: none
+		sourceColumn: last_show_date
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Chronological sort order.
+	column tour_order
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 49d8f73e-e54f-4584-a630-e896ced5c99d
+		sourceLineageTag: tour_order
+		summarizeBy: none
+		sourceColumn: tour_order
+
+		annotation SummarizationSetBy = Automatic
+
+	column _built_at
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		isAvailableInMdx: false
+		lineageTag: fb61177b-9b89-4cae-b917-95d56f2c0135
+		sourceLineageTag: _built_at
+		summarizeBy: none
+		sourceColumn: _built_at
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Residency (Sphere) or Touring. Q10.
+	column show_type
+		dataType: string
+		lineageTag: 97b2f640-3a2a-48d5-97ba-53b296ef1285
+		summarizeBy: none
+		sourceColumn: show_type
+
+	partition dim_tour = entity
+		mode: directLake
+		source
+			entityName: dim_tour
+			schemaName: dbo
+			expressionSource: 'DirectLake - wh_gold'
+

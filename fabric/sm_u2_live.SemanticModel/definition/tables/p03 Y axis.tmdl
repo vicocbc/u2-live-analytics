@@ -1,0 +1,43 @@
+/// Field parameter: y-axis choice of the p03 song scatter (times played, shows played, years since last played).
+table 'p03 Y axis'
+	lineageTag: bcbc3f65-db8e-4ebb-8337-c58b52ffa083
+
+	column 'p03 Y axis Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5f02af72-ea9e-4a4e-b69b-6c3ab0c5b6d2
+		summarizeBy: sum
+		sourceColumn: [Value3]
+
+	column 'p03 Y axis Fields'
+		dataType: string
+		isHidden
+		lineageTag: b54e16ed-9146-4ba1-a42f-b49e5633b06c
+		summarizeBy: none
+		sourceColumn: [Value2]
+		sortByColumn: 'p03 Y axis Order'
+
+		extendedProperty ParameterMetadata =
+				{
+				  "version": 3,
+				  "kind": 2
+				}
+
+	/// Display name of the selected y-axis measure.
+	column 'p03 Y axis'
+		dataType: string
+		lineageTag: 7b6eb2da-4174-4a9e-940e-2e2fbc6de04f
+		summarizeBy: none
+		sourceColumn: [Value1]
+		sortByColumn: 'p03 Y axis Order'
+
+	partition 'p03 Y axis' = calculated
+		mode: import
+		source =
+				{
+				    ("Times played", NAMEOF('fact_performance'[Performances]), 0),
+				    ("Shows played", NAMEOF('fact_performance'[Shows Played]), 1),
+				    ("Years since last played", NAMEOF('fact_performance'[Years Since Last Played]), 2)
+				}
+

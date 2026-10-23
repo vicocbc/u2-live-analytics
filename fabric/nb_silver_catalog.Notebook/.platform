@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_silver_catalog",
+    "description": "Silver album, song and tour (SPEC-03 3.2)"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "ef5a0165-2600-8b89-4ceb-a8ae74cafc07"
+  }
+}
