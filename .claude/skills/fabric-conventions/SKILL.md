@@ -12,29 +12,32 @@ notebooks `nb_<layer>_<subject>` (Bronze and Silver only); Gold procedures `wh_g
 pipeline `pl_refresh`; semantic model `sm_u2_live`; report `rpt_u2_live`.
 Full list in `docs/architecture.md`.
 
-## The loop: pull → edit → push → verify
+## The loop with Fabric Git integration
 
-There is no git during development. The workspace is the running copy; `fabric/` is the working copy.
+The workspace is connected to GitHub (`main`, folder `fabric/`). `fabric/` is written by Fabric; never run
+`fab import` or `fab export` on items under Git (they create workspace changes that conflict with Git).
 
-1. **Pull** the current definition before editing:
-   `fab export "U2 Live Analytics.Workspace/<item>.<Type>" -o ./fabric -f`
-   (or the MCP definition tool, writing the result into `fabric/<item>.<Type>/`).
-2. **Edit** files in `fabric/<item>.<Type>/`.
-3. **Push**: `fab import "U2 Live Analytics.Workspace/<item>.<Type>" -i ./fabric/<item>.<Type> -f`
-   (or the MCP `update_item_definition` tool).
-4. **Verify**: list the item again (MCP `get_item` / `fab get`) and, for notebooks, run it (below).
+1. **Before you start:** `git pull`, and ask Vini whether *Source control* in the workspace shows pending changes or
+   updates for the items you will touch.
+2. **Edit in files** (`fabric/<item>.<Type>/`, or generators such as `scripts/gen_report.py`), or **edit in Fabric**
+   (the Power BI modeling MCP for the model, `sqlcmd` for `wh_gold`).
+3. **Hand over:**
+   - file edits: propose the commit; when Vini asks, commit and push; Vini then runs *Source control → Update all*;
+   - Fabric edits: Vini commits from *Source control → Changes*; then run `git pull`.
+4. **Verify** in the workspace (MCP `get_item`, a DAX query, `fab job run` for notebooks) and check that `fabric/`
+   after `git pull` matches what you meant to change.
 
-New item: create it with the MCP `create_item` tool or by importing a folder with `fab import`; then export it so
-`fabric/` has exactly what Fabric stores.
+New item: create it in the workspace (portal or MCP `create_item`), have Vini commit it from *Source control*,
+then `git pull`. Never write a `.platform` by hand.
 
 Flags and argument names evolve: run `fab <command> --help` the first time you use a command in a session,
 and list an MCP server's tools before relying on a tool name.
 
 ## Notebook files
 
-Use the layout that `fab export` produces for a notebook (`.platform` + `notebook-content.py` with
+Use the layout Fabric Git integration writes for a notebook (`.platform` + `notebook-content.py` with
 `# Fabric notebook source`, `# METADATA`, `# PARAMETERS CELL`, `# CELL`, `# MARKDOWN` markers). Copy markers and
-the METADATA block (default lakehouse binding, environment) from an exported notebook; never invent ids in `.platform`.
+the METADATA block (default lakehouse binding, environment) from an existing notebook in `fabric/`; never invent ids in `.platform`.
 
 Skeleton, always in this order: markdown header (purpose, inputs, outputs) → parameters cell →
 imports and `RUN_ID` → read → transform (calls into `u2lib`) → write → quality checks →

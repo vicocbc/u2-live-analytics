@@ -219,15 +219,17 @@ You need a Microsoft Fabric capacity (a trial works), Power BI Desktop on Window
 
 1. Install the tools and sign in: Azure CLI, Fabric CLI (`fab`), go-sqlcmd, Python 3.11 and Node.js, as described in
    [`docs/setup.md`](docs/setup.md).
-2. Create the workspace items: lakehouses `lk_bronze` and `lk_silver` (with Lakehouse schemas), warehouse `wh_gold`
-   and the Key Vault secret `setlistfm-api-key`.
-3. Build the `u2lib` wheel (`python -m build`) and attach it, with `rapidfuzz`, to a Fabric environment `env_u2`.
-4. Import the notebooks and the pipeline from [`fabric/`](fabric/) with `fab import`, upload [`seeds/`](seeds/) to
-   `lk_bronze/Files/seeds/`, and apply [`sql/wh_gold/`](sql/wh_gold/) with `sqlcmd` in the order of `deploy.txt`.
+2. Fork this repository, create an empty Fabric workspace and connect it with Fabric Git integration to your fork,
+   branch `main`, folder `fabric`: the initial sync creates the lakehouses, the warehouse, the environment, the
+   notebooks, the pipeline, the semantic model and the report.
+3. Store the setlist.fm key in Key Vault as `setlistfm-api-key`, build the `u2lib` wheel (`python -m build`) and
+   attach it to `env_u2` if the synced environment needs republishing.
+4. Replace the environment-specific values listed in [`docs/setup.md`](docs/setup.md) section 8 (the warehouse SQL
+   endpoint and the Power BI connection used by `pl_refresh`), upload [`seeds/`](seeds/) to `lk_bronze/Files/seeds/`
+   and apply [`sql/wh_gold/`](sql/wh_gold/) with `sqlcmd` in the order of `deploy.txt`.
 5. Run `pl_refresh` (`fab job run`): about 40 minutes with the MusicBrainz load (1 request per second), about
-   10 minutes without it.
-6. Create a Direct Lake semantic model on `wh_gold` named `sm_u2_live` and import its definition and the report from
-   [`fabric/`](fabric/), then refresh the model.
+   10 minutes without it. The last step refreshes the Direct Lake model.
+6. Open `rpt_u2_live`.
 
 The project's working loop and the order the tasks were done in are in [`tasks/BOARD.md`](tasks/BOARD.md); run ids and
 counts of every step are in [`docs/run-log.md`](docs/run-log.md).

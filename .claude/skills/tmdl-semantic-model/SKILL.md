@@ -13,10 +13,10 @@ it needs XMLA *Read Write*, see `docs/setup.md`).
 
 - Use the server's tools to create/update relationships, columns properties, measures; run DAX queries; run
   best-practice checks. Prefer one batch/transaction per logical change.
-- After each task, refresh the local copy:
-  `fab export "U2 Live Analytics.Workspace/sm_u2_live.SemanticModel" -o ./fabric -f`
-  so `fabric/sm_u2_live.SemanticModel/definition/` (TMDL) matches the workspace. That folder is what goes to GitHub.
-- Editing TMDL files by hand and pushing with `fab import` is the fallback only when the MCP server is unavailable.
+- After each task, Vini commits the model from the workspace's *Source control*; then `git pull` brings the TMDL
+  into `fabric/sm_u2_live.SemanticModel/definition/`.
+- Editing TMDL files by hand (committed with Git, applied with *Update all*) is the fallback only when the MCP server is
+  unavailable.
   Then keep tabs/ordering, never change existing lineage tags, and ask Vini to confirm the model in the portal.
 
 ## TMDL layout (for reading the copy)

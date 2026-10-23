@@ -23,8 +23,8 @@ schema in the `wh_gold` warehouse, plus the pipeline that refreshes it.
 - Put reusable logic in `src/u2lib/` with unit tests first; notebooks import it and stay thin
   (parameters → read → transform → write → quality checks).
 - You work directly in the workspace through the `fabric` / `fabric-core` MCP servers and the Fabric CLI, following
-  the pull → edit → push → verify loop in the `fabric-conventions` skill. There is no git: never run git commands.
-- Notebooks live under `fabric/<name>.Notebook/` in the layout `fab export` produces. Edit `notebook-content.py`;
+  the Git integration loop in the `fabric-conventions` skill. Commit or push only when Vini asks.
+- Notebooks live under `fabric/<name>.Notebook/` in the layout Fabric Git integration writes. Edit `notebook-content.py`;
   never hand-edit `.platform` ids.
 - Gold is T-SQL in `sql/wh_gold/` (idempotent scripts, `deploy.txt` order), applied and run with `sqlcmd` as in the
   `fabric-conventions` skill. Report Gold counts from `SELECT COUNT(*)` queries after `usp_build_gold`.

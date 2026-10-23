@@ -10,7 +10,7 @@ repo at the end.
 
 ## Deliverables
 
-1. **Fabric workspace** `U2 Live Analytics` on a Fabric capacity (trial or paid). No git integration.
+1. **Fabric workspace** `U2 Live Analytics` on a Fabric capacity (trial or paid), connected to GitHub with Fabric Git integration (folder `fabric/`, added in T-40b).
 2. **Lakehouses** `lk_bronze`, `lk_silver` (with "Lakehouse schemas" on, the portal default; every table lives in
    schema `dbo`, so tables are `lk_silver.dbo.<table>` both in Spark and in T-SQL) and **Warehouse** `wh_gold` (Gold layer, schema `dbo`).
 3. **Folders in `lk_bronze/Files`**: `bronze/` (raw JSON, created by the notebooks) and `seeds/`.

@@ -115,56 +115,36 @@ replaces one already attached to `env_u2`, so notebooks can print which version 
 
 | Need | Tool |
 | --- | --- |
-| Create items, read/write notebook and pipeline definitions | `fabric-core` / `fabric` MCP, or `fab export` / `fab import` |
+| Create items, read notebook and pipeline definitions | `fabric-core` / `fabric` MCP; definitions reach the workspace through Git (*Update all*, section 8) |
 | Upload seeds and config files to the lakehouse | `fabric` MCP OneLake tools, or `fab cp` |
 | Run a notebook or the pipeline | `fab job run` (no MCP tool runs jobs today) |
 | Gold warehouse tables, procedures, T-SQL checks | `sqlcmd` against `wh_gold` with files from `sql/wh_gold/` |
 | Semantic model changes and DAX validation queries | `powerbi-modeling` MCP |
-| Report pages | PBIR files + `fab import`; you open the `.pbip` in Power BI Desktop to check |
+| Report pages | PBIR files committed with Git, then *Update all* in the workspace; you open the report in Power BI Desktop to check |
 
 Tool names and command flags change between releases; when something looks different, run `fab <command> --help`
 or ask Claude to list the server's tools.
 
-## 8. Environment-specific values in `fabric/`
+## 8. Fabric Git integration and environment-specific values
 
-`fabric/` is what `fab export` produces, so it references this workspace. None of these values is a secret, but some
-are tied to this environment and a fork must replace them.
+The workspace is connected to GitHub `vicocbc/u2-live-analytics`, branch `main`, folder `fabric/` (Workspace settings →
+Git integration, authenticated with a fine-grained personal access token that has *Contents: Read and write* on this
+repository only). Fabric serialises every supported item into `fabric/`; SQL analytics endpoints are not tracked.
 
-**Kept out of the files (placeholders, filled at import time).** `pl_refresh` is pushed and pulled with
-`scripts/pipeline.ps1`, never with plain `fab import` / `fab export`:
+- **Fabric → Git:** after changing something in Fabric, open *Source control → Changes*, select the items, commit,
+  then run `git pull` locally.
+- **Git → Fabric:** after pushing a change under `fabric/`, open *Source control → Updates → Update all*.
+- The token expires: when Fabric reports an authentication error, create a new token and update it under
+  Git integration → *Manage all accounts*.
 
-| Placeholder in `fabric/pl_refresh.DataPipeline/pipeline-content.json` | Value | Set with |
-| --- | --- | --- |
-| `__U2_SQL_SERVER__` | `wh_gold` SQL endpoint host (Stored procedure activities) | `$env:U2_SQL_SERVER` (section 2) |
-| `__U2_PBI_CONNECTION_ID__` | Power BI cloud connection used by the *Refresh semantic model* activity | `$env:U2_PBI_CONNECTION_ID` |
+**Environment-specific values committed in `fabric/`** (not secrets; a fork connects its own workspace and replaces
+them in the portal):
 
-```powershell
-$env:U2_SQL_SERVER = [Environment]::GetEnvironmentVariable('U2_SQL_SERVER','User')
-$env:U2_PBI_CONNECTION_ID = '<connection id from Manage connections and gateways>'
-./scripts/pipeline.ps1 -Action import    # push fabric/ -> workspace
-./scripts/pipeline.ps1 -Action export    # pull workspace -> fabric/ (placeholders restored)
-```
-
-**Fabric object ids kept as exported** (`fab import` needs them to bind items in this workspace; in a new workspace,
-re-bind in the portal or replace them with the new ids):
-
-| Where | Ids |
+| Where | Value |
 | --- | --- |
-| `fabric/nb_*.Notebook/notebook-content.py` (`# META` block) | workspace id, default lakehouse id (`lk_bronze` or `lk_silver`), known lakehouses |
-| `fabric/pl_refresh.DataPipeline/pipeline-content.json` | workspace id, notebook ids, `wh_gold` id, `sm_u2_live` id |
-| `fabric/sm_u2_live.SemanticModel/definition/expressions.tmdl` | Direct Lake source: workspace id and `wh_gold` id |
-| `fabric/rpt_u2_live.Report/definition.pbir` | `sm_u2_live` id (live connection) |
-| `fabric/*/.platform` | `logicalId` (zeros or as exported; never edit by hand) |
+| `fabric/pl_refresh.DataPipeline/pipeline-content.json` | `wh_gold` SQL endpoint host (Stored procedure activities), id of the Power BI connection used by the *Semantic model refresh* activity, workspace id |
+| `fabric/nb_*.Notebook/notebook-content.py` (`# META` block) | workspace id, default lakehouse id |
+| `fabric/sm_u2_live.SemanticModel/definition/expressions.tmdl` | Direct Lake source (workspace and `wh_gold` ids) |
 
-**Personal values to review before publishing:** the default of `CONTACT` in
-`fabric/nb_bronze_musicbrainz.Notebook` (MusicBrainz User-Agent contact) is an e-mail address; switch it to the GitHub
-repository URL when the repo exists. `docs/run-log.md` lists item ids and run ids as a history; they identify this
-workspace only.
-
-## Sources
-
-- Fabric MCP servers overview: https://learn.microsoft.com/en-us/rest/api/fabric/articles/mcp-servers/what-is-fabric-mcp-server
-- Fabric local MCP setup: https://learn.microsoft.com/en-us/rest/api/fabric/articles/mcp-servers/pro-dev-local/get-started-local
-- Fabric Core MCP tools: https://learn.microsoft.com/en-us/rest/api/fabric/articles/mcp-servers/core-remote/tools-core-mcp-server
-- Power BI authoring MCP: https://learn.microsoft.com/en-us/power-bi/developer/mcp/power-bi-authoring-mcp
-- Fabric CLI: https://github.com/microsoft/fabric-cli
+Item references between items (`pl_refresh` → notebooks, report → model) use Git logical ids or relative paths, so
+they move with the repository.

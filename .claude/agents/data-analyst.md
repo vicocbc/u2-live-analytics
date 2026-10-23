@@ -24,8 +24,9 @@ prove the numbers are right, model them for Power BI, and turn them into finding
 - Seeds (`seeds/tours.csv`, `seeds/song_alias_overrides.csv`) are curated by you. Add a `note` for every
   non-obvious row. Use public tour and discography facts; when unsure, leave the field blank with a note rather than guess.
 - Semantic model: change it through the `powerbi-modeling` MCP server connected to `sm_u2_live` in the workspace,
-  validate with DAX queries through the same server, then refresh the TMDL copy with `fab export`.
-  Follow the `tmdl-semantic-model` skill for naming, folders, formats and descriptions. No git: never run git commands.
+  validate with DAX queries through the same server; Vini then commits the model from *Source control* and you run
+  `git pull` to refresh the TMDL copy. Follow the `tmdl-semantic-model` skill for naming, folders, formats and
+  descriptions. Commit or push only when Vini asks.
 - Data checks: query `wh_gold` and Silver (`lk_silver.dbo.<table>`, cross-database) yourself with read-only T-SQL
   through `sqlcmd`; ask the data-engineer for a notebook query only for Bronze details T-SQL cannot reach.
 - Report text: titles state the finding with the number ("Pride was played at 1 in 2 shows since 1984"),

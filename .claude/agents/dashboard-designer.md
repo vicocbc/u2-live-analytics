@@ -27,8 +27,8 @@ and you build it as PBIR files that Power BI Desktop opens without errors.
   No pies with more than three slices, no 3D, no gauges.
 - Build PBIR by copying the structure of a page or visual Vini created in Desktop, then changing it; follow the
   `pbir-report` skill. Keep visual names stable (they are folder names) so diffs stay small.
-- Push each finished page with `fab import` (see `pbir-report`), then ask Vini to open the report and confirm it
-  renders; fix what he reports. No git: never run git commands.
+- Hand each finished page over through Git (see `pbir-report`): propose the commit, push only when Vini asks, and
+  have him run *Source control → Update all*; then he opens the report and confirms it renders.
 - Use the Power BI modeling MCP only to read the model (list tables, columns, measures); model changes belong to the data-analyst.
 - Run the accessibility checklist from `u2-design-system` on every page before marking it for review.
 

@@ -14,7 +14,7 @@ Everything in this repo is in English (code, comments, docs, table and column na
 | `docs/charter.md` | Business questions the report must answer. The source of truth for "what matters". |
 | `docs/specs/` | One spec per component (SPEC-01 … SPEC-08). Each task points to a spec. |
 | `tasks/BOARD.md` | Task board: id, owner agent, dependencies, status. |
-| `fabric/` | Local working copy of the workspace items (notebooks, pipeline, semantic model, report) in the folder layout `fab export` produces. |
+| `fabric/` | Workspace items as Fabric Git integration serialises them (notebooks, pipeline, environment, lakehouses, warehouse SQL project, semantic model, report). |
 | `sql/wh_gold/` | Working copy of the Gold warehouse: table DDL, stored procedures, `deploy.txt` (apply order). |
 | `src/u2lib/` | Pure-Python helpers (parsing, song-name normalisation) with unit tests in `tests/`. |
 | `seeds/` | Small curated CSVs (tour metadata, song alias overrides) uploaded to `lk_bronze/Files/seeds/`. |
@@ -24,31 +24,39 @@ Everything in this repo is in English (code, comments, docs, table and column na
 
 ## Source of truth and version control
 
-- **The Git repository is the version-controlled copy; the Fabric workspace is the running copy.** The project
-  was built without git; Vini created the repository and made the first push in task T-40. The workspace is not
-  connected to Fabric Git integration: `fabric/` and `sql/` are exported from it and committed like any other file.
-- **Vini owns the history.** Agents may stage changes and propose a commit message, but only commit or push when
-  Vini asks for it. Never rewrite published history (no force-push, no rebase of pushed commits).
-- **Before editing an item, pull it; after editing, push it and confirm it changed.** Pull with `fab export` or the
-  Fabric MCP definition tools; push with `fab import`. If Vini edited something in the portal, the workspace wins:
-  pull first, then commit. `pl_refresh` goes through `scripts/pipeline.ps1`, which swaps the environment-specific
-  values (`__U2_SQL_SERVER__`, `__U2_PBI_CONNECTION_ID__`) so they never reach the repository.
-- Warehouse objects follow the same rule with `sql/wh_gold/`: change the `.sql` file, apply it with `sqlcmd`,
-  confirm the object changed. If Vini edited a procedure in the portal, script it back into `sql/` first.
-- A commit is ready when `fabric/` and `sql/` match the workspace for every item it touches, `ruff check .`,
-  `ruff format --check .` and `pytest` pass, and no secret, API data extract or environment-specific host is in
-  the diff.
+- **Git is the version-controlled copy; the Fabric workspace is the running copy.** The workspace is connected to
+  `vicocbc/u2-live-analytics`, branch `main`, folder `fabric/` through Fabric Git integration (task T-40b). Fabric
+  writes and reads `fabric/` itself; everything else (`src/`, `tests/`, `sql/`, `docs/`, `seeds/`, `scripts/`) is
+  ordinary Git content.
+- **Vini owns the history.** Agents may edit files and propose a commit message, but only commit or push when Vini
+  asks for it, and never commit from the Fabric portal. Never rewrite published history (no force-push, no rebase of
+  pushed commits).
+- **Start every task with `git pull`** (Fabric commits to `main` too) and check that the workspace's *Source control*
+  panel shows no pending changes or updates for the items you will touch.
+- **Changes made in Fabric** (portal edits, the Power BI modeling MCP, `sqlcmd` DDL on `wh_gold`): Vini commits them
+  from *Source control → Changes*, then `git pull` brings them into the local folder.
+- **Changes made in files under `fabric/`** (notebook code, `scripts/gen_report.py` output): commit and push with Git
+  when Vini asks, then Vini runs *Source control → Updates → Update all* in the workspace. Do not use `fab import` on
+  items under Git: it creates workspace changes that conflict with the incoming update.
+- **Warehouse:** `sql/wh_gold/` stays the editable source (idempotent scripts, `deploy.txt`, applied with `sqlcmd`).
+  `fabric/wh_gold.Warehouse/` is the SQL project Fabric serialises from the live warehouse: never edit it by hand;
+  commit it from the portal after applying a script.
+- `fabric/pl_refresh.DataPipeline` holds this workspace's `wh_gold` SQL endpoint host and the id of the Power BI
+  connection used by the model refresh. They are not secrets (access needs a signed-in identity); a fork replaces
+  them (see `docs/setup.md` section 8).
+- A commit is ready when `ruff check .`, `ruff format --check .` and `pytest` pass, `fabric/` and `sql/` agree with
+  the workspace for every item it touches, and no secret or API data extract is in the diff.
 
 ## Tools for working in Fabric
 
 | Need | Use |
 | --- | --- |
-| List workspaces/items, create items, read/write item definitions | Fabric Core MCP (`fabric-core`) or Fabric local MCP (`fabric`); fallback `fab export` / `fab import` |
+| List workspaces/items, create items, read item definitions | Fabric Core MCP (`fabric-core`) or Fabric local MCP (`fabric`); item definitions reach the workspace through Git (*Update all*) |
 | Upload/download lakehouse files, list tables | Fabric local MCP (`fabric`) OneLake tools; fallback `fab cp` |
 | Run a notebook or pipeline and wait for the result | Fabric CLI: `fab job run` (no MCP tool runs jobs) |
 | Warehouse `wh_gold`: DDL, stored procedures, T-SQL validation queries (also cross-database on `lk_silver`) | `sqlcmd` (go-sqlcmd) with `--authentication-method ActiveDirectoryDefault` against `$env:U2_SQL_SERVER`, database `wh_gold` |
 | Semantic model: relationships, measures, DAX queries, best-practice checks | Power BI modeling MCP (`powerbi-modeling`) connected to `sm_u2_live` in the workspace |
-| Report pages and visuals (PBIR) | Files in `fabric/rpt_u2_live.Report/` pushed with `fab import`; Vini checks in Power BI Desktop (no MCP edits reports) |
+| Report pages and visuals (PBIR) | Files in `fabric/rpt_u2_live.Report/` (generated by `scripts/gen_report.py`), committed with Git and pulled into the workspace with *Update all*; Vini checks in Power BI Desktop (no MCP edits reports) |
 
 If an MCP server is missing or not signed in, say which one and point Vini to `docs/setup.md`; never ask for credentials.
 
