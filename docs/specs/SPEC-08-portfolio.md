@@ -19,7 +19,8 @@ Owner: data-analyst (findings, write-up) Â· dashboard-designer (visual assets) Â
 
 - `docs/img/`: page screenshots (PNG, 1280 px wide), one GIF of a drill-through (optional).
 - `docs/data-dictionary.md`: every Gold column and every measure with description (generated from specs + TMDL descriptions).
-- Short write-up (LinkedIn/Medium draft in `docs/post.md`, in Portuguese and English) built around the three findings.
+- Short write-up (LinkedIn/Medium post, in Portuguese and English) built around the three findings; the draft is kept
+  locally in `drafts/` (git-ignored) and published on LinkedIn, not in the repository.
 
 ## Acceptance criteria
 
