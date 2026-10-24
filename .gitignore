@@ -34,5 +34,3 @@ build/
 .DS_Store
 Thumbs.db
 
-# Local drafts (not published)
-drafts/

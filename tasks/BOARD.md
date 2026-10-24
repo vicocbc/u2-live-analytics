@@ -52,7 +52,7 @@ No git until T-40: agents push changes to the workspace (MCP / `fab`) and keep `
 | --- | --- | --- | --- | --- |
 | T-22 | Add `u2lib.quality` checks writing to `wh_gold.dbo.dq_run_log` to every notebook; `usp_dq_gold` with rollback on hard failure | data-engineer | T-20 | done |
 | T-23 | Create `pl_refresh` (notebooks → Stored procedure activity `usp_build_gold` → model refresh; definition pushed via MCP or `fab import`), run it once with `fab job run` | data-engineer | T-22 | done |
-| T-24 | Set the weekly schedule; run from empty lakehouses; break-a-rule test | vini | T-23 | todo |
+| T-24 | Set the weekly schedule; run from empty lakehouses; break-a-rule test | vini | T-23 | done |
 
 ## Phase 6 · Semantic model (SPEC-05)
 
@@ -82,7 +82,7 @@ No git until T-40: agents push changes to the workspace (MCP / `fab`) and keep `
 | --- | --- | --- | --- | --- |
 | T-37 | Screenshots and drill-through GIF into `docs/img/` | vini | T-36 | done |
 | T-38 | `docs/data-dictionary.md` from specs and TMDL descriptions | data-analyst | T-28 | done |
-| T-39 | README per SPEC-08 and `docs/post.md` (PT + EN); final `fab export` of every item into `fabric/` and check `sql/wh_gold/` matches the warehouse | data-analyst + data-engineer | T-37, T-38 | done |
+| T-39 | README per SPEC-08; final `fab export` of every item into `fabric/` and check `sql/wh_gold/` matches the warehouse | data-analyst + data-engineer | T-37, T-38 | done |
 | T-40 | **Git, by Vini (learning task):** secrets scan, `git init`, review `.gitignore`, first commits, CI workflow (ruff + pytest), create the GitHub repo, push, make public | vini | T-39 | done |
 | T-40b | **Fabric Git integration (Vini + coordinator):** connect workspace `U2 Live Analytics` to `vicocbc/u2-live-analytics`, branch `main`, folder `fabric/`, first sync workspace → Git; then align docs, `CLAUDE.md` and `scripts/pipeline.ps1` with the new flow | vini | T-40 | done |
 

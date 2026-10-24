@@ -145,5 +145,5 @@ Setup and sign-in: `docs/setup.md`.
 4. **Gold**: star schema in `wh_gold` (T-SQL).
 5. **Semantic model**: Direct Lake model + measures.
 6. **Report**: design system, wireframes, pages.
-7. **Portfolio**: README, screenshots, write-up.
+7. **Portfolio**: README and screenshots.
 8. *(Optional)* Popularity enrichment (Last.fm listeners/playcount) → `fact_popularity`.

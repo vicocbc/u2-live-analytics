@@ -1,6 +1,6 @@
 # SPEC-08 · Portfolio packaging
 
-Owner: data-analyst (findings, write-up) · dashboard-designer (visual assets) · vini (final review, publishing)
+Owner: data-analyst (findings) · dashboard-designer (visual assets) · vini (final review, publishing)
 
 ## README.md structure
 
@@ -19,8 +19,6 @@ Owner: data-analyst (findings, write-up) · dashboard-designer (visual assets) �
 
 - `docs/img/`: page screenshots (PNG, 1280 px wide), one GIF of a drill-through (optional).
 - `docs/data-dictionary.md`: every Gold column and every measure with description (generated from specs + TMDL descriptions).
-- Short write-up (LinkedIn/Medium post, in Portuguese and English) built around the three findings; the draft is kept
-  locally in `drafts/` (git-ignored) and published on LinkedIn, not in the repository.
 
 ## Acceptance criteria
 
