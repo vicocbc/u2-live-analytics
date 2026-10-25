@@ -28,7 +28,7 @@
 # double-quoted fields may contain commas.
 # # **Outputs** (full snapshot, `overwrite`): one table per CSV, every column as a string as delivered, plus
 # `_run_id` and `_ingested_at`. Expected today: `bronze_seed_tours`, `bronze_seed_song_alias_overrides`,
-`bronze_seed_album_overrides`, `bronze_seed_show_exclusions`, `bronze_seed_release_2026_tracks` (SPEC-09 §9.2).
+# `bronze_seed_album_overrides`, `bronze_seed_show_exclusions`, `bronze_seed_release_2026_tracks` (SPEC-09 §9.2).
 # # **Checks**: required columns present, row count = rows parsed by Python's `csv` module, no duplicate keys.
 
 # PARAMETERS CELL ********************
