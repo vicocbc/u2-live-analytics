@@ -30,6 +30,10 @@ Each question has an id used by specs, measures and report pages.
 
 Optional (phase 8): Q11 Do the most-played live songs match the most-streamed/listened songs today?
 
+Phase 9 (SPEC-09): Q12 Which songs will the 2027 tour play, how much of the 2026 trilogy (*Days of Ash*, *Easter
+Lily*, *Carnaval de Luz*) will be in it, and how close was the prediction once the tour began? Main data:
+fact_setlist_prediction, fact_setlist_backtest, dim_song, dim_tour.
+
 ## Success criteria
 
 - Every question Q1–Q10 is answered by at least one visual, and the README states three concrete findings.

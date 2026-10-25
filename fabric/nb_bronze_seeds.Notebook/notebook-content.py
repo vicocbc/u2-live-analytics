@@ -27,7 +27,8 @@
 # # **Inputs**: `Files/seeds/*.csv` (uploaded from the project's `seeds/` folder with `fab cp`), UTF-8, header row,
 # double-quoted fields may contain commas.
 # # **Outputs** (full snapshot, `overwrite`): one table per CSV, every column as a string as delivered, plus
-# `_run_id` and `_ingested_at`. Expected today: `bronze_seed_tours`, `bronze_seed_song_alias_overrides`.
+# `_run_id` and `_ingested_at`. Expected today: `bronze_seed_tours`, `bronze_seed_song_alias_overrides`,
+`bronze_seed_album_overrides`, `bronze_seed_show_exclusions`, `bronze_seed_release_2026_tracks` (SPEC-09 §9.2).
 # # **Checks**: required columns present, row count = rows parsed by Python's `csv` module, no duplicate keys.
 
 # PARAMETERS CELL ********************
@@ -66,9 +67,17 @@ print("Run:", RUN_ID, "| u2lib", u2lib.__version__)
 # Required columns and natural key of each known seed (SPEC-02 §2.3). Other CSVs are loaded without key checks.
 SEED_CONTRACT = {
     "tours": {
-        "required": ["tour_name", "tour_name_display", "album_promoted", "is_residency", "era"],
+        "required": ["tour_name", "tour_name_display", "album_promoted", "is_residency", "era", "tour_type",
+                     "is_planned"],
         "key": ["tour_name"],
         "min_rows": 1,
+    },
+    "release_2026_tracks": {           # SPEC-09 §9.2: the 25 tracks of the 2026 trilogy
+        "required": ["track_title", "release_title", "release_group_id", "release_type", "release_date",
+                     "track_number", "is_single", "single_date", "single_order", "featured_artist",
+                     "is_spoken_word", "is_bonus_track", "note"],
+        "key": ["release_title", "track_number"],
+        "min_rows": 25,
     },
     "song_alias_overrides": {
         "required": ["song_name", "work_id", "note", "is_fragment"],

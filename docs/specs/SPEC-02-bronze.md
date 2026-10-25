@@ -70,11 +70,12 @@ Copies `seeds/*.csv` (uploaded to `Files/seeds/` with `fab cp` or the portal) in
 
 | Seed | Owner | Columns |
 | --- | --- | --- |
-| `seeds/tours.csv` | data-analyst | `tour_name` (exact setlist.fm value), `tour_name_display`, `album_promoted` (release group title or blank), `is_residency`, `era` |
+| `seeds/tours.csv` | data-analyst | `tour_name` (exact setlist.fm value), `tour_name_display`, `album_promoted` (release group title or blank), `is_residency`, `era`, `tour_type` (`album`, `anniversary`, `residency`, `promo`, `benefit`, `early`), `is_planned` (`true` or blank; SPEC-09 §9.2) |
 | `seeds/song_alias_overrides.csv` | data-analyst | `song_name` (as in setlist.fm), `work_id` (MusicBrainz), `original` or `ignore`, `note`, `is_fragment` (`true` or blank, SPEC-03 §3.2) |
 | `seeds/report_images.csv` | dashboard-designer | `image_id`, `file_name` (in `Files/seeds/report_images/`), `mime_type`, `credit_text`, `license`, `source_url`, `note`; loaded with the files as base64 chunks into `bronze_seed_report_image` / `bronze_seed_report_image_chunk` (SPEC-04 "Report presentation assets") |
 | `seeds/show_exclusions.csv` | data-analyst | `setlist_id`, `event_date`, `reason` (`cancelled`, `postponed`, `duplicate`), `note` (SPEC-03 §3.1) |
 | `seeds/album_overrides.csv` | data-analyst | `release_group_id` (MusicBrainz), `title` (for readability only), `album_type` (SPEC-03 values), `note` |
+| `seeds/release_2026_tracks.csv` | data-analyst | the 25 tracks of the 2026 trilogy (*Days of Ash*, *Easter Lily*, *Carnaval de Luz*): `track_title`, `release_title`, `release_group_id` (MusicBrainz release-group MBID), `release_type`, `release_date`, `track_number`, `is_single`, `single_date`, `single_order`, `featured_artist`, `is_spoken_word`, `is_bonus_track`, `note` (SPEC-09 §9.2) |
 
 All seeds also carry a free-text `note` column. Seeds are UTF-8 without BOM (tour and album names contain `°` and `’`).
 

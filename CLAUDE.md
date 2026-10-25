@@ -12,14 +12,14 @@ Everything in this repo is in English (code, comments, docs, table and column na
 | `docs/architecture.md` | Data flow, Fabric items, development loop, naming. Read before any build task. |
 | `docs/setup.md` | How Vini installs and signs in to the MCP servers and the Fabric CLI. |
 | `docs/charter.md` | Business questions the report must answer. The source of truth for "what matters". |
-| `docs/specs/` | One spec per component (SPEC-01 … SPEC-08). Each task points to a spec. |
+| `docs/specs/` | One spec per component (SPEC-01 … SPEC-09). Each task points to a spec. |
 | `tasks/BOARD.md` | Task board: id, owner agent, dependencies, status. |
 | `fabric/` | Workspace items as Fabric Git integration serialises them (notebooks, pipeline, environment, lakehouses, warehouse SQL project, semantic model, report). |
 | `sql/wh_gold/` | Working copy of the Gold warehouse: table DDL, stored procedures, `deploy.txt` (apply order). |
 | `src/u2lib/` | Pure-Python helpers (parsing, song-name normalisation) with unit tests in `tests/`. |
 | `seeds/` | Small curated CSVs (tour metadata, song alias overrides) uploaded to `lk_bronze/Files/seeds/`. |
 | `.mcp.json` | MCP servers for this project (Fabric local, Fabric Core remote, Power BI modeling local). |
-| `.claude/agents/` | `data-engineer`, `data-analyst`, `dashboard-designer`. |
+| `.claude/agents/` | `data-engineer`, `data-analyst`, `data-scientist`, `dashboard-designer`. |
 | `.claude/skills/` | Conventions the agents load (Fabric, medallion, source APIs, TMDL, PBIR, design system). |
 
 ## Source of truth and version control

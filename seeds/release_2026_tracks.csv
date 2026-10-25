@@ -1,0 +1,26 @@
+track_title,release_title,release_group_id,release_type,release_date,track_number,is_single,single_date,single_order,featured_artist,is_spoken_word,is_bonus_track,note
+American Obituary,Days of Ash,18b82e5d-33b0-4baf-bb87-75c82db6d697,ep,2026-02-18,1,false,,,,false,false,"First of the 2026 trilogy; EP surprise-released on Ash Wednesday, political themes (Wikipedia: Days of Ash, checked 2026-10-25)"
+The Tears of Things,Days of Ash,18b82e5d-33b0-4baf-bb87-75c82db6d697,ep,2026-02-18,2,false,,,,false,false,
+Song of the Future,Days of Ash,18b82e5d-33b0-4baf-bb87-75c82db6d697,ep,2026-02-18,3,true,2026-02-18,1,,false,false,Only single from Days of Ash (same day as the EP)
+Wildpeace,Days of Ash,18b82e5d-33b0-4baf-bb87-75c82db6d697,ep,2026-02-18,4,false,,,Adeola,true,false,"Spoken word by Adeola over a poem by Yehuda Amichai (1:18); not a band performance, likely tape or intro at most"
+One Life at a Time,Days of Ash,18b82e5d-33b0-4baf-bb87-75c82db6d697,ep,2026-02-18,5,false,,,,false,false,
+Yours Eternally,Days of Ash,18b82e5d-33b0-4baf-bb87-75c82db6d697,ep,2026-02-18,6,false,,,Ed Sheeran; Taras Topolia,false,false,Guest vocals are hard to reproduce live without the guests
+Song for Hal,Easter Lily,c0520470-f9f4-4e14-a76a-4f1bfbb883bd,ep,2026-04-03,1,false,,,,false,false,"Second of the 2026 trilogy; EP surprise-released on Good Friday, themes of friendship, loss, faith and renewal; no single (Wikipedia: Easter Lily (EP), checked 2026-10-25)"
+In a Life,Easter Lily,c0520470-f9f4-4e14-a76a-4f1bfbb883bd,ep,2026-04-03,2,false,,,,false,false,
+Scars,Easter Lily,c0520470-f9f4-4e14-a76a-4f1bfbb883bd,ep,2026-04-03,3,false,,,,false,false,Co-written with Martin Garrix and others; no featured artist
+Resurrection Song,Easter Lily,c0520470-f9f4-4e14-a76a-4f1bfbb883bd,ep,2026-04-03,4,false,,,,false,false,
+Easter Parade,Easter Lily,c0520470-f9f4-4e14-a76a-4f1bfbb883bd,ep,2026-04-03,5,false,,,,false,false,
+Coexist (I Will Bless the Lord at All Times?),Easter Lily,c0520470-f9f4-4e14-a76a-4f1bfbb883bd,ep,2026-04-03,6,false,,,,false,false,Credited to Brian Eno and U2; setlist.fm may list it as Coexist
+Go (Carnaval de Luz),Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,1,false,,,,false,false,"Third of the 2026 trilogy and the album the 2027 tour promotes; album opener, co-written with Brian Eno (Rolling Stone and Wikipedia: Carnaval de Luz, checked 2026-10-25). MusicBrainz spells the album Carnaval de luz; match with normalize_title"
+La Reina,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,2,false,,,,false,false,
+Street of Dreams,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,3,true,2026-07-07,2,,false,false,First single from the album
+The Mirror Maker (Rosalía),Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,4,false,,,,false,false,Rosalía is part of the title (no featured-artist credit found); setlist.fm may drop the brackets
+Superficiality,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,5,false,,,,false,false,
+If the World Is at War We Better Not Be,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,6,false,,,,false,false,
+Silencio,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,7,true,2026-09-24,3,,false,false,Second single from the album; live debut at the surprise Mount Temple show in Dublin on 2026-09-25
+The Greatest Show on Earth,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,8,true,2026-10-15,4,,false,false,Third single from the album; released with the announcement of the tour that carries its name
+Glorify,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,9,false,,,,false,false,
+Midnight Sunshine,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,10,false,,,,false,false,
+Can't Stop Us Now,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,11,false,,,,false,false,
+Torn,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,12,false,,,Dolly Parton,false,false,Album closer; Dolly Parton's last recorded vocal. Guest vocals are hard to reproduce live without the guest
+Get Back to Now,Carnaval de Luz,09f9581c-52b0-4d2b-bb1b-d5902830b8c1,studio,2026-11-13,13,false,,,,false,true,iTunes bonus track; not on the standard 12-track edition

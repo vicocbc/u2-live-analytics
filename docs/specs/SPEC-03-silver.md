@@ -29,8 +29,9 @@ Rules:
 | Table | Grain | Columns and rules |
 | --- | --- | --- |
 | `album` | release group kept for analysis | `album_id` (= release group id), `title`, `release_date`, `release_year`, `album_type` (`studio`, `live`, `compilation`, `re-recording`, `ep`, `single`), `is_studio` |
-| `song` | MusicBrainz work by U2 | `song_id` (= work id), `title`, `first_album_id` (earliest studio album with a recording of the work, else earliest any album, else null), `first_release_year` (earliest year of any non-re-recording album with a recording of the work), `is_original` (true), `cover_artist` (null; set on cover rows), `is_fragment` (see Fragments) |
-| `tour` | tour name from setlist.fm | `tour_name` (PK), `tour_name_display`, `album_promoted_id` (from `bronze_seed_tours`), `is_residency`, `era`, `first_show_date`, `last_show_date`, `shows` |
+| `song` | MusicBrainz work by U2 | `song_id` (= work id), `title`, `first_album_id` (earliest studio album with a recording of the work, else earliest any album, else null), `first_release_year` (earliest year of any non-re-recording album with a recording of the work), `is_original` (true), `cover_artist` (null; set on cover rows), `is_fragment` (see Fragments), `is_single`, `single_date`, `single_order` (singles history, SPEC-09 §9.2: MusicBrainz singles for past studio-album songs, the seed for 2026 tracks; false/null otherwise) |
+| `tour` | tour name from setlist.fm | `tour_name` (PK), `tour_name_display`, `album_promoted_id` (from `bronze_seed_tours`), `is_residency`, `era`, `tour_type`, `is_planned` (SPEC-09 §9.3; null `tour_type` only for `(No tour)`), `first_show_date`, `last_show_date`, `shows` |
+| `release_track` | track of the 2026 trilogy | SPEC-09 §9.3: seed columns of `release_2026_tracks` (typed) + `album_id` (release group id first, then title) + `song_id` |
 
 Album rules:
 - Keep a release group only when it has a kept official release in `bronze_musicbrainz_release` (drops ~1,000 bootleg-only groups).

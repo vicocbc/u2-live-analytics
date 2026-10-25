@@ -26,17 +26,23 @@
 # MARKDOWN ********************
 
 # # U2 · Silver · catalog
-# # Builds `album`, `song` and `tour` in `lk_silver` (SPEC-03 §3.2). Reads only Bronze, so it can run in parallel
-# with `nb_silver_shows` (SPEC-07).
+# # Builds `album`, `song`, `tour` and `release_track` in `lk_silver` (SPEC-03 §3.2, SPEC-09 §9.2–9.3). Reads only
+# Bronze, so it can run in parallel with `nb_silver_shows` (SPEC-07).
 # # **Inputs**: `lk_bronze.dbo.bronze_musicbrainz_*`, `lk_bronze.dbo.bronze_seed_album_overrides`,
-# `lk_bronze.dbo.bronze_seed_tours`, `lk_bronze.dbo.bronze_setlistfm_show`, `lk_bronze.dbo.bronze_setlistfm_distinct_song`.
+# `lk_bronze.dbo.bronze_seed_tours`, `lk_bronze.dbo.bronze_seed_release_2026_tracks`,
+# `lk_bronze.dbo.bronze_setlistfm_show`, `lk_bronze.dbo.bronze_setlistfm_distinct_song`.
 # # **Outputs** (overwrite, `lk_silver.dbo`):
 # - `album`: release groups with a kept official release; `album_type` by the first rule that applies
 #   (override seed → Live → Compilation → EP → Single → plain Album = studio → anything else = compilation).
 # - `song`: MusicBrainz works (artist browse) with their first album; works setlist.fm plays as covers get
 #   `is_original = false` and `cover_artist` (except the Passengers/Bono exceptions); U2 originals without a work
-#   (override `original`) as `u2:<song key>`; synthetic cover songs (`cover:<song key>:<artist key>`).
-# - `tour`: one row per setlist.fm tour plus `(No tour)`, with the promoted album resolved by title.
+#   (override `original`) as `u2:<song key>`; synthetic cover songs (`cover:<song key>:<artist key>`); one row for
+#   every 2026 trilogy track (work or `u2:<song key>`). Singles history: `is_single`, `single_date`, `single_order`
+#   from MusicBrainz singles for past studio-album songs, from the seed for 2026 tracks.
+# - `tour`: one row per setlist.fm tour plus `(No tour)` plus planned tours (no shows), with the promoted album resolved
+#   by title, `tour_type` and `is_planned` from the seed.
+# - `release_track`: the 25 tracks of the 2026 trilogy (seed columns typed) with `album_id` (release group id first,
+#   then title) and `song_id`.
 
 # PARAMETERS CELL ********************
 
@@ -61,6 +67,14 @@ ORIGINAL_DESPITE_COVER_TAG = {
     "69985e91-92dd-3af4-81d0-f4f7ea259982",   # North and South of the River
 }
 
+# SPEC-09 §9.2–9.3 and §9.9
+TOUR_TYPES = {"album", "anniversary", "residency", "promo", "benefit", "early"}
+EXPECTED_ANNIVERSARY_RESIDENCY = 3     # The Joshua Tree Tour 2017 and 2019, Sphere
+EXPECTED_RELEASE_TRACKS = 25           # Days of Ash 6 + Easter Lily 6 + Carnaval de Luz 12 + 1 bonus
+# 2026 non-album singles, out of scope for SPEC-09 (Vini, 2026-10-25): never used for singles history.
+EXCLUDED_SINGLES = ["Fireflies", "Yeah, Yeah, Yeah, Yeah, Yeah"]
+LATE_SINGLE_YEARS = 3                  # warning only: singles released this many years after their album, for review
+
 # METADATA ********************
 
 # META {
@@ -79,7 +93,7 @@ from pyspark.sql.types import (StructType, StructField, StringType, IntegerType,
                                TimestampType)
 
 import u2lib
-from u2lib import matching, shows, songs
+from u2lib import catalog, matching, shows, songs
 from u2lib.quality import Results
 
 RUN_TS = dt.datetime.now(dt.timezone.utc).replace(microsecond=0)
@@ -96,6 +110,11 @@ def clean(s):
         return None
     s = str(s).strip()
     return s or None
+
+
+def is_true(s) -> bool:
+    """Seed booleans are the strings true/false or blank (= false)."""
+    return (clean(s) or "false").lower() == "true"
 
 # METADATA ********************
 
@@ -120,9 +139,11 @@ b_tours = bronze("bronze_seed_tours")
 b_show = bronze("bronze_setlistfm_show")
 b_distinct = bronze("bronze_setlistfm_distinct_song")
 b_song_ovr = bronze("bronze_seed_song_alias_overrides")
+b_release_tracks = bronze("bronze_seed_release_2026_tracks")
 manual_exclusions = {r["setlist_id"].strip() for r in bronze("bronze_seed_show_exclusions") if r["setlist_id"]}
 print(f"release groups {len(b_rg)} | releases {len(b_rel)} | tracks {len(b_track)} | recording-work {len(b_rw)} "
-      f"| works {len(b_work)} | album overrides {len(b_album_ovr)} | seed tours {len(b_tours)} | shows {len(b_show)}")
+      f"| works {len(b_work)} | album overrides {len(b_album_ovr)} | seed tours {len(b_tours)} | shows {len(b_show)} "
+      f"| 2026 release tracks {len(b_release_tracks)}")
 
 # METADATA ********************
 
@@ -371,6 +392,155 @@ print(f"songs {len(song_rows)} (U2 works {len(kept_works)} of {len(u2_works)}, c
 
 # MARKDOWN ********************
 
+# ## 3b. Release tracks of the 2026 trilogy (SPEC-09 §9.3)
+# Release: `album_id` by the seed's `release_group_id`, else by `normalize_title(release_title)` (studio first, earliest
+# date, id); a release that resolves to nothing is a hard failure. Track: song-alias override → work recorded on that
+# release with the same title key → any U2 work with that key → `u2:<song key>`. Songs not yet in `song` are added.
+
+# CELL ********************
+
+def to_date(s):
+    s = clean(s)
+    return dt.date.fromisoformat(s) if s else None
+
+
+def to_int(s):
+    s = clean(s)
+    return int(s) if s else None
+
+
+# Work titles from the work table, completed by the recording-work relations (works not in the artist browse).
+work_title = {w["work_id"]: clean(w["title"]) for w in b_work}
+recording_works = defaultdict(set)
+for rw in b_rw:
+    work_title.setdefault(rw["work_id"], clean(rw["work_title"]))
+    recording_works[rw["recording_id"]].add(rw["work_id"])
+
+# album id -> song key -> work ids recorded on that album (sorted, so the choice is deterministic)
+album_work_sets = defaultdict(lambda: defaultdict(set))
+for recording_id, album_ids in recording_albums.items():
+    for work_id in recording_works.get(recording_id, ()):
+        key = songs.normalize_title(work_title.get(work_id))
+        if key:
+            for album_id in album_ids:
+                album_work_sets[album_id][key].add(work_id)
+album_work_ids = {a: {k: sorted(ids) for k, ids in by_key.items()} for a, by_key in album_work_sets.items()}
+u2_work_ids_by_key = {k: [w["work_id"] for w in sorted(ws, key=original_rank)] for k, ws in works_by_key.items()}
+
+existing_song_ids = {s["song_id"] for s in song_rows}
+release_track_rows, new_song_rows, unresolved_releases, release_type_mismatch = [], [], [], []
+album_methods, song_methods = Counter(), Counter()
+for r in sorted(b_release_tracks, key=lambda r: (to_date(r["release_date"]) or dt.date.max,
+                                                  clean(r["release_title"]) or "", to_int(r["track_number"]) or 0)):
+    track_title, release_title = clean(r["track_title"]), clean(r["release_title"])
+    release_group_id = clean(r.get("release_group_id"))
+    album_id, album_method = catalog.resolve_album_id(album_rows, release_group_id, release_title)
+    album_methods[album_method] += 1
+    if not album_id:
+        unresolved_releases.append(f"{release_title} ({release_group_id})")
+    elif album_by_id[album_id]["album_type"] != (clean(r["release_type"]) or "").lower():
+        release_type_mismatch.append(f"{release_title}: seed {r['release_type']} vs album "
+                                     f"{album_by_id[album_id]['album_type']}")
+    key = songs.normalize_title(track_title)
+    song_id, song_method = catalog.resolve_track_song_id(
+        track_title, override_by_key.get(key), album_work_ids.get(album_id, {}), u2_work_ids_by_key)
+    song_methods[song_method] += 1
+    if song_id not in existing_song_ids:
+        if song_id.startswith("u2:"):
+            first_album, first_year = first_album_and_year(recording_title_albums.get(key, ()))
+            title = track_title
+        else:
+            first_album, first_year = first_album_and_year(work_albums.get(song_id, ()))
+            title = work_title.get(song_id) or track_title
+        row = {"song_id": song_id, "title": title, "first_album_id": first_album, "first_release_year": first_year,
+               "is_original": True, "cover_artist": None, "is_fragment": song_id in fragment_ids}
+        song_rows.append(row)
+        new_song_rows.append(row)
+        existing_song_ids.add(song_id)
+    release_track_rows.append({
+        "track_title": track_title,
+        "release_title": release_title,
+        "release_group_id": release_group_id,
+        "release_type": (clean(r["release_type"]) or "").lower() or None,
+        "release_date": to_date(r["release_date"]),
+        "track_number": to_int(r["track_number"]),
+        "is_single": is_true(r["is_single"]),
+        "single_date": to_date(r["single_date"]),
+        "single_order": to_int(r["single_order"]),
+        "featured_artist": clean(r["featured_artist"]),
+        "is_spoken_word": is_true(r["is_spoken_word"]),
+        "is_bonus_track": is_true(r["is_bonus_track"]),
+        "note": clean(r["note"]),
+        "song_id": song_id,
+        "album_id": album_id,
+    })
+    print(f"{release_title} #{r['track_number']} {track_title} -> {album_id} ({album_method}) | "
+          f"{song_id} ({song_method})")
+print(f"release tracks {len(release_track_rows)} | album by {dict(album_methods)} | song by {dict(song_methods)} "
+      f"| new song rows {len(new_song_rows)}: {[s['song_id'] for s in new_song_rows]}")
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# MARKDOWN ********************
+
+# ## 3c. Singles history (SPEC-09 §9.2)
+# Past studio-album songs (first album is a studio album that is not a 2026 release): a single when an
+# `album_type = 'single'` release group has the same `normalize_title`; `single_date` = that single's earliest release
+# date; `single_order` = order of the single within the song's first studio album. 2026 tracks take the seed values.
+# The 2026 non-album singles in `EXCLUDED_SINGLES` are ignored.
+
+# CELL ********************
+
+release_track_by_song = {r["song_id"]: r for r in release_track_rows}
+release_2026_albums = {r["album_id"] for r in release_track_rows if r["album_id"]}
+single_releases = [(a["title"], a["release_date"]) for a in album_rows if a["album_type"] == "single"]
+past_studio_songs = [
+    {"song_id": s["song_id"], "title": s["title"], "album_id": s["first_album_id"]}
+    for s in song_rows
+    if s["first_album_id"] and album_by_id[s["first_album_id"]]["is_studio"]
+    and s["first_album_id"] not in release_2026_albums and s["song_id"] not in release_track_by_song
+]
+singles = catalog.singles_history(past_studio_songs, single_releases, EXCLUDED_SINGLES)
+for s in song_rows:
+    seed = release_track_by_song.get(s["song_id"])
+    hist = singles.get(s["song_id"])
+    if seed:
+        s["is_single"], s["single_date"], s["single_order"] = seed["is_single"], seed["single_date"], seed["single_order"]
+    elif hist:
+        s["is_single"], s["single_date"], s["single_order"] = True, hist.single_date, hist.single_order
+    else:
+        s["is_single"], s["single_date"], s["single_order"] = False, None, None
+
+excluded_single_keys = {songs.normalize_title(t) for t in EXCLUDED_SINGLES}
+excluded_flagged = sorted(s["song_id"] for s in song_rows
+                          if s["is_single"] and songs.normalize_title(s["title"]) in excluded_single_keys)
+late_singles = sorted(
+    f"{s['title']} ({s['single_date']}, album {album_by_id[s['first_album_id']]['release_year']})"
+    for s in song_rows
+    if s["song_id"] in singles and s["single_date"] and album_by_id[s["first_album_id"]]["release_year"]
+    and s["single_date"].year - album_by_id[s["first_album_id"]]["release_year"] >= LATE_SINGLE_YEARS)
+n_past_singles = len(singles)
+singles_by_album = Counter(album_by_id[s["first_album_id"]]["title"] for s in song_rows if s["song_id"] in singles)
+print(f"single release groups {len(single_releases)} | past studio-album songs {len(past_studio_songs)} "
+      f"| singles among them {n_past_singles} | 2026 seed singles "
+      f"{sum(1 for r in release_track_rows if r['is_single'])}")
+print("Singles per album:", dict(sorted(singles_by_album.items())))
+print("Late singles (review):", late_singles)
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# MARKDOWN ********************
+
 # ## 4. Tour
 
 # CELL ********************
@@ -388,45 +558,47 @@ for s in b_show:
         st["first"] = d if st["first"] is None else min(st["first"], d)
         st["last"] = d if st["last"] is None else max(st["last"], d)
 
-albums_by_key = defaultdict(list)
-for a in album_rows:
-    albums_by_key[songs.normalize_title(a["title"])].append(a)
+seed_by_name = {clean(t["tour_name"]): t for t in b_tours if clean(t["tour_name"])}
+# Planned tours (SPEC-09 §9.2): seed rows with is_planned = true that have no shows yet get a row with 0 shows.
+planned_names = sorted(n for n, t in seed_by_name.items() if is_true(t.get("is_planned")))
+planned_without_shows = [n for n in planned_names if n not in tour_stats]
+empty_stats = {"first": None, "last": None, "shows": 0}
 
-
-def resolve_album(title):
-    """Album id for a seed title: normalised title match; prefer studio, then earliest release date, then id."""
-    hits = albums_by_key.get(songs.normalize_title(title), [])
-    if not hits:
-        return None
-    best = min(hits, key=lambda a: (not a["is_studio"], a["release_date"] or dt.date(9999, 12, 31), a["album_id"]))
-    return best["album_id"]
-
-
-seed_by_name = {t["tour_name"]: t for t in b_tours}
 tour_rows, unresolved, missing_note = [], [], []
-for name in sorted(tour_stats):
+for name in sorted(set(tour_stats) | set(planned_without_shows)):
     seed = seed_by_name.get(name, {})
     promoted_title = clean(seed.get("album_promoted"))
-    album_id = resolve_album(promoted_title) if promoted_title else None
+    album_id = catalog.resolve_album_id(album_rows, None, promoted_title)[0] if promoted_title else None
     if promoted_title and not album_id:
         unresolved.append(f"{name} -> {promoted_title}")
-    st = tour_stats[name]
+    st = tour_stats.get(name, empty_stats)
     if (name != NO_TOUR and not album_id and st["shows"] >= MIN_SHOWS_NEED_ALBUM
             and not clean(seed.get("note"))):
         missing_note.append(name)
+    tour_type = clean(seed.get("tour_type"))
     tour_rows.append({
         "tour_name": name,
         "tour_name_display": clean(seed.get("tour_name_display")) or name,
         "album_promoted_id": album_id,
-        "is_residency": (clean(seed.get("is_residency")) or "false").lower() == "true",
+        "is_residency": is_true(seed.get("is_residency")),
         "era": clean(seed.get("era")),
+        "tour_type": tour_type.lower() if tour_type else None,   # (No tour) has no seed row: null
+        "is_planned": is_true(seed.get("is_planned")),
         "first_show_date": st["first"],
         "last_show_date": st["last"],
         "shows": st["shows"],
     })
 tours_not_in_seed = sorted(n for n in tour_stats if n != NO_TOUR and n not in seed_by_name)
-seed_tours_not_in_bronze = sorted(n for n in seed_by_name if n not in tour_stats)
-print(f"tours {len(tour_rows)} | unresolved promoted albums {unresolved} | not in seed {tours_not_in_seed}")
+seed_tours_not_in_bronze = sorted(n for n in seed_by_name if n not in tour_stats and n not in planned_names)
+tours_without_type = sorted(t["tour_name"] for t in tour_rows if t["tour_name"] != NO_TOUR and not t["tour_type"])
+bad_tour_types = sorted({t["tour_type"] for t in tour_rows if t["tour_type"] and t["tour_type"] not in TOUR_TYPES})
+anniversary_residency = sorted(t["tour_name"] for t in tour_rows if t["tour_type"] in ("anniversary", "residency"))
+residency_mismatch = sorted(t["tour_name"] for t in tour_rows
+                            if t["tour_name"] != NO_TOUR and t["is_residency"] != (t["tour_type"] == "residency"))
+planned_with_shows = sorted(n for n in planned_names if n in tour_stats)
+print(f"tours {len(tour_rows)} | planned {planned_names} (without shows {planned_without_shows}) "
+      f"| unresolved promoted albums {unresolved} | not in seed {tours_not_in_seed}")
+print("Anniversary/residency tours:", anniversary_residency)
 
 # METADATA ********************
 
@@ -449,13 +621,21 @@ schemas = {
     "song": StructType([
         StructField("song_id", S), StructField("title", S), StructField("first_album_id", S),
         StructField("first_release_year", I), StructField("is_original", B), StructField("cover_artist", S),
-        StructField("is_fragment", B)]),
+        StructField("is_fragment", B), StructField("is_single", B), StructField("single_date", D),
+        StructField("single_order", I)]),
     "tour": StructType([
         StructField("tour_name", S), StructField("tour_name_display", S), StructField("album_promoted_id", S),
-        StructField("is_residency", B), StructField("era", S), StructField("first_show_date", D),
-        StructField("last_show_date", D), StructField("shows", I)]),
+        StructField("is_residency", B), StructField("era", S), StructField("tour_type", S),
+        StructField("is_planned", B), StructField("first_show_date", D), StructField("last_show_date", D),
+        StructField("shows", I)]),
+    "release_track": StructType([
+        StructField("track_title", S), StructField("release_title", S), StructField("release_group_id", S),
+        StructField("release_type", S), StructField("release_date", D), StructField("track_number", I),
+        StructField("is_single", B), StructField("single_date", D), StructField("single_order", I),
+        StructField("featured_artist", S), StructField("is_spoken_word", B), StructField("is_bonus_track", B),
+        StructField("note", S), StructField("song_id", S), StructField("album_id", S)]),
 }
-rows_by_table = {"album": album_rows, "song": song_rows, "tour": tour_rows}
+rows_by_table = {"album": album_rows, "song": song_rows, "tour": tour_rows, "release_track": release_track_rows}
 
 dfs = {}
 for table, rows in rows_by_table.items():
@@ -506,8 +686,10 @@ dq.check("album_overrides_all_applied", not overrides_not_applied, "warning",
 dq.check("song_no_dup_id", counts["song"] == dfs["song"].select("song_id").distinct().count(), "hard")
 work_ids = {w["work_id"] for w in u2_works}
 kept_ids = {w["work_id"] for w in kept_works}
-dq.check("song_u2_works_complete", sum(1 for s in song_rows if s["song_id"] in work_ids) == len(kept_works), "hard",
-         value=f"{len(kept_works)} kept of {len(u2_works)}")
+new_work_rows = sum(1 for s in new_song_rows if s["song_id"] in work_ids)   # 2026 tracks on works not kept above
+dq.check("song_u2_works_complete",
+         sum(1 for s in song_rows if s["song_id"] in work_ids) == len(kept_works) + new_work_rows, "hard",
+         value=f"{len(kept_works)} kept of {len(u2_works)} + {new_work_rows} from 2026 tracks")
 dq.check("song_referenced_works_kept", referenced_works <= kept_ids, "hard",
          value=",".join(sorted(referenced_works - kept_ids)) or len(referenced_works))
 dq.check("song_works_dropped_unplayed_unreleased", True, "warning", value=dropped_works)
@@ -522,8 +704,51 @@ dq.check("song_synthetic_originals_complete", len(synthetic_originals) == n_orig
 bad_targets = sorted(t for t in override_by_key.values() if t not in ("ignore", "original") and t not in work_ids)
 dq.check("song_override_work_ids_exist", not bad_targets, "hard", value=",".join(bad_targets) or None)
 
-dq.check("tour_one_row_per_tour_plus_no_tour", counts["tour"] == len(tour_stats) and NO_TOUR in tour_stats, "hard",
+dq.check("song_singles_past_studio", True, "warning", value=n_past_singles)
+dq.check("song_singles_late_for_review", True, "warning", value="; ".join(late_singles) or 0)
+dq.check("song_excluded_2026_singles_not_flagged", not excluded_flagged, "hard",
+         value=",".join(excluded_flagged) or None)
+bad_single_order = sorted(s["song_id"] for s in song_rows if s["is_single"] != (s["single_order"] is not None))
+dq.check("song_single_order_iff_single", not bad_single_order, "hard", value=",".join(bad_single_order) or None)
+
+# tour (SPEC-03 acceptance as changed by SPEC-09 §9.3: setlist.fm tours + (No tour) + planned tours)
+dq.check("tour_one_row_per_tour_plus_no_tour_plus_planned",
+         counts["tour"] == len(tour_stats) + len(planned_without_shows) and NO_TOUR in tour_stats, "hard",
          value=counts["tour"])
+dq.check("tour_has_tour_type", not tours_without_type, "hard", value="; ".join(tours_without_type) or None)
+dq.check("tour_type_values_valid", not bad_tour_types, "hard", value=",".join(bad_tour_types) or None)
+dq.check("tour_anniversary_residency_count", len(anniversary_residency) == EXPECTED_ANNIVERSARY_RESIDENCY, "hard",
+         value="; ".join(anniversary_residency))
+dq.check("tour_is_residency_matches_type", not residency_mismatch, "hard",
+         value="; ".join(residency_mismatch) or None)
+dq.check("tour_planned_present", len(planned_names) >= 1, "hard", value="; ".join(planned_names) or None)
+planned_rows_ok = all(t["shows"] == 0 and t["first_show_date"] is None and t["last_show_date"] is None
+                      for t in tour_rows if t["tour_name"] in planned_without_shows)
+dq.check("tour_planned_without_shows_empty", planned_rows_ok, "hard", value=len(planned_without_shows))
+# Once setlist.fm publishes the first show under the planned name, the row has shows: time to clear is_planned (T-53).
+dq.check("tour_planned_has_no_shows_yet", not planned_with_shows, "warning",
+         value="; ".join(planned_with_shows) or None)
+
+# release_track (SPEC-09 §9.9)
+dq.check("release_track_count", counts["release_track"] == EXPECTED_RELEASE_TRACKS == len(b_release_tracks), "hard",
+         value=f"{counts['release_track']}/{len(b_release_tracks)} expected {EXPECTED_RELEASE_TRACKS}")
+dq.check("release_track_release_resolved", not unresolved_releases, "hard",
+         value="; ".join(unresolved_releases) or None)
+n_rt_missing = dfs["release_track"].filter("song_id IS NULL OR album_id IS NULL").count()
+dq.check("release_track_has_song_and_album", n_rt_missing == 0, "hard", value=n_rt_missing)
+dq.check("release_track_album_by_id", album_methods.get("id", 0) == len(release_track_rows), "warning",
+         value=json.dumps(dict(album_methods)))
+dq.check("release_track_release_type_matches_album", not release_type_mismatch, "warning",
+         value="; ".join(release_type_mismatch) or None)
+dq.check("release_track_no_dup_track",
+         counts["release_track"] == dfs["release_track"].select("release_title", "track_number").distinct().count(),
+         "hard")
+dq.check("release_track_one_track_per_song", len(release_track_by_song) == len(release_track_rows), "hard",
+         value=len(release_track_by_song))
+dq.check("release_track_songs_exist", set(release_track_by_song) <= existing_song_ids, "hard",
+         value=len(release_track_by_song))
+dq.check("release_track_song_methods", True, "warning", value=json.dumps(dict(song_methods)))
+dq.check("song_new_rows_for_2026_tracks", True, "warning", value=len(new_song_rows))
 dq.check("tour_promoted_album_resolved", not unresolved, "hard", value="; ".join(unresolved) or None)
 dq.check("tour_big_tours_have_album_or_note", not missing_note, "hard", value="; ".join(missing_note) or None)
 dq.check("tour_names_in_seed", not tours_not_in_seed, "warning", value="; ".join(tours_not_in_seed) or None)
@@ -553,6 +778,11 @@ exit_value = {
     **{t: n for t, (n, _) in image_counts.items()},
     "u2_works_with_first_album": with_album,
     "tours_with_promoted_album": sum(1 for t in tour_rows if t["album_promoted_id"]),
+    "tours_planned": len(planned_names), "tours_anniversary_residency": len(anniversary_residency),
+    "release_track_album_by": dict(album_methods), "release_track_song_by": dict(song_methods),
+    "new_song_rows_2026": len(new_song_rows), "single_release_groups": len(single_releases),
+    "past_studio_songs": len(past_studio_songs), "past_singles": n_past_singles,
+    "songs_is_single": sum(1 for s in song_rows if s["is_single"]),
     **dq.summary(),
 }
 print(json.dumps(exit_value, indent=2))
