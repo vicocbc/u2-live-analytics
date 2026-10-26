@@ -242,7 +242,7 @@ Anchor: the predicted setlist as a ticket (same language as the p08 stub). Left:
 column (528 px). Built straight in `scripts/gen_report.py`; Vini reviews the rendered page in T-52.
 
 ```
- [Overview|Road|Songs|Albums|Setlists|Sphere|Next tour|About]    ALL 25 NEW SONGS, BY RELEASE: 8 MAKE THE SETLIST
+ [Overview|Road|Songs|Albums|Setlists|Sphere|2027|About]         ALL 25 NEW SONGS, BY RELEASE: 8 MAKE THE SETLIST
  OUR GUESS FOR 2027: 24 SONGS A NIGHT, 8 OF THEM NEW (DIN)       Release · Song · Chance ▬▬ · ✓ picked   (scrolls)
  Before the first show, our model picks 6 … 61% vs 48% (HTML)    "Toss-ups: 2 of the 7 album songs tied at 38% …"
  ┌ ⛺ THE GREATEST SHOW ON EARTH TOUR   24   8 new   16 older ┐  +12.7 pp  HOW GOOD IS THIS? replayed since Zoo TV …
@@ -254,15 +254,15 @@ column (528 px). Built straight in `scripts/gen_report.py`; Vini reviews the ren
 
 | Element | x, y, w, h | Tag | Fields | Q |
 | --- | --- | --- | --- | --- |
-| `p10_nav` | 40, 6, 656, 44 | NAT page navigator | page 10 appears as "Next tour", before About | — |
+| `p10_nav` | 40, 6, 656, 44 | NAT page navigator | page 10 appears as "2027", before About (T-52: 8 tabs, 9 pt, no cell padding; p07/p08 navs widened to 656) | — |
 | `p10_headline` | 40, 54, 656, 144 | HTML | `Headline p10`, `First Glimpse p10` (report measures from `Expected Songs per Show`, `New Songs Predicted`, `Catalog Songs Predicted`, `Model/Baseline Precision at N`; **request** to promote to the model) | Q12 |
 | `p10_setlist_ticket` | 40, 208, 656, 480 | HTML (anchor) | `Ticket p10`: `fact_setlist_prediction` rows of the latest as-of date with `predicted_in_setlist`, in `predicted_position` order, set header when `predicted_set` changes; per song position, title, NEW · ALBUM/EP tag (`model_part`, `dim_song[release_role_2027]`), chance bar and % (`probability`); band with glyph, tour, as-of date, `Expected Songs per Show`, `New Songs Predicted` (album/EP split), `Catalog Songs Predicted`; footnote: order approximate, chances not rescaled, list = top N | Q12 |
-| `p10_new_songs_table` | 728, 16, 528, 224 | NAT table, all 25 rows (scrolls on purpose), data bars, picked songs in `accent` + "✓ picked" | `Release p10`, `dim_song[song_title]`, `Predicted Probability`, `In Setlist p10`; filter `release_role_2027` in (promoted_album, companion_release) | Q12 |
-| `p10_ties_note` | 728, 244, 528, 40 | HTML italic `accent` | `Ties Note p10` (tied scores among the last new-song slots, from the data) | Q12 |
-| `p10_backtest_intro` | 728, 292, 528, 72 | HTML | `Model vs. Baseline` as the big number, `Selected Baseline`, B1–B3 explained | Q12 |
-| `p10_backtest_bar` | 728, 368, 528, 92 | NAT bar, model `accent`, baselines `neutral` | `fact_setlist_backtest[method]` (model, B1, B2, B3), `Mean Precision at N` | Q12 |
-| `p10_analog_note` | 728, 464, 528, 36 | HTML italic `accent` | `Closest Analog Note p10` (e+i: model vs B1) | Q12 |
-| `p10_tracker_intro` | 728, 504, 528, 40 | HTML | `Tracker Intro p10`: empty-state text until the first show, then shows played and `Hit Rate` | Q12 |
+| `p10_new_songs_table` | 728, 16, 528, 216 | NAT table, all 25 rows (vertical scroll on purpose; columns 104/196/92/58 px, no horizontal scroll), data bars, picked songs in `accent` + "✓ picked" | `Release p10`, `dim_song[song_title]`, `Predicted Probability`, `In Setlist p10`; filter `release_role_2027` in (promoted_album, companion_release) | Q12 |
+| `p10_ties_note` | 728, 236, 528, 36 | HTML italic `accent` | `Ties Note p10` (tied scores among the last new-song slots, from the data) | Q12 |
+| `p10_backtest_intro` | 728, 280, 528, 56 | HTML | `Model vs. Baseline` as the big number, `Selected Baseline` named as the best simple rule | Q12 |
+| `p10_backtest_bars` | 728, 340, 528, 112 | HTML labelled bars (T-52: the native bar chart rendered only its placeholder at 92 px) | `Backtest Bars p10`: `Mean Precision at N` per `fact_setlist_backtest[method]` (Model in `accent`; B1 repeat the last album tour, B2 career's most played, B3 latest tour in `neutral`), value labels | Q12 |
+| `p10_analog_note` | 728, 456, 528, 36 | HTML italic `accent` | `Closest Analog Note p10` (e+i: model vs B1) | Q12 |
+| `p10_tracker_intro` | 728, 500, 528, 44 | HTML | `Tracker Intro p10`: empty-state text until the first show, then shows played and `Hit Rate` | Q12 |
 | `p10_hit_rate_line` | 728, 548, 256, 140 | NAT line | `dim_date[date]`, `Hit Rate` (empty before the first show) | Q12 |
 | `p10_chance_line` | 1000, 548, 256, 140 | NAT line, legend new/catalog | `dim_date[date]`, `Predicted Probability`, series `model_part`; filters `predicted_in_setlist` = true, `Tour Started p10` > 0 | Q12 |
 
@@ -285,7 +285,7 @@ the ticket inlines the original `glyph_greatest_show_2027.svg` (big top tent, `c
 | Q8 | Show length and structure (openers, encores, closers) | `p05_songs_per_show_line`, `p05_openers_closers`, `p07_position_bar`, `p08_ticket`, `p08_vs_tour_callouts`, `p06_every_show_scatter` |
 | Q9 | Covers and guest appearances | `p03_covers_guests`, `p08_ticket` |
 | Q10 | Sphere residency vs. touring | `p06_residency_callouts`, `p06_head_to_head`, `p06_every_show_scatter`, `p05_variety_table` (Sphere row) |
-| Q12 | 2027 setlist prediction, trilogy share, how close it was | `p10_headline`, `p10_setlist_ticket`, `p10_new_songs_table`, `p10_ties_note`, `p10_backtest_intro`, `p10_backtest_bar`, `p10_analog_note`, `p10_hit_rate_line`, `p10_chance_line` |
+| Q12 | 2027 setlist prediction, trilogy share, how close it was | `p10_headline`, `p10_setlist_ticket`, `p10_new_songs_table`, `p10_ties_note`, `p10_backtest_intro`, `p10_backtest_bars`, `p10_analog_note`, `p10_hit_rate_line`, `p10_chance_line` |
 
 ## 6. Colour, type and contrast
 
@@ -356,7 +356,7 @@ To the **data-analyst** (T-51, page 10):
 | `Headline p10`, `First Glimpse p10` | text measures | promote the report-level versions (same wording) to the model, folder Text | p10 |
 | `Tour Icon SVG` / `Tour Icon` for The Greatest Show on Earth Tour | measure change | add `glyph_greatest_show_2027.svg` (and a row in `glyph_paths.csv` via `scripts/gen_glyph_paths.py`) so tour tables show the planned tour | p10, tour tables |
 | `dim_song` release of *Get Back to Now* | data | it has no `album_key` (Unknown); the report shows "Carnaval de luz (bonus)" from the tour's promoted album. A Gold fix (release from `release_track`) would remove the workaround | p10 |
-| `method_label` on `fact_setlist_backtest` (or a small method dimension) | column | readable names ("Model", "B1 · last album tour", …) for the bar axis instead of model/B1/B2/B3 | p10 |
+| `method_label` on `fact_setlist_backtest` (or a small method dimension) | column | optional since T-52: the HTML bars carry their own labels | p10 |
 
 ## 8. As built (T-32..T-34, 2026-10-21)
 

@@ -1240,7 +1240,7 @@
         {
           "name": "Ties Note p10 · p10_ties_note",
           "dataType": "Text",
-          "expression": "\"<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:32px;overflow:hidden'>\" & [Ties Note p10] & \"</div>\"",
+          "expression": "\"<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:28px;overflow:hidden'>\" & [Ties Note p10] & \"</div>\"",
           "description": "Typography wrapper (presentation only).",
           "references": {
             "measures": [
@@ -1255,7 +1255,7 @@
         {
           "name": "Backtest Intro p10",
           "dataType": "Text",
-          "expression": "\"<div style='display:flex;gap:14px;align-items:flex-start;font-family:Segoe UI'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#F2A93B;flex:none'>\" & FORMAT ( [Model vs. Baseline] * 100, \"+0.0;-0.0;0.0\", \"en-US\" ) & \" pp\" & \"</div><div style='font-size:12px;line-height:1.4;color:#A3A9B3'><span style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>HOW GOOD IS THIS?</span> Replayed on every album tour since Zoo TV, knowing only what came before its first show: share of its picks that became core songs, vs \" & [Selected Baseline] & \" (repeat the last album tour), B2 (career's most played) and B3 (latest tour: Sphere for 2027).</div></div>\"",
+          "expression": "\"<div style='display:flex;gap:14px;align-items:flex-start;font-family:Segoe UI'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#F2A93B;flex:none'>\" & FORMAT ( [Model vs. Baseline] * 100, \"+0.0;-0.0;0.0\", \"en-US\" ) & \" pp\" & \"</div><div style='font-size:12px;line-height:1.4;color:#A3A9B3'><span style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>HOW GOOD IS THIS?</span> Replayed on every album tour since Zoo TV, knowing only what came before its first show: more of its picks became core songs (played at half the shows or more) than with \" & [Selected Baseline] & \", the best simple rule.</div></div>\"",
           "description": "HTML: backtest section intro with the model's lead over the baseline as a big number.",
           "references": {
             "measures": [
@@ -1273,7 +1273,7 @@
         {
           "name": "Backtest Intro p10 · p10_backtest_intro",
           "dataType": "Text",
-          "expression": "\"<div style='height:64px;overflow:hidden'>\" & [Backtest Intro p10] & \"</div>\"",
+          "expression": "\"<div style='height:48px;overflow:hidden'>\" & [Backtest Intro p10] & \"</div>\"",
           "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
           "references": {
             "measures": [
@@ -1286,10 +1286,33 @@
           }
         },
         {
-          "name": "Method Colour p10",
+          "name": "Backtest Bars p10",
           "dataType": "Text",
-          "expression": "IF ( SELECTEDVALUE ( fact_setlist_backtest[method] ) = \"model\", \"#F2A93B\", \"#6E7581\" )",
-          "description": "Hex colour for conditional formatting (presentation only)."
+          "expression": "VAR P_model = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = \"model\" ) VAR P_B1 = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = \"B1\" ) VAR P_B2 = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = \"B2\" ) VAR P_B3 = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = \"B3\" ) RETURN \"<div style='font-family:Segoe UI;font-size:12px'><div style='font-size:11px;color:#A3A9B3;margin-bottom:4px'>Share of the picks that became core songs, album tours since Elevation</div>\" & \"<div style='display:flex;align-items:center;gap:10px;height:22px'><div style='width:216px;flex:none;white-space:nowrap;color:#F2A93B;font-weight:700;'>Model</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;background:#F2A93B;width:\" & FORMAT ( 100 * COALESCE ( P_model, 0 ), \"0\", \"en-US\" ) & \"%'></div></div><div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:15px;color:#F2A93B'>\" & FORMAT ( P_model, \"0%\", \"en-US\" ) & \"</div></div>\" & \"<div style='display:flex;align-items:center;gap:10px;height:22px'><div style='width:216px;flex:none;white-space:nowrap;color:#ECEDEF;'>B1 · repeat the last album tour</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;background:#6E7581;width:\" & FORMAT ( 100 * COALESCE ( P_B1, 0 ), \"0\", \"en-US\" ) & \"%'></div></div><div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:15px;color:#ECEDEF'>\" & FORMAT ( P_B1, \"0%\", \"en-US\" ) & \"</div></div>\" & \"<div style='display:flex;align-items:center;gap:10px;height:22px'><div style='width:216px;flex:none;white-space:nowrap;color:#ECEDEF;'>B2 · career's most played songs</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;background:#6E7581;width:\" & FORMAT ( 100 * COALESCE ( P_B2, 0 ), \"0\", \"en-US\" ) & \"%'></div></div><div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:15px;color:#ECEDEF'>\" & FORMAT ( P_B2, \"0%\", \"en-US\" ) & \"</div></div>\" & \"<div style='display:flex;align-items:center;gap:10px;height:22px'><div style='width:216px;flex:none;white-space:nowrap;color:#ECEDEF;'>B3 · latest tour (Sphere for 2027)</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;background:#6E7581;width:\" & FORMAT ( 100 * COALESCE ( P_B3, 0 ), \"0\", \"en-US\" ) & \"%'></div></div><div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:15px;color:#ECEDEF'>\" & FORMAT ( P_B3, \"0%\", \"en-US\" ) & \"</div></div>\" & \"</div>\"",
+          "description": "HTML: backtest precision of the model and the three baselines as labelled bars.",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_backtest",
+                "name": "Mean Precision at N"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Backtest Bars p10 · p10_backtest_bars",
+          "dataType": "Text",
+          "expression": "\"<div style='height:104px;overflow:hidden'>\" & [Backtest Bars p10] & \"</div>\"",
+          "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Backtest Bars p10"
+              }
+            ]
+          }
         },
         {
           "name": "Closest Analog Note p10",
@@ -1364,7 +1387,7 @@
         {
           "name": "Tracker Intro p10 · p10_tracker_intro",
           "dataType": "Text",
-          "expression": "\"<div style='height:32px;overflow:hidden'>\" & [Tracker Intro p10] & \"</div>\"",
+          "expression": "\"<div style='height:36px;overflow:hidden'>\" & [Tracker Intro p10] & \"</div>\"",
           "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
           "references": {
             "measures": [

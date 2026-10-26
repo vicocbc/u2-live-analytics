@@ -5,7 +5,7 @@
     "x": 728,
     "y": 16,
     "z": 4000,
-    "height": 224,
+    "height": 216,
     "width": 528,
     "tabOrder": 4000
   },
@@ -366,7 +366,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "124D"
+                  "Value": "104D"
                 }
               }
             }
@@ -380,7 +380,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "214D"
+                  "Value": "196D"
                 }
               }
             }
@@ -394,7 +394,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "104D"
+                  "Value": "92D"
                 }
               }
             }
@@ -408,7 +408,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "64D"
+                  "Value": "58D"
                 }
               }
             }

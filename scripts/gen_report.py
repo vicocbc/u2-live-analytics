@@ -425,7 +425,7 @@ def nav(page, x=40, y=12, w=640):
                 {
                     "properties": {
                         "fontColor": color(T["muted"]),
-                        "fontSize": lit(10),
+                        "fontSize": lit(9),
                         "fontFamily": lit("Segoe UI"),
                         "verticalAlignment": lit("middle"),
                         "leftMargin": lit(0),
@@ -437,6 +437,7 @@ def nav(page, x=40, y=12, w=640):
             "fill": props(show=lit(False)),
             "border": props(show=lit(False)),
             "outline": props(show=lit(False)),
+            "layout": props(cellPadding=lit(0)),  # 8 tabs share the width: no gaps, so every label stays whole
             "accentBar": [
                 {
                     "properties": {
@@ -2053,7 +2054,7 @@ def page_song_detail():
     p = Page("p07_song_detail", "Song", drill=col("dim_song", "song_title"), hidden=True)
     image(p, "p07_photo", "photo_popmart_1997_reggio_emilia.jpg", 800, 0, 480, 208, "PopMart Tour, Reggio Emilia 1997")
     scrim(p, "p07_scrim_left", "left", 800, 0, 240, 208)
-    nav(p, 40, 6, 640)
+    nav(p, 40, 6, 656)
     back_button(p, 704, 12)
     card_body = (
         "\"<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;"
@@ -2202,7 +2203,7 @@ def page_show_detail():
     p = Page("p08_show_detail", "Show", drill=col("dim_show", "show_label"), hidden=True)
     image(p, "p08_photo", "photo_war_1983_dublin.jpg", 900, 0, 380, 720, "War Tour, Dublin 1983, by Colm Henry")
     scrim(p, "p08_scrim_left", "left", 900, 0, 190, 720)
-    nav(p, 40, 6, 640)
+    nav(p, 40, 6, 656)
     back_button(p, 704, 12)
     header = (
         "\"<div style='color:#F2A93B;font-size:10px;letter-spacing:1.4px;font-weight:700;padding-top:8px'>\" & "
@@ -2446,7 +2447,7 @@ def page_next_tour():
     """Page 10 (SPEC-09 §9.8, Q12): the predicted 2027 setlist, the new material, how good the model was in the
     backtest, and (from the first show on) predicted vs played. Left: story column with the setlist ticket (anchor).
     Right: new songs, backtest, in-tour tracker."""
-    p = Page("p10_next_tour", "Next tour")
+    p = Page("p10_next_tour", "2027")  # short tab label: 8 tabs share navs as narrow as 656 px
     lw, rx, rw = 656, 728, 528  # left column width (x 40), right column x and width
     nav(p, 40, 6, lw)
     asof = "VAR AsOf = [Prediction As-Of Date Key] "
@@ -2698,14 +2699,14 @@ def page_next_tour():
         rx,
         16,
         rw,
-        224,
+        216,
         new_fields,
         "All 25 songs of the 2026 album and EPs by release, with each song's chance; songs in the predicted setlist "
         "in amber and marked picked; right-click a song for its story",
         sort=[(release, "Ascending"), (chance, "Descending")],
         filters=[basic_filter(col("dim_song", "release_role_2027"), ["promoted_album", "companion_release"], "new")],
         title=new_title,
-        widths=[124, 214, 104, 64],
+        widths=[104, 196, 92, 58],  # 450 px: room for the vertical scrollbar, no horizontal one
         extra_objects={
             "values": [
                 *props(
@@ -2761,9 +2762,9 @@ def page_next_tour():
         p,
         "p10_ties_note",
         rx,
-        244,
+        236,
         rw,
-        40,
+        36,
         ties,
         size=12.5,
         color_=T["accent"],
@@ -2781,33 +2782,56 @@ def page_next_tour():
         "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;"
         "color:#F2A93B;flex:none'>\" & " + pp + " & \"</div><div style='font-size:12px;line-height:1.4;"
         f"color:#A3A9B3'><span style='{KICKER}'>HOW GOOD IS THIS?</span> Replayed on every album tour since Zoo TV, "
-        "knowing only what came before its first show: share of its picks that became core songs, vs "
-        '" & [Selected Baseline] & " (repeat the last album tour), B2 (career\'s most played) and B3 '
-        '(latest tour: Sphere for 2027).</div></div>"',
+        "knowing only what came before its first show: more of its picks became core songs (played at half the "
+        'shows or more) than with " & [Selected Baseline] & ", the best simple rule.</div></div>"',
         description="HTML: backtest section intro with the model's lead over the baseline as a big number.",
     )
     ext_refs(None, [(FSB, "Model vs. Baseline"), (FSB, "Selected Baseline")])
-    html(p, "p10_backtest_intro", rx, 292, rw, 72, good, alt="How good is the model: lead over the simple baseline")
-    method = col(FSB, "method")
-    bar_colour = color_measure(
-        "Method Colour p10",
-        f'IF ( SELECTEDVALUE ( {FSB}[method] ) = "model", "{T["accent"]}", "{T["neutral"]}" )',
-        refs=[],
+    html(p, "p10_backtest_intro", rx, 280, rw, 56, good, alt="How good is the model: lead over the simple baseline")
+
+    # backtest precision per method as labelled HTML bars (the native bar chart did not render at this size, T-52)
+    def method_row(m, label):
+        hi = m == "model"
+        tc = T["accent"] if hi else T["text"]
+        return (
+            "\"<div style='display:flex;align-items:center;gap:10px;height:22px'>"
+            f"<div style='width:216px;flex:none;white-space:nowrap;color:{tc};{'font-weight:700;' if hi else ''}'>"
+            f"{label}</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;"
+            f'background:{T["accent"] if hi else T["neutral"]};width:" & '
+            f'FORMAT ( 100 * COALESCE ( P_{m}, 0 ), "0", "en-US" ) & "%\'></div></div>'
+            "<div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;"
+            f'font-size:15px;color:{tc}\'>" & FORMAT ( P_{m}, "0%", "en-US" ) & "</div></div>"'
+        )
+
+    methods = (
+        ("model", "Model"),
+        ("B1", "B1 · repeat the last album tour"),
+        ("B2", "B2 · career's most played songs"),
+        ("B3", "B3 · latest tour (Sphere for 2027)"),
     )
-    bar(
+    bars = ext_measure(
+        FS,
+        "Backtest Bars p10",
+        " ".join(
+            f'VAR P_{m} = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "{m}" )'
+            for m, _ in methods
+        )
+        + " RETURN \"<div style='font-family:Segoe UI;font-size:12px'><div style='font-size:11px;color:#A3A9B3;"
+        "margin-bottom:4px'>Share of the picks that became core songs, album tours since Elevation</div>\" & "
+        + " & ".join(method_row(m, label) for m, label in methods)
+        + ' & "</div>"',
+        description="HTML: backtest precision of the model and the three baselines as labelled bars.",
+    )
+    ext_refs(None, [(FSB, "Mean Precision at N")])
+    html(
         p,
-        "p10_backtest_bar",
+        "p10_backtest_bars",
         rx,
-        368,
+        340,
         rw,
-        92,
-        named(method, "Method"),
-        named(meas(FSB, "Mean Precision at N"), "Precision"),
-        "Backtest precision on the album tours since Elevation: the model against the three simple baselines",
-        title="Share of the picks that became core songs, album tours since Elevation",
-        filters=[basic_filter(method, ["model", "B1", "B2", "B3"], "methods")],
-        fill=fill_by(bar_colour),
-        margin=12,
+        112,
+        bars,
+        alt="Backtest precision on the album tours since Elevation: the model against the three simple baselines",
     )
     ei = ext_measure(
         FS,
@@ -2826,7 +2850,7 @@ def page_next_tour():
         p,
         "p10_analog_note",
         rx,
-        464,
+        456,
         rw,
         36,
         ei,
@@ -2860,7 +2884,7 @@ def page_next_tour():
         description="HTML: in-tour section intro, an empty-state message before the first show.",
     )
     ext_refs(None, [(FSP, "Hit Rate")], ["Tour Started p10"])
-    html(p, "p10_tracker_intro", rx, 504, rw, 40, tracker, alt="Once the tour starts: predicted versus played")
+    html(p, "p10_tracker_intro", rx, 500, rw, 44, tracker, alt="Once the tour starts: predicted versus played")
 
     def line(vname, x, y_field, alt, title, series=None, filters=None):
         roles = {"Category": [named(col("dim_date", "date"), "Date")], "Y": [y_field]}
