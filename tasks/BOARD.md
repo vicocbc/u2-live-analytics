@@ -104,7 +104,7 @@ No git until T-40: agents push changes to the workspace (MCP / `fab`) and keep `
 | T-47 | `nb_silver_setlist_features` with the no-leakage assertion (SPEC-09 §9.4) | data-scientist | T-46 | done |
 | T-48 | `nb_silver_setlist_prediction`: baselines, model, backtest, 2027 prediction; results and `model_version` in `docs/run-log.md` (SPEC-09 §9.5–9.6); data-analyst reproduces the backtest metrics with T-SQL | data-scientist + data-analyst | T-47 | done |
 | T-49 | Gold: `fact_setlist_prediction`, `fact_setlist_backtest`, new `dim_tour`/`dim_song` columns (`ALTER TABLE`), procedures, notebooks added to `pl_refresh` | data-engineer | T-48 | review |
-| T-50 | Measures for SPEC-09 §9.7 with DAX tests; refresh the TMDL copy | data-analyst | T-49 | review |
-| T-51 | Page 10 · Next tour in PBIR (SPEC-09 §9.8) | dashboard-designer | T-50 | review |
-| T-52 | Check page 10 in Power BI Desktop | vini | T-51 | todo |
+| T-50 | Measures for SPEC-09 §9.7 with DAX tests; refresh the TMDL copy | data-analyst | T-49 | done |
+| T-51 | Page 10 · Next tour in PBIR (SPEC-09 §9.8) | dashboard-designer | T-50 | done |
+| T-52 | Check page 10 in Power BI Desktop | vini | T-51 | done |
 | T-53 | After the first show (2027-02-23): set the exact setlist.fm `tour_name` in `seeds/tours.csv`, rerun, confirm in-tour updates and predicted vs. played | data-analyst + vini | T-52 | todo |

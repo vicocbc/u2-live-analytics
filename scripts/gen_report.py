@@ -2706,7 +2706,7 @@ def page_next_tour():
         sort=[(release, "Ascending"), (chance, "Descending")],
         filters=[basic_filter(col("dim_song", "release_role_2027"), ["promoted_album", "companion_release"], "new")],
         title=new_title,
-        widths=[104, 196, 92, 58],  # 450 px: room for the vertical scrollbar, no horizontal one
+        widths=[104, 176, 92, 78],  # 450 px: room for the vertical scrollbar, no horizontal one; 78 fits "✓ picked"
         extra_objects={
             "values": [
                 *props(

@@ -1,7 +1,7 @@
 # U2 Live Analytics
 
 **Fifty years of U2 on stage (1,874 shows, 29,366 songs played in full) turned into a Microsoft Fabric medallion
-pipeline and a nine-page Power BI report.**
+pipeline and a ten-page Power BI report, including a forecast of the 2027 setlist.**
 
 ![Overview page of the report: shows per year since 1976, the ten most played songs and KPI tiles](docs/img/01-overview.png)
 
@@ -14,11 +14,11 @@ Built by Vinicius Baccarini ([LinkedIn](https://www.linkedin.com/in/vin%C3%ADciu
 
 ---
 
-## Three findings
+## Three findings and a forecast
 
-Numbers from the Gold build of 2026-10-22; each one was reproduced with T-SQL on the warehouse and a DAX query on the
-model ([`docs/run-log.md`](docs/run-log.md), [`tests/dax/`](tests/dax/)). "Performances" means songs played in full:
-snippets, tapes and lead-in fragments are left out.
+Numbers from the Gold builds of 2026-10-22 (findings) and 2026-10-26 (forecast); each one was reproduced with T-SQL
+on the warehouse and a DAX query on the model ([`docs/run-log.md`](docs/run-log.md), [`tests/dax/`](tests/dax/)).
+"Performances" means songs played in full: snippets, tapes and lead-in fragments are left out.
 
 **1. Ten songs make up 29% of everything U2 has played live.** Out of 304 different songs, the top ten account for
 8,624 of 29,366 performances. *I Will Follow*, from the 1980 debut, leads with 1,065 performances at 1,004 of the
@@ -38,10 +38,21 @@ each setlist, against 14% on the 2015-2019 tours. Nights were about as long (22.
 
 <img src="docs/img/06-sphere.png" alt="Sphere vs. touring: residency compared with the 2015-2019 tours" width="640">
 
+**4. Forecast: 24 songs a night in 2027, 8 of them new.** A setlist model trained on past album tours expects 6 songs
+from *Carnaval de luz* and 2 from the 2026 EPs, with *Street of Dreams* as the opener. Backtested on the album tours
+since Elevation (2001), 61% of its picks became core songs of the tour (played at half the shows or more), against
+48% for repeating the last album tour (B1) and 45% for the career's most played songs (B2) or the latest tour, which
+for 2027 is the Sphere (B3). The caveat: on Experience + Innocence, the closest analog, the model only tied B1, and
+the last new-song slots are decided by ties.
+
+<img src="docs/img/10-next-tour.png" alt="Page 2027: predicted setlist of the next tour, the new songs and the backtest against three baselines" width="640">
+
 More pages: [on the road](docs/img/02-road.png) · [setlist evolution](docs/img/05-setlists.png) ·
-[song detail](docs/img/07-song.png) · [show detail](docs/img/08-show.png) · [about the data](docs/img/09-about.png) ·
+[song detail](docs/img/07-song.png) · [show detail](docs/img/08-show.png) ·
+[next tour (2027)](docs/img/10-next-tour.png) · [about the data](docs/img/09-about.png) ·
 drill-through demos: [road → show](docs/img/drill-show.gif), [songs → song](docs/img/drill-song.gif).
-The ten business questions behind the pages are in [`docs/charter.md`](docs/charter.md).
+The twelve business questions behind the pages (the optional Q11 is not built yet) are in
+[`docs/charter.md`](docs/charter.md).
 
 ---
 
@@ -65,11 +76,14 @@ flowchart LR
       S1[show, performance]
       S2[album, song, song_map]
       S3[tour]
+      S4["nb_silver_setlist_features<br/>setlist_feature"]
+      S5["nb_silver_setlist_prediction<br/>setlist_prediction, setlist_backtest,<br/>setlist_model_coef"]
     end
     subgraph GO[wh_gold · Warehouse]
       G1[fact_performance, fact_show]
       G2[dim_show, dim_song, dim_album,<br/>dim_tour, dim_venue, dim_date]
       G3[dq_run_log]
+      G4[fact_setlist_prediction,<br/>fact_setlist_backtest,<br/>fact_setlist_model_coef]
     end
     SM[sm_u2_live<br/>semantic model, Direct Lake]
     RPT[rpt_u2_live<br/>Power BI report]
@@ -86,9 +100,15 @@ flowchart LR
   S1 -->|T-SQL cross-database| G1
   S2 --> G2
   S3 --> G2
+  S1 --> S4
+  S2 --> S4
+  S3 --> S4
+  S4 --> S5
+  S5 --> G4
   G1 --> SM
   G2 --> SM
   G3 --> SM
+  G4 --> SM
   SM --> RPT
   PL -.orchestrates.-> BR
   PL -.-> SI
@@ -120,6 +140,11 @@ erDiagram
   dim_venue ||--o{ fact_show : venue_key
   dim_show ||--o{ fact_show : show_key
   dim_album ||--o{ dim_song : "album_key (first album)"
+  dim_date ||--o{ fact_setlist_prediction : as_of_date_key
+  dim_tour ||--o{ fact_setlist_prediction : tour_key
+  dim_song ||--o{ fact_setlist_prediction : song_key
+  dim_tour ||--o{ fact_setlist_backtest : tour_key
+  dim_tour ||--o{ fact_setlist_model_coef : tour_key
 
   fact_performance {
     bigint show_key
@@ -135,10 +160,29 @@ erDiagram
     int song_count
     bit has_setlist
   }
+  fact_setlist_prediction {
+    bigint song_key
+    float probability
+    bit predicted_in_setlist
+    int predicted_position
+  }
+  fact_setlist_backtest {
+    bigint tour_key
+    varchar method
+    varchar metric
+    float value
+  }
+  fact_setlist_model_coef {
+    bigint tour_key
+    varchar feature
+    float coef_standardized
+  }
   dim_song {
     bigint song_key
     varchar song_title
     bit is_original
+    varchar release_role_2027
+    bit is_single
   }
   dim_album {
     bigint album_key
@@ -150,6 +194,8 @@ erDiagram
     varchar tour_name_display
     varchar era
     bigint album_promoted_key
+    varchar tour_type
+    bit is_planned
   }
   dim_venue {
     bigint venue_key
@@ -167,8 +213,9 @@ erDiagram
   }
 ```
 
-Two facts at different grains (one row per song played, one row per show) meet only through shared dimensions.
-Every column and all 79 measures are described in [`docs/data-dictionary.md`](docs/data-dictionary.md).
+Two facts at different grains (one row per song played, one row per show) meet only through shared dimensions; the
+three prediction facts (2027 candidates, backtest metrics, model coefficients) hang off `dim_tour` the same way.
+Every column and all 97 measures are described in [`docs/data-dictionary.md`](docs/data-dictionary.md).
 
 ## Engineering decisions worth discussing
 
@@ -186,13 +233,22 @@ Every column and all 79 measures are described in [`docs/data-dictionary.md`](do
   forced failure was tested: it rolled back and left the previous Gold intact.
 - **No fact-to-fact relationship.** Shows and performances are joined only through dimensions, which avoids ambiguous
   filter paths. Default measures exclude snippets, tapes and fragments in one base measure, `Performances`.
+- **A leakage-free backtest.** Features for a target tour come only from shows before its first show; the notebook
+  asserts it for every target and a T-SQL script rebuilt all 147 backtest rows from the raw Silver tables. The
+  anniversary tours and the Sphere residency are not training examples: they play an old album in full and would
+  teach the model the wrong habits.
+- **A simple model on purpose.** With only about ten comparable tours, the prediction is a logistic regression for
+  catalog songs plus ranked rules for the new ones. It is written in pure Python (`u2lib`, unit-tested) and
+  cross-checked against scikit-learn 1.6.1 in the Fabric runtime (largest coefficient difference 2e-6).
 - **Secrets stay out of the repo.** The setlist.fm API key lives in Azure Key Vault and is read inside the notebooks;
   sign-in everywhere uses Microsoft Entra ID (no passwords or keys in files).
 
 ## Data quality
 
 Every notebook and the Gold build write their checks to `wh_gold.dbo.dq_run_log` (shown on the report's About page);
-a hard failure stops the pipeline. The last full pipeline run logged 51 Bronze, 42 Silver and 28 Gold checks.
+a hard failure stops the pipeline. The latest run of each step logged 35 Bronze checks (seeds), 42 Silver catalog,
+14 setlist feature, 11 setlist prediction and 36 Gold checks, all passing. These are separate runs from 2026-10-25/26;
+the first end-to-end `pl_refresh` run with the two setlist notebooks is still to come.
 
 | What | Number |
 | --- | --- |
@@ -203,8 +259,9 @@ a hard failure stops the pipeline. The last full pipeline run logged 51 Bronze, 
 | Full performances mapped to a song | 99.97% (10 of 29,730 unmapped) |
 | Snippets / lead-in fragments left out of default counts | 57 snippets; *The Cry* (364 lead-ins to *The Electric Co.*) |
 | Hand checks against setlist.fm | Joshua Tree Tour 1987: 109 shows; most played: *I Will Follow* 1,065; first show 1976-10-01 |
-| Unit tests (`u2lib`) | 131 passed, 100% coverage, ruff clean |
-| DAX tests reproduced in T-SQL | 30 query files in [`tests/dax/`](tests/dax/) |
+| Setlist backtest rebuilt in T-SQL | 147 of 147 rows match; 13 of 13 targets use only earlier shows |
+| Unit tests (`u2lib`) | 217 passed, 99% coverage, ruff clean |
+| DAX tests reproduced in T-SQL | 34 query files in [`tests/dax/`](tests/dax/) |
 | Best Practice Analyzer (Tabular Editor, Microsoft rules) | 22 rules fired: 9 fixed, 13 justified ([`docs/model-bpa.md`](docs/model-bpa.md)) |
 
 Known limitations: setlist.fm is crowd-sourced, so early shows are often missing songs, and counts follow the
@@ -242,7 +299,8 @@ counts of every step are in [`docs/run-log.md`](docs/run-log.md).
 descriptive User-Agent and at most one per second. No data extracts are stored in this repository.
 
 **Images.** All photos are from Wikimedia Commons under the licences below; changes made are listed for each. The
-tour glyphs, era badges, scrims, arrows and icons (40 files) are original work of this project.
+tour glyphs (including the planned 2027 tour), era badges, scrims, arrows and icons (41 files) are original work of
+this project.
 
 | Image | Author | Licence | Changes |
 | --- | --- | --- | --- |
@@ -281,12 +339,14 @@ the data.
 
 ## Built with Claude Code
 
-The project was planned and built in Claude Code with three subagents, each owning one part of the work and loading
+The project was planned and built in Claude Code with four subagents, each owning one part of the work and loading
 project-specific skills:
 
 - [`data-engineer`](.claude/agents/data-engineer.md): `u2lib`, notebooks, Gold procedures, pipeline and quality checks.
 - [`data-analyst`](.claude/agents/data-analyst.md): business questions, seeds, validation of every number (T-SQL and
   DAX), the semantic model and the findings.
+- [`data-scientist`](.claude/agents/data-scientist.md): setlist features, the 2027 prediction model and its backtest
+  against baselines.
 - [`dashboard-designer`](.claude/agents/dashboard-designer.md): design system, wireframes and the PBIR report.
 
 The skills in [`.claude/skills/`](.claude/skills/) hold the conventions (Fabric workflow, medallion rules, source APIs,
