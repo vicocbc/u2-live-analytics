@@ -1,0 +1,510 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "p10_next_tour",
+  "displayName": "Next tour",
+  "displayOption": "FitToPage",
+  "height": 720,
+  "width": 1280,
+  "objects": {
+    "background": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#0F1115'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ],
+    "outspace": [
+      {
+        "properties": {
+          "color": {
+            "solid": {
+              "color": {
+                "expr": {
+                  "Literal": {
+                    "Value": "'#0F1115'"
+                  }
+                }
+              }
+            }
+          },
+          "transparency": {
+            "expr": {
+              "Literal": {
+                "Value": "0D"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "visualInteractions": [
+    {
+      "source": "p10_headline",
+      "target": "p10_setlist_ticket",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_headline",
+      "target": "p10_new_songs_table",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_headline",
+      "target": "p10_ties_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_headline",
+      "target": "p10_backtest_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_headline",
+      "target": "p10_backtest_bar",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_headline",
+      "target": "p10_analog_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_headline",
+      "target": "p10_tracker_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_headline",
+      "target": "p10_hit_rate_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_headline",
+      "target": "p10_chance_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_setlist_ticket",
+      "target": "p10_headline",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_setlist_ticket",
+      "target": "p10_new_songs_table",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_setlist_ticket",
+      "target": "p10_ties_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_setlist_ticket",
+      "target": "p10_backtest_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_setlist_ticket",
+      "target": "p10_backtest_bar",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_setlist_ticket",
+      "target": "p10_analog_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_setlist_ticket",
+      "target": "p10_tracker_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_setlist_ticket",
+      "target": "p10_hit_rate_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_setlist_ticket",
+      "target": "p10_chance_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_new_songs_table",
+      "target": "p10_headline",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_new_songs_table",
+      "target": "p10_setlist_ticket",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_new_songs_table",
+      "target": "p10_ties_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_new_songs_table",
+      "target": "p10_backtest_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_new_songs_table",
+      "target": "p10_backtest_bar",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_new_songs_table",
+      "target": "p10_analog_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_new_songs_table",
+      "target": "p10_tracker_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_new_songs_table",
+      "target": "p10_hit_rate_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_new_songs_table",
+      "target": "p10_chance_line",
+      "type": "DataFilter"
+    },
+    {
+      "source": "p10_ties_note",
+      "target": "p10_headline",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_ties_note",
+      "target": "p10_setlist_ticket",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_ties_note",
+      "target": "p10_new_songs_table",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_ties_note",
+      "target": "p10_backtest_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_ties_note",
+      "target": "p10_backtest_bar",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_ties_note",
+      "target": "p10_analog_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_ties_note",
+      "target": "p10_tracker_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_ties_note",
+      "target": "p10_hit_rate_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_ties_note",
+      "target": "p10_chance_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_intro",
+      "target": "p10_headline",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_intro",
+      "target": "p10_setlist_ticket",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_intro",
+      "target": "p10_new_songs_table",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_intro",
+      "target": "p10_ties_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_intro",
+      "target": "p10_backtest_bar",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_intro",
+      "target": "p10_analog_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_intro",
+      "target": "p10_tracker_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_intro",
+      "target": "p10_hit_rate_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_intro",
+      "target": "p10_chance_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_bar",
+      "target": "p10_headline",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_bar",
+      "target": "p10_setlist_ticket",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_bar",
+      "target": "p10_new_songs_table",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_bar",
+      "target": "p10_ties_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_bar",
+      "target": "p10_backtest_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_bar",
+      "target": "p10_analog_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_bar",
+      "target": "p10_tracker_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_bar",
+      "target": "p10_hit_rate_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_backtest_bar",
+      "target": "p10_chance_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_analog_note",
+      "target": "p10_headline",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_analog_note",
+      "target": "p10_setlist_ticket",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_analog_note",
+      "target": "p10_new_songs_table",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_analog_note",
+      "target": "p10_ties_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_analog_note",
+      "target": "p10_backtest_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_analog_note",
+      "target": "p10_backtest_bar",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_analog_note",
+      "target": "p10_tracker_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_analog_note",
+      "target": "p10_hit_rate_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_analog_note",
+      "target": "p10_chance_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_tracker_intro",
+      "target": "p10_headline",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_tracker_intro",
+      "target": "p10_setlist_ticket",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_tracker_intro",
+      "target": "p10_new_songs_table",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_tracker_intro",
+      "target": "p10_ties_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_tracker_intro",
+      "target": "p10_backtest_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_tracker_intro",
+      "target": "p10_backtest_bar",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_tracker_intro",
+      "target": "p10_analog_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_tracker_intro",
+      "target": "p10_hit_rate_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_tracker_intro",
+      "target": "p10_chance_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_hit_rate_line",
+      "target": "p10_headline",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_hit_rate_line",
+      "target": "p10_setlist_ticket",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_hit_rate_line",
+      "target": "p10_new_songs_table",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_hit_rate_line",
+      "target": "p10_ties_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_hit_rate_line",
+      "target": "p10_backtest_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_hit_rate_line",
+      "target": "p10_backtest_bar",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_hit_rate_line",
+      "target": "p10_analog_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_hit_rate_line",
+      "target": "p10_tracker_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_hit_rate_line",
+      "target": "p10_chance_line",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_chance_line",
+      "target": "p10_headline",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_chance_line",
+      "target": "p10_setlist_ticket",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_chance_line",
+      "target": "p10_new_songs_table",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_chance_line",
+      "target": "p10_ties_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_chance_line",
+      "target": "p10_backtest_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_chance_line",
+      "target": "p10_backtest_bar",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_chance_line",
+      "target": "p10_analog_note",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_chance_line",
+      "target": "p10_tracker_intro",
+      "type": "NoFilter"
+    },
+    {
+      "source": "p10_chance_line",
+      "target": "p10_hit_rate_line",
+      "type": "NoFilter"
+    }
+  ]
+}

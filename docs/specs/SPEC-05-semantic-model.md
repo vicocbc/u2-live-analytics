@@ -13,6 +13,9 @@ Owner: data-analyst · Item: `sm_u2_live` (Direct Lake on `wh_gold`, authored as
   - `fact_performance[date_key]` → `dim_date`, `[song_key]` → `dim_song`, `[tour_key]` → `dim_tour`, `[venue_key]` → `dim_venue`, `[show_key]` → `dim_show`
   - `fact_show[date_key|tour_key|venue_key|show_key]` → the same dimensions
   - No fact-to-fact relationship: both facts meet only through shared dimensions, which avoids ambiguous filter paths. The show drill-through page filters on `dim_show`.
+  - `fact_setlist_prediction[as_of_date_key]` → `dim_date[date_key]`, `[tour_key]` → `dim_tour`, `[song_key]` →
+    `dim_song`; `fact_setlist_backtest[tour_key]` and `fact_setlist_model_coef[tour_key]` → `dim_tour` (T-50, SPEC-09).
+    The three facts are leaves like the others (no fact-to-fact relationship, single direction), so no ambiguous path.
   - `dim_song[album_key]` → `dim_album[album_key]` (active)
   - No relationship on `dim_tour[album_promoted_key]` (an inactive one was removed after the BPA run on 2026-10-22,
     `docs/model-bpa.md` #9): `Promoted Album Share %` applies the promoted album with `TREATAS`.
@@ -44,6 +47,10 @@ Owner: data-analyst · Item: `sm_u2_live` (Direct Lake on `wh_gold`, authored as
 | `Setlist Variety` [Tours] | `Distinct Songs / Avg Songs per Show` per tour | Q6 |
 | `Covers Played`, `Guest Appearances` [Songs] | | Q9 |
 | `First Show Date`, `Last Show Date` [Shows] | min/max date in context | Q3, Q7 |
+| `Predicted Probability` [Prediction] | model probability, latest as-of date in context (mean above song level) | Q12 |
+| `Predicted Songs` [Prediction] | count of `predicted_in_setlist` rows, latest as-of date (never a sum of probabilities) | Q12 |
+| `Hit Rate` [Prediction] | predicted songs played in full at a show ÷ predicted songs, mean over shows played; blank before the first show | Q12 |
+| `Model vs. Baseline` [Prediction\Backtest] | model − selected baseline (default B1) on mean `precision_at_n`, album tours from Elevation on | Q12 |
 
 Every measure has: a format string, a description (shown in tooltips), and a display folder.
 
@@ -99,6 +106,36 @@ Gold facts the measures rely on (checked in T-21, `sql/review/gold_validation.sq
   supplies path-only glyphs if Deneb needs them. `U2 360°` has no glyph (logo image), so `Tour Icon` is blank for it.
 - Waiting on Gold (SPEC-04): `dim_album[album_label]` (sort-by), `dim_show[show_label]` uniqueness,
   `dim_tour[show_type]`, `dim_album[release_decade_group]`.
+
+## Setlist prediction (T-50, SPEC-09 §9.7)
+
+- Tables (Direct Lake on OneLake, entity partitions on `wh_gold` like the other facts): `fact_setlist_prediction`
+  (281 rows for as-of 2027-02-22), `fact_setlist_backtest` (147), `fact_setlist_model_coef` (104). Keys, `probability`,
+  `value`, `model_version` and `_built_at` are hidden (use the measures). New columns: `dim_tour[tour_type]`,
+  `dim_tour[is_planned]`, `dim_song[release_role_2027]`, `dim_song[is_single]`. `dim_tour[tour_order]` already sorts
+  the planned tour (25) before (No tour) (26); `Tour Icon` is blank for the planned tour until the designer adds a glyph.
+- Measure names follow the Title Case convention (`Predicted Probability`, `Predicted Songs`, `Hit Rate`,
+  `Model vs. Baseline`).
+- Folder `Prediction` (home `fact_setlist_prediction`): every measure reads only the latest `as_of_date_key` in context
+  (`Prediction As-Of Date Key`, hidden), so in-tour updates replace the pre-tour prediction without a page filter.
+  `Predicted Probability`, `Predicted Songs`, `New Songs Predicted` (8), `Catalog Songs Predicted` (16),
+  `Expected Songs per Show` (= N = 24, ignores song/album filters; SPEC-09 §9.11: catalog probabilities are calibrated
+  on `is_core` and sum to ≈ 20 for 24 slots, so the page uses N, not a sum of probabilities), `Candidate Songs` (281),
+  `Shows Observed`, `Prediction As-Of Date`, `Hit Rate`.
+- `Hit Rate`: for each show with a setlist in context (tour of the prediction), the share of the songs predicted by the
+  latest prediction made on or before the show date that were performed in full there (`Distinct Songs` with
+  `TREATAS` on show and songs); mean over the shows. Blank while the planned tour has no show, and for played tours
+  (they have no prediction row).
+- Folder `Prediction\Backtest` (home `fact_setlist_backtest`): `Backtest Mean` averages `value` over tours for the
+  method and metric in context, using the backtest tours in the `dim_tour` filter if any, else the album tours from
+  Elevation (2001) on (SPEC-09 §9.9 scope; a page filtered to the planned tour falls back to it).
+  `Mean Precision at N`, `Mean Jaccard First Show`, `Mean Brier Score`, `Model Precision at N`,
+  `Selected Baseline` (the one baseline B1/B2/B3 in context, else B1), `Baseline Precision at N`, `Model vs. Baseline`.
+- Tests: `tests/dax/Predicted_Songs.dax`, `Predicted_Probability.dax`, `Hit_Rate.dax`, `Model_vs_Baseline.dax`;
+  T-SQL cross-checks in `sql/review/measure_checks.sql` (sections "T-50"). Values on Gold 2026-10-26 06:48:10 UTC:
+  24 predicted (6 promoted_album + 2 companion_release + 16 catalog; 22 main + 2 encore), Street of Dreams opens at
+  0.860; mean `precision_at_n` from Elevation: model 0.6091, B1 0.4818, B2 0.4470, B3 0.4485 (model vs. B1 +12.7 pp);
+  Jaccard model 0.4366 vs. B1 0.2903.
 
 ## Report presentation layer (T-29 requests)
 

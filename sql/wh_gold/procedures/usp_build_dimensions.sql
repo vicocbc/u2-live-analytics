@@ -78,25 +78,49 @@ BEGIN
         SELECT song_id, MIN(event_date) AS debut, MAX(event_date) AS last_played, COUNT(*) AS full_performances
         FROM perf
         GROUP BY song_id
+    ),
+    -- release_role_2027 (T-49, SPEC-09 9.7): role of a 2026 trilogy track in the 2027 prediction, taken from the
+    -- planned tour's setlist_feature row, else from release_track.release_type (studio -> promoted_album,
+    -- ep -> companion_release); NULL for every catalog song.
+    planned_role AS (
+        SELECT f.song_id, MAX(f.release_role) AS release_role
+        FROM lk_silver.dbo.setlist_feature AS f
+        WHERE f.is_planned_tour = 1 AND f.release_role <> 'catalog'
+        GROUP BY f.song_id
+    ),
+    role_2027 AS (
+        SELECT rt.song_id,
+               MAX(COALESCE(pr.release_role,
+                            CASE rt.release_type WHEN 'studio' THEN 'promoted_album' WHEN 'ep' THEN 'companion_release' END))
+                 AS release_role_2027
+        FROM lk_silver.dbo.release_track AS rt
+        LEFT JOIN planned_role AS pr ON pr.song_id = rt.song_id
+        GROUP BY rt.song_id
     )
     INSERT INTO dbo.dim_song (song_key, song_id, song_title, album_key, first_release_year, is_original, cover_artist,
-                              live_debut_date, last_played_date, full_performances, _built_at)
+                              live_debut_date, last_played_date, full_performances, release_role_2027, is_single,
+                              _built_at)
     SELECT CAST(HASHBYTES('SHA2_256', CAST(s.song_id AS varchar(400))) AS bigint),
            s.song_id, s.title,
            CASE WHEN s.first_album_id IS NULL THEN -1
                 ELSE CAST(HASHBYTES('SHA2_256', CAST(s.first_album_id AS varchar(400))) AS bigint) END,
            s.first_release_year, s.is_original, s.cover_artist,
            st.debut, st.last_played, ISNULL(st.full_performances, 0),
+           r.release_role_2027,
+           CAST(ISNULL(s.is_single, 0) AS bit),
            @built_at
     FROM lk_silver.dbo.song AS s
     LEFT JOIN stats AS st ON st.song_id = s.song_id
+    LEFT JOIN role_2027 AS r ON r.song_id = s.song_id
     UNION ALL
-    SELECT -1, '(unknown)', 'Unknown', -1, NULL, 0, NULL, NULL, NULL, 0, @built_at;
+    SELECT -1, '(unknown)', 'Unknown', -1, NULL, 0, NULL, NULL, NULL, 0, NULL, 0, @built_at;
 
     ---------------------------------------------------------------- dim_tour
     DELETE FROM dbo.dim_tour;
+    -- tour_order: chronological by first show; a planned tour (no shows yet, NULL first_show_date) comes after every
+    -- played tour (T-49; before, ORDER BY first_show_date put NULL first); "(No tour)" and Unknown last.
     INSERT INTO dbo.dim_tour (tour_key, tour_name, tour_name_display, album_promoted_key, is_residency, show_type, era,
-                              first_show_date, last_show_date, tour_order, _built_at)
+                              first_show_date, last_show_date, tour_order, tour_type, is_planned, _built_at)
     SELECT CAST(HASHBYTES('SHA2_256', CAST(t.tour_name AS varchar(400))) AS bigint),
            t.tour_name, t.tour_name_display,
            CASE WHEN t.album_promoted_id IS NULL THEN -1
@@ -104,11 +128,14 @@ BEGIN
            t.is_residency,
            CASE WHEN t.is_residency = 1 THEN 'Residency' ELSE 'Touring' END,            -- T-28
            t.era, t.first_show_date, t.last_show_date,
-           ROW_NUMBER() OVER (ORDER BY CASE WHEN t.tour_name = '(No tour)' THEN 1 ELSE 0 END, t.first_show_date, t.tour_name),
+           ROW_NUMBER() OVER (ORDER BY CASE WHEN t.tour_name = '(No tour)' THEN 1 ELSE 0 END,
+                                       ISNULL(t.first_show_date, CAST('9999-12-31' AS date)), t.tour_name),
+           t.tour_type,                                                                 -- T-49
+           CAST(ISNULL(t.is_planned, 0) AS bit),                                         -- T-49
            @built_at
     FROM lk_silver.dbo.tour AS t
     UNION ALL
-    SELECT -1, '(unknown)', 'Unknown', -1, 0, 'Touring', NULL, NULL, NULL, 999999, @built_at;
+    SELECT -1, '(unknown)', 'Unknown', -1, 0, 'Touring', NULL, NULL, NULL, 999999, NULL, 0, @built_at;
 
     ---------------------------------------------------------------- dim_venue
     DELETE FROM dbo.dim_venue;

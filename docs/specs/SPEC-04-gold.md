@@ -63,6 +63,37 @@ This schema is the contract with the semantic model (SPEC-05). Renames need both
 | `song_count` | int | full performances (no tapes, no snippets, no fragments) |
 | `has_setlist` | bit | |
 
+### Setlist prediction facts (SPEC-09 §9.7, T-49)
+
+Built by `usp_build_facts` from `lk_silver` in the same transaction. Keys resolve by `tour_name` / `song_id` to the
+freshly built dimensions (unmatched → `-1`, which a hard check forbids).
+
+`fact_setlist_prediction` · grain (`as_of_date_key`, `tour_key`, `song_key`) · `setlist_prediction` rows with
+`is_backtest = 0` only (the planned / current tour; backtest predictions stay in Silver)
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `as_of_date_key` | int | `yyyyMMdd` → `dim_date` (pre-tour: the day before the first show) |
+| `tour_key` | bigint | → `dim_tour` (target tour) |
+| `song_key` | bigint | → `dim_song` (candidate song) |
+| `shows_observed` | int | shows of the tour before `as_of_date`; 0 = pre-tour prediction |
+| `probability` | float | 0..1 |
+| `predicted_in_setlist` | bit | |
+| `predicted_position` | int | 1..N on pre-tour picked rows; null otherwise |
+| `predicted_set` | varchar(10) | `main` / `encore` on pre-tour picked rows; null otherwise |
+| `model_part` | varchar(10) | `catalog` / `new` |
+| `model_version` | varchar(20) | e.g. `sl1.0-u2lib0.5.0` |
+
+`fact_setlist_backtest` · grain (`tour_key`, `method`, `metric`) · from `setlist_backtest`: `tour_key` bigint,
+`method` varchar(10) (`model`, `B1`, `B2`, `B3`, `context`), `metric` varchar(30), `value` float, `model_version` varchar(20).
+
+`fact_setlist_model_coef` · grain (`tour_key`, `model_part`, `feature`) · from `setlist_model_coef` (one catalog and one
+new-material model per target tour, so the page can explain the prediction): `tour_key` bigint, `model_part`
+varchar(10), `feature` varchar(40) (incl. `intercept`), `coef_standardized` float (null for `intercept`), `coef_raw`
+float, `n_train` int, `n_positive` int, `model_version` varchar(20).
+
+Every setlist fact also has `_built_at`. Probabilities and metrics stay `float` as specified in SPEC-09 §9.7.
+
 ### `dq_run_log` · one row per data quality check per run (all layers; appended, never rebuilt)
 
 | Column | Type | Notes |
@@ -82,9 +113,9 @@ Bronze and Silver notebooks append through `u2lib.quality.Results.write` (Spark 
 | Table | Columns |
 | --- | --- |
 | `dim_show` | `show_key`, `setlist_id`, `show_label` (e.g. "1987-09-11 · Philadelphia · JFK Stadium"; unique: when several shows share date and venue, append `' · show ' + n` numbered by `setlist_id`, T-27 found 8 such pairs), `setlist_url` (link to setlist.fm), `show_info` |
-| `dim_song` | `song_key`, `song_id`, `song_title`, `album_key` (first album), `first_release_year`, `is_original`, `cover_artist`, `live_debut_date`, `last_played_date`, `full_performances` (precomputed for sorting) |
+| `dim_song` | `song_key`, `song_id`, `song_title`, `album_key` (first album), `first_release_year`, `is_original`, `cover_artist`, `live_debut_date`, `last_played_date`, `full_performances` (precomputed for sorting); T-49 (`alter_003`): `release_role_2027` varchar(30) (`promoted_album` / `companion_release` for the 25 `release_track` songs, from the planned tour's `setlist_feature.release_role`, else `release_track.release_type`; null for every other song), `is_single` bit (`song.is_single`, null → 0) |
 | `dim_album` | `album_key`, `album_id`, `album_title`, `album_label` (unique display name, T-27: `album_title` for studio albums; otherwise `album_title + ' (' + album_type + ', ' + release_year + ')'`; if still not unique, append `' #' + n` by `album_order`), `release_date`, `release_year`, `album_type`, `is_studio`, `album_order` (chronological sort), `release_decade_group` (T-28, for the p04 area chart: `'1980s albums'` … `'2020s albums'` from `release_year` when `is_studio`, else `'Not on a studio album'`; Unknown row too) |
-| `dim_tour` | `tour_key`, `tour_name`, `tour_name_display`, `album_promoted_key`, `is_residency`, `show_type` (T-28: `'Residency'` when `is_residency`, else `'Touring'`; legend of the p06 scatter), `era`, `first_show_date`, `last_show_date`, `tour_order` |
+| `dim_tour` | `tour_key`, `tour_name`, `tour_name_display`, `album_promoted_key`, `is_residency`, `show_type` (T-28: `'Residency'` when `is_residency`, else `'Touring'`; legend of the p06 scatter), `era`, `first_show_date`, `last_show_date`, `tour_order` (chronological by `first_show_date`; a planned tour with null dates after every played tour, then `(No tour)`, then Unknown 999999); T-49 (`alter_003`): `tour_type` varchar(20) (`album`, `anniversary`, `residency`, `promo`, `benefit`, `early`; null for `(No tour)` and Unknown), `is_planned` bit (announced tour without shows; 0 otherwise) |
 | `dim_venue` | `venue_key`, `venue_id`, `venue_name`, `city_name`, `state_code`, `country_code`, `country_name`, `continent`, `latitude`, `longitude` |
 | `dim_date` | `date_key`, `date`, `year`, `decade` (e.g. "1980s"), `quarter`, `month`, `month_name`, `day_of_week`, `day_name` |
 
@@ -126,4 +157,9 @@ longest Silver value with margin, `*_date` date, `*_year`/`*_order`/counts int, 
 - Row counts reconcile with Silver: `fact_show` = `dim_show` (minus Unknown) = `lk_silver.dbo.show`; `fact_performance` = `lk_silver.dbo.performance` minus `ignore`-mapped songs.
 - A forced hard failure inside `usp_build_gold` leaves the previous Gold rows intact (rollback) and logs the failure in `dq_run_log`.
 - No null foreign keys; Unknown members referenced by < 1% of fact rows (log the share).
+- Setlist facts (T-49, hard checks in `usp_dq_gold`): row counts equal Silver (`setlist_prediction` with
+  `is_backtest = 0`, `setlist_backtest`, `setlist_model_coef`); no Unknown tour/song key and every `as_of_date_key` in
+  `dim_date`; grains unique; pre-tour rows = one per candidate (`setlist_feature` rows of the target tour) and the picked
+  songs are positions 1..N; every `release_track` song has a `dim_song.release_role_2027`; `tour_order` unique with
+  planned tours after every played tour.
 - Validation queries (run by data-analyst) reproduce three known facts by hand-checking setlist.fm pages: total shows of one tour, the most-played song, and the first show date.

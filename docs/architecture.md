@@ -20,9 +20,10 @@ flowchart LR
       S1[show, performance]
       S2[album, song, song_map]
       S3[tour]
+      S4[release_track, setlist_feature,<br/>setlist_prediction, setlist_backtest,<br/>setlist_model_coef]
     end
     subgraph GO[wh_gold · Warehouse]
-      G1[fact_performance, fact_show]
+      G1[fact_performance, fact_show,<br/>fact_setlist_prediction, fact_setlist_backtest,<br/>fact_setlist_model_coef]
       G2[dim_show, dim_song, dim_album,<br/>dim_tour, dim_venue, dim_date]
       G3[dq_run_log]
     end
@@ -41,6 +42,10 @@ flowchart LR
   S1 -->|T-SQL cross-database| G1
   S2 --> G2
   S3 --> G2
+  S1 --> S4
+  S2 --> S4
+  S3 --> S4
+  S4 --> G1
   G1 --> SM
   G2 --> SM
   G3 --> SM
@@ -79,7 +84,7 @@ Warehouse has no recursive CTEs and only a subset of types (`varchar` with UTF-8
 | Environment | `env_u2` | Spark environment with the `u2lib` wheel attached as a custom library. |
 | Notebooks | `nb_u2_load_bronze` (setlist.fm, in production), `nb_bronze_musicbrainz`, `nb_bronze_seeds`, `nb_silver_shows`, `nb_silver_catalog`, `nb_silver_song_map`, `nb_silver_setlist_features`, `nb_silver_setlist_prediction` (SPEC-09) | PySpark. One notebook per step; parameters cell first. |
 | Stored procedures | `wh_gold.dbo.usp_build_gold` (calls `usp_build_dimensions`, `usp_build_facts`, `usp_dq_gold`) | T-SQL. Source in `sql/wh_gold/`. |
-| Pipeline | `pl_refresh` | Bronze notebooks → Silver notebooks → Stored procedure activity `usp_build_gold` → semantic model refresh. Weekly schedule. |
+| Pipeline | `pl_refresh` | Bronze notebooks → Silver notebooks (shows ‖ catalog → song map → setlist features → setlist prediction) → Stored procedure activity `usp_build_gold` → semantic model refresh. Weekly schedule. |
 | Semantic model | `sm_u2_live` | Direct Lake on `wh_gold` tables (no views: views fall back to DirectQuery). Authored as TMDL (PBIP). |
 | Report | `rpt_u2_live` | PBIR (PBIP). Reads only `sm_u2_live`. |
 

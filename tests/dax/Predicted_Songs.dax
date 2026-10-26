@@ -1,0 +1,32 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (sections "T-50"), Gold committed 2026-10-26 06:48:10 UTC, as_of 20270222.
+-- Expected (planned 2027 tour): Predicted Songs 24, New Songs Predicted 8, Catalog Songs Predicted 16,
+-- Expected Songs per Show 24, Candidate Songs 281, Shows Observed 0, Prediction As-Of Date 2027-02-22,
+-- Predicted Probability 0.0717 (mean of the 281 candidates; not rescaled: their sum is 20.155, below 24), Hit Rate blank.
+EVALUATE
+SUMMARIZECOLUMNS (
+    dim_tour[tour_name],
+    TREATAS ( { TRUE () }, dim_tour[is_planned] ),
+    "Predicted Songs", [Predicted Songs],
+    "New Songs Predicted", [New Songs Predicted],
+    "Catalog Songs Predicted", [Catalog Songs Predicted],
+    "Expected Songs per Show", [Expected Songs per Show],
+    "Candidate Songs", [Candidate Songs],
+    "Shows Observed", [Shows Observed],
+    "Prediction As-Of Date", [Prediction As-Of Date],
+    "Predicted Probability", ROUND ( [Predicted Probability], 4 ),
+    "Hit Rate", [Hit Rate]
+)
+
+-- Expected by release role: (blank) 16 of 256, promoted_album 6 of 13, companion_release 2 of 12;
+-- Expected Songs per Show 24 on every row (ignores song filters).
+EVALUATE
+SUMMARIZECOLUMNS (
+    dim_song[release_role_2027],
+    "Predicted Songs", [Predicted Songs],
+    "Candidate Songs", [Candidate Songs],
+    "Expected Songs per Show", [Expected Songs per Show]
+)
+
+-- Expected by set: main 22, encore 2.
+EVALUATE SUMMARIZECOLUMNS ( fact_setlist_prediction[predicted_set], "Predicted Songs", [Predicted Songs] )

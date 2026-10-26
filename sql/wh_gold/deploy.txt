@@ -10,10 +10,14 @@ tables/dim_venue.sql
 tables/dim_show.sql
 tables/fact_performance.sql
 tables/fact_show.sql
+tables/fact_setlist_prediction.sql
+tables/fact_setlist_backtest.sql
+tables/fact_setlist_model_coef.sql
 tables/report_image.sql
 tables/report_image_chunk.sql
 tables/alter_001_t27_t28_columns.sql
 tables/alter_002_dim_venue_coordinates_decimal.sql
+tables/alter_003_t49_setlist_columns.sql
 procedures/usp_build_dimensions.sql
 procedures/usp_build_facts.sql
 procedures/usp_dq_gold.sql

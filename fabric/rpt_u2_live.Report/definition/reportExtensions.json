@@ -955,6 +955,426 @@
               }
             ]
           }
+        },
+        {
+          "name": "Promoted Album p10",
+          "dataType": "Text",
+          "expression": "VAR K = CALCULATE ( SELECTEDVALUE ( dim_tour[album_promoted_key] ), REMOVEFILTERS (), fact_setlist_prediction ) RETURN CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K )",
+          "description": "Title of the album the predicted tour promotes (presentation only)."
+        },
+        {
+          "name": "Predicted Tour p10",
+          "dataType": "Text",
+          "expression": "CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name_display] ), REMOVEFILTERS (), fact_setlist_prediction )",
+          "description": "Display name of the tour the prediction is for (presentation only)."
+        },
+        {
+          "name": "New Album Songs Predicted p10",
+          "dataType": "Integer",
+          "expression": "CALCULATE ( [New Songs Predicted], dim_song[release_role_2027] = \"promoted_album\" )",
+          "description": "Predicted setlist slots for songs of the promoted album.",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "New Songs Predicted"
+              }
+            ]
+          }
+        },
+        {
+          "name": "New EP Songs Predicted p10",
+          "dataType": "Integer",
+          "expression": "CALCULATE ( [New Songs Predicted], dim_song[release_role_2027] = \"companion_release\" )",
+          "description": "Predicted setlist slots for songs of the companion releases (the 2026 EPs).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "New Songs Predicted"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Headline p10",
+          "dataType": "Text",
+          "expression": "\"Our guess for 2027: \" & FORMAT ( [Expected Songs per Show], \"#,0\", \"en-US\" ) & \" songs a night, \" & FORMAT ( [New Songs Predicted], \"#,0\", \"en-US\" ) & \" of them new\"",
+          "description": "Finding-style headline of page 10 (request: promote to the model, data-analyst).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Expected Songs per Show"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "New Songs Predicted"
+              }
+            ]
+          }
+        },
+        {
+          "name": "First Glimpse p10",
+          "dataType": "Text",
+          "expression": "VAR AsOf = [Prediction As-Of Date Key] VAR Obs = [Shows Observed] VAR Opener = MAXX ( FILTER ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], fact_setlist_prediction[predicted_position], fact_setlist_prediction[as_of_date_key] ), fact_setlist_prediction[predicted_position] = 1 && fact_setlist_prediction[as_of_date_key] = AsOf ), dim_song[song_title] ) RETURN IF ( Obs = 0, \"Before the first show\", \"After \" & FORMAT ( Obs, \"#,0\", \"en-US\" ) & \" shows\" ) & \", our model picks <b>\" & FORMAT ( [New Album Songs Predicted p10], \"#,0\", \"en-US\" ) & \"</b> songs from \" & [Promoted Album p10] & \", <b>\" & FORMAT ( [New EP Songs Predicted p10], \"#,0\", \"en-US\" ) & \"</b> from the EPs and <b>\" & FORMAT ( [Catalog Songs Predicted], \"#,0\", \"en-US\" ) & \"</b> older ones\" & IF ( NOT ISBLANK ( Opener ), \", opening with <b>\" & Opener & \"</b>\" ) & \". On the album tours since Elevation, <b>\" & FORMAT ( [Model Precision at N], \"0%\", \"en-US\" ) & \"</b> of its picks became core songs, vs <b>\" & FORMAT ( [Baseline Precision at N], \"0%\", \"en-US\" ) & \"</b> for repeating the last album tour.\"",
+          "description": "Intro paragraph of page 10 with the key numbers in bold (request: promote to the model).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Prediction As-Of Date Key"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Shows Observed"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Catalog Songs Predicted"
+              },
+              {
+                "entity": "fact_setlist_backtest",
+                "name": "Model Precision at N"
+              },
+              {
+                "entity": "fact_setlist_backtest",
+                "name": "Baseline Precision at N"
+              },
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "New Album Songs Predicted p10"
+              },
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Promoted Album p10"
+              },
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "New EP Songs Predicted p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Header p10",
+          "dataType": "Text",
+          "expression": "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>\" & [Headline p10] & \"</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>\" & [First Glimpse p10] & \"</div>\"",
+          "description": "HTML: page headline and intro paragraph.",
+          "references": {
+            "measures": [
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Headline p10"
+              },
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "First Glimpse p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Header p10 · p10_headline",
+          "dataType": "Text",
+          "expression": "\"<div style='height:136px;overflow:hidden'>\" & [Header p10] & \"</div>\"",
+          "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Header p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Ticket p10",
+          "dataType": "Text",
+          "expression": "VAR AsOf = [Prediction As-Of Date Key] VAR PickRows = CALCULATETABLE ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], dim_song[release_role_2027], fact_setlist_prediction[predicted_position], fact_setlist_prediction[predicted_set], fact_setlist_prediction[model_part], fact_setlist_prediction[probability], fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[as_of_date_key] = AsOf, fact_setlist_prediction[predicted_in_setlist] = TRUE () ) RETURN IF ( ISEMPTY ( PickRows ), \"<div style='font-family:Segoe UI;color:#A3A9B3;font-size:14px'>No prediction in the current selection.</div>\", \"<div style='background:#20242C;border-radius:10px;overflow:hidden;font-family:Segoe UI;font-size:12px'>\" & \"<div style='display:flex;gap:16px;align-items:center;padding:12px 16px;background:#262A33;border-bottom:2px dashed #0F1115'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='36' height='36' role='img' aria-label='The Greatest Show on Earth Tour (planned 2027): big top tent'><title>The Greatest Show on Earth Tour (planned 2027): big top tent</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 5v8'/><path d='M24 5l7 2.5-7 2.5'/><path d='M7 27L24 13l17 14'/><path d='M7 27q4.25 4 8.5 0q4.25 4 8.5 0q4.25 4 8.5 0q4.25 4 8.5 0'/><path d='M10 30v10M38 30v10M6 40h36'/><path d='M19 40l5-9 5 9'/></g></svg><div style='flex:1'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>\" & UPPER ( [Predicted Tour p10] ) & \"</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px'>Predicted setlist · \" & IF ( [Shows Observed] = 0, \"before the first show\", \"after \" & FORMAT ( [Shows Observed], \"#,0\", \"en-US\" ) & \" shows\" ) & \" · as of \" & FORMAT ( [Prediction As-Of Date], \"yyyy-mm-dd\", \"en-US\" ) & \"</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Expected Songs per Show], \"#,0\", \"en-US\" ) & \"</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px;white-space:nowrap'>songs a night</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#F2A93B'>\" & FORMAT ( [New Songs Predicted], \"#,0\", \"en-US\" ) & \"</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px;white-space:nowrap'>new: \" & FORMAT ( [New Album Songs Predicted p10], \"#,0\", \"en-US\" ) & \" album · \" & FORMAT ( [New EP Songs Predicted p10], \"#,0\", \"en-US\" ) & \" EP</div></div>\" & \"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>\" & FORMAT ( [Catalog Songs Predicted], \"#,0\", \"en-US\" ) & \"</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px;white-space:nowrap'>older songs</div></div>\" & \"</div>\" & \"<div style='padding:10px 16px 12px'>\" & \"<div style='display:flex;gap:16px;font-size:10px;color:#A3A9B3;margin:0 0 6px'><span><span style='display:inline-block;width:14px;height:6px;border-radius:3px;background:#F2A93B'></span> new 2026 song (NEW tag)</span><span><span style='display:inline-block;width:14px;height:6px;border-radius:3px;background:#6FA8DC'></span> older song</span><span>bar and % = chance it is a core song (opener: \" & FORMAT ( CALCULATE ( [Predicted Probability], fact_setlist_prediction[predicted_position] = 1 ), \"0%\", \"en-US\" ) & \")</span></div>\" & \"<div style='columns:2;column-gap:24px'>\" & CONCATENATEX ( PickRows, VAR K = COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ) VAR S = fact_setlist_prediction[predicted_set] VAR PrevK = MAXX ( FILTER ( PickRows, COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ) < K ), COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ) ) VAR PrevS = MAXX ( FILTER ( PickRows, COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ) = PrevK ), fact_setlist_prediction[predicted_set] ) RETURN IF ( NOT ISBLANK ( S ) && ( ISBLANK ( PrevK ) || S <> PrevS ), \"<div style='color:#F2A93B;font-size:10px;letter-spacing:1.4px;font-weight:700;padding:4px 0 2px'>\" & IF ( S = \"encore\", \"ENCORE\", \"MAIN SET\" ) & \"</div>\" ) & ( VAR Pos = fact_setlist_prediction[predicted_position] VAR Pr = fact_setlist_prediction[probability] VAR IsNew = fact_setlist_prediction[model_part] = \"new\" VAR Bar = IF ( IsNew, \"#F2A93B\", \"#6FA8DC\" ) RETURN \"<div style='display:flex;align-items:center;gap:6px;min-height:21px;break-inside:avoid'><div style='width:16px;text-align:right;color:#A3A9B3;flex:none'>\" & COALESCE ( Pos, \"·\" ) & \"</div><div style='flex:1;color:#ECEDEF;line-height:1.2'>\" & dim_song[song_title] & \"</div>\" & IF ( IsNew, \"<div style='font-size:9px;font-weight:700;letter-spacing:.5px;border-radius:7px;padding:0 4px;flex:none;color:#F2A93B;border:1px solid #F2A93B'>NEW · \" & IF ( dim_song[release_role_2027] = \"companion_release\", \"EP\", \"ALBUM\" ) & \"</div>\" ) & \"<div style='width:34px;height:6px;background:#2A2F38;border-radius:3px;flex:none'><div style='height:6px;border-radius:3px;background:\" & Bar & \";width:\" & MAX ( 1, INT ( 34 * Pr ) ) & \"px'></div></div><div style='width:28px;text-align:right;color:#ECEDEF;flex:none'>\" & FORMAT ( Pr, \"0%\", \"en-US\" ) & \"</div></div>\" ), \"\", COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ), ASC ) & \"</div>\" & \"<div style='font-size:10.5px;line-height:1.4;color:#A3A9B3;margin-top:8px;border-top:1px solid #2A2F38;padding-top:6px'>Order is approximate: each older song sits where it played on the previous album tour, new songs where that tour placed its new songs. The % is the chance of being a core song (played at half the shows or more); older songs' chances are not rescaled, so they do not add up to \" & FORMAT ( [Expected Songs per Show], \"#,0\", \"en-US\" ) & \". The list is the top \" & FORMAT ( [Expected Songs per Show], \"#,0\", \"en-US\" ) & \", with new and older slots filled separately.</div>\" & \"</div></div>\" )",
+          "description": "HTML: predicted setlist ticket (tour, numbers, songs in predicted order with chance bars, notes).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Prediction As-Of Date Key"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Prediction As-Of Date"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Shows Observed"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Expected Songs per Show"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "New Songs Predicted"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Catalog Songs Predicted"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Predicted Probability"
+              },
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Predicted Tour p10"
+              },
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "New Album Songs Predicted p10"
+              },
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "New EP Songs Predicted p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Ticket p10 · p10_setlist_ticket",
+          "dataType": "Text",
+          "expression": "\"<div style='height:472px;overflow:hidden'>\" & [Ticket p10] & \"</div>\"",
+          "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Ticket p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Release p10",
+          "dataType": "Text",
+          "expression": "VAR K = SELECTEDVALUE ( dim_song[album_key] ) VAR A = CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K ) RETURN IF ( HASONEVALUE ( dim_song[song_title] ), IF ( ISBLANK ( A ) || K = -1, [Promoted Album p10] & \" (bonus)\", A ) )",
+          "description": "Release of a 2026 song: its album, or the promoted album for its bonus track (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Promoted Album p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "In Setlist p10",
+          "dataType": "Text",
+          "expression": "IF ( HASONEVALUE ( dim_song[song_title] ), IF ( [Predicted Songs] > 0, \"✓ picked\", \"\" ) )",
+          "description": "Text marker for songs in the predicted setlist (second cue next to the colour).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Predicted Songs"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Song Colour p10",
+          "dataType": "Text",
+          "expression": "IF ( [Predicted Songs] > 0, \"#F2A93B\", \"#ECEDEF\" )",
+          "description": "Accent for picked songs (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Predicted Songs"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Title p10 new songs",
+          "dataType": "Text",
+          "expression": "\"All \" & FORMAT ( CALCULATE ( [Candidate Songs], NOT ISBLANK ( dim_song[release_role_2027] ) ), \"#,0\", \"en-US\" ) & \" new songs, by release: \" & FORMAT ( [New Songs Predicted], \"#,0\", \"en-US\" ) & \" make the setlist\"",
+          "description": "Visual title with the total (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Candidate Songs"
+              },
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "New Songs Predicted"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Ties Note p10",
+          "dataType": "Text",
+          "expression": "VAR AsOf = [Prediction As-Of Date Key] VAR R = CALCULATETABLE ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], dim_song[release_role_2027], fact_setlist_prediction[predicted_position], fact_setlist_prediction[predicted_set], fact_setlist_prediction[model_part], fact_setlist_prediction[probability], fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[as_of_date_key] = AsOf, REMOVEFILTERS ( dim_song ), NOT ISBLANK ( dim_song[release_role_2027] ) ) VAR PA = MINX ( FILTER ( R, dim_song[release_role_2027] = \"promoted_album\" && fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[probability] ) VAR PE = MINX ( FILTER ( R, dim_song[release_role_2027] = \"companion_release\" && fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[probability] ) VAR TA = COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = \"promoted_album\" && ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( PA, 6 ) ) ) VAR KA = COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = \"promoted_album\" && fact_setlist_prediction[predicted_in_setlist] && ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( PA, 6 ) ) ) VAR TE = COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = \"companion_release\" && ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( PE, 6 ) ) ) VAR KE = COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = \"companion_release\" && fact_setlist_prediction[predicted_in_setlist] && ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( PE, 6 ) ) ) VAR TieA = TA > KA VAR TieE = TE > KE RETURN IF ( TieA || TieE, \"Toss-ups the model cannot settle: \" & IF ( TieA, KA & \" of the \" & TA & \" album songs tied at \" & FORMAT ( PA, \"0%\", \"en-US\" ) & \" got a slot\" ) & IF ( TieA && TieE, \", and \" ) & IF ( TieE, KE & \" of the \" & TE & \" EP songs tied at \" & FORMAT ( PE, \"0%\", \"en-US\" ) & IF ( TieA, \"\", \" got a slot\" ) ) & \". Which ones is arbitrary.\", \"No ties among the new-song picks.\" )",
+          "description": "Annotation: new songs whose slot is decided by a tie in the model's score (SPEC-09 honesty note).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Prediction As-Of Date Key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Ties Note p10 · p10_ties_note",
+          "dataType": "Text",
+          "expression": "\"<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:32px;overflow:hidden'>\" & [Ties Note p10] & \"</div>\"",
+          "description": "Typography wrapper (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Ties Note p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Backtest Intro p10",
+          "dataType": "Text",
+          "expression": "\"<div style='display:flex;gap:14px;align-items:flex-start;font-family:Segoe UI'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#F2A93B;flex:none'>\" & FORMAT ( [Model vs. Baseline] * 100, \"+0.0;-0.0;0.0\", \"en-US\" ) & \" pp\" & \"</div><div style='font-size:12px;line-height:1.4;color:#A3A9B3'><span style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>HOW GOOD IS THIS?</span> Replayed on every album tour since Zoo TV, knowing only what came before its first show: share of its picks that became core songs, vs \" & [Selected Baseline] & \" (repeat the last album tour), B2 (career's most played) and B3 (latest tour: Sphere for 2027).</div></div>\"",
+          "description": "HTML: backtest section intro with the model's lead over the baseline as a big number.",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_backtest",
+                "name": "Model vs. Baseline"
+              },
+              {
+                "entity": "fact_setlist_backtest",
+                "name": "Selected Baseline"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Backtest Intro p10 · p10_backtest_intro",
+          "dataType": "Text",
+          "expression": "\"<div style='height:64px;overflow:hidden'>\" & [Backtest Intro p10] & \"</div>\"",
+          "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Backtest Intro p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Method Colour p10",
+          "dataType": "Text",
+          "expression": "IF ( SELECTEDVALUE ( fact_setlist_backtest[method] ) = \"model\", \"#F2A93B\", \"#6E7581\" )",
+          "description": "Hex colour for conditional formatting (presentation only)."
+        },
+        {
+          "name": "Closest Analog Note p10",
+          "dataType": "Text",
+          "expression": "VAR EI = \"eXPERIENCE + iNNOCENCE Tour\" VAR M = CALCULATE ( [Model Precision at N], dim_tour[tour_name_display] = EI ) VAR B = CALCULATE ( [Baseline Precision at N], dim_tour[tour_name_display] = EI ) RETURN IF ( NOT ISBLANK ( M ), \"On the e+i tour (2018), the closest match to 2027 with a new album next to a companion record, the model \" & IF ( ABS ( M - B ) < 0.005, \"only tied\", IF ( M > B, \"beat\", \"lost to\" ) ) & \" \" & [Selected Baseline] & \": \" & FORMAT ( M, \"0%\", \"en-US\" ) & \" vs \" & FORMAT ( B, \"0%\", \"en-US\" ) & \".\" )",
+          "description": "Annotation: the model against the baseline on the closest analog tour (SPEC-09 honesty note).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_backtest",
+                "name": "Model Precision at N"
+              },
+              {
+                "entity": "fact_setlist_backtest",
+                "name": "Baseline Precision at N"
+              },
+              {
+                "entity": "fact_setlist_backtest",
+                "name": "Selected Baseline"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Closest Analog Note p10 · p10_analog_note",
+          "dataType": "Text",
+          "expression": "\"<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:28px;overflow:hidden'>\" & [Closest Analog Note p10] & \"</div>\"",
+          "description": "Typography wrapper (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Closest Analog Note p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Tour Started p10",
+          "dataType": "Integer",
+          "expression": "CALCULATE ( [Shows Observed], REMOVEFILTERS ( dim_date ) )",
+          "description": "Shows of the predicted tour played at the latest prediction (0 before the first show).",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Shows Observed"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Tracker Intro p10",
+          "dataType": "Text",
+          "expression": "VAR Obs = [Tour Started p10] VAR H = CALCULATE ( [Hit Rate], REMOVEFILTERS ( dim_date ) ) RETURN \"<div style='font-family:Segoe UI;font-size:12px;line-height:1.4;color:#A3A9B3'><span style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>ONCE THE TOUR STARTS</span> \" & IF ( Obs = 0 || ISBLANK ( H ), \"No show of the tour yet, so these charts are empty. After each show they compare the predicted setlist with what was played and follow how the chances move.\", \"After <b style='color:#ECEDEF'>\" & FORMAT ( Obs, \"#,0\", \"en-US\" ) & \"</b> shows, <b style='color:#ECEDEF'>\" & FORMAT ( H, \"0%\", \"en-US\" ) & \"</b> of the predicted songs were played per show, on average.\" ) & \"</div>\"",
+          "description": "HTML: in-tour section intro, an empty-state message before the first show.",
+          "references": {
+            "measures": [
+              {
+                "entity": "fact_setlist_prediction",
+                "name": "Hit Rate"
+              },
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Tour Started p10"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Tracker Intro p10 · p10_tracker_intro",
+          "dataType": "Text",
+          "expression": "\"<div style='height:32px;overflow:hidden'>\" & [Tracker Intro p10] & \"</div>\"",
+          "description": "Clipping wrapper so the HTML visual never scrolls (presentation only).",
+          "references": {
+            "measures": [
+              {
+                "schema": "extension",
+                "entity": "fact_show",
+                "name": "Tracker Intro p10"
+              }
+            ]
+          }
         }
       ]
     },

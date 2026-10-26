@@ -65,7 +65,8 @@ def parse_table(path: Path) -> dict:
             doc = []
         elif indent == 1 and s.startswith("measure "):
             head = s[8:]
-            name_part, _, expr = head.partition(" = ")
+            # "measure Name = expr" on one line, or "measure 'Name' =" with the expression on the next lines.
+            name_part, _, expr = re.sub(r"\s=$", " = ", head).partition(" = ")
             expr_lines = [expr] if expr.strip() else []
             j = i + 1
             while j < len(lines):
@@ -120,6 +121,9 @@ tables = [parse_table(p) for p in sorted(tables_dir.glob("*.tmdl"))]
 order = [
     "fact_performance",
     "fact_show",
+    "fact_setlist_prediction",
+    "fact_setlist_backtest",
+    "fact_setlist_model_coef",
     "dim_show",
     "dim_song",
     "dim_album",
@@ -170,6 +174,8 @@ md.append(
 md.append("(`song_key`); `dim_song` → `dim_album` (`album_key`). `dim_tour[album_promoted_key]` has no relationship:")
 md.append("`Promoted Album Share %` applies it with `TREATAS`;")
 md.append("`report_image_chunk` → `report_image` (`image_id`).")
+md.append("Setlist prediction (SPEC-09, T-50): `fact_setlist_prediction` → `dim_date` (`as_of_date_key`), `dim_tour`,")
+md.append("`dim_song`; `fact_setlist_backtest` and `fact_setlist_model_coef` → `dim_tour` (`tour_key`).")
 md.append("")
 md.append("## Columns")
 for t in gold:

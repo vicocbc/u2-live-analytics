@@ -1,0 +1,28 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (sections "T-50"), Gold committed 2026-10-26 06:48:10 UTC.
+-- Default scope: album tours from Elevation (2001) on = Elevation, Vertigo, U2 360°, i+e, e+i (5 tours).
+-- Expected Mean Precision at N: model 0.6091, B1 0.4818, B2 0.4470, B3 0.4485.
+-- Expected Mean Jaccard First Show: model 0.4366, B1 0.2903, B2 0.2453, B3 0.2544.
+-- Expected Mean Brier Score: model 0.0341, B1 0.0723, B2 0.0503, B3 0.0764.
+-- Expected Selected Baseline / Model vs. Baseline: B1 0.1273, B2 0.1621, B3 0.1606; the model row falls back to B1 0.1273.
+EVALUATE
+SUMMARIZECOLUMNS (
+    fact_setlist_backtest[method],
+    TREATAS ( { "model", "B1", "B2", "B3" }, fact_setlist_backtest[method] ),
+    "Mean Precision at N", ROUND ( [Mean Precision at N], 4 ),
+    "Mean Jaccard First Show", ROUND ( [Mean Jaccard First Show], 4 ),
+    "Mean Brier Score", ROUND ( [Mean Brier Score], 4 ),
+    "Selected Baseline", [Selected Baseline],
+    "Model vs. Baseline", ROUND ( [Model vs. Baseline], 4 )
+)
+ORDER BY fact_setlist_backtest[method]
+
+-- Expected: 0.1273 with no filter and with the planned tour filtered (no backtest tour in context, so the default scope);
+-- Zoo TV alone 0.7368 (backtest tour in context); all 7 album backtest tours 0.626 (0.6260 in T-SQL).
+EVALUATE
+ROW (
+    "Model vs. Baseline", ROUND ( [Model vs. Baseline], 4 ),
+    "Planned tour filter", ROUND ( CALCULATE ( [Model vs. Baseline], dim_tour[is_planned] = TRUE () ), 4 ),
+    "Zoo TV model precision", ROUND ( CALCULATE ( [Model Precision at N], dim_tour[tour_name] = "Zoo TV" ), 4 ),
+    "All 7 tours model precision", ROUND ( CALCULATE ( [Model Precision at N], dim_tour[tour_type] = "album" ), 4 )
+)

@@ -39,6 +39,7 @@ The report credits them on page 9 "About the data"; the README must do the same.
 | | The Joshua Tree Tour 2019 | `photo_joshua_tree_2019_singapore.jpg` (stage before the show) | original glyph |
 | 2023-present Sphere and after | U2:UV Achtung Baby Live at Sphere | `photo_sphere_2023_las_vegas.jpg`, `photo_sphere_2023_las_vegas_bow.jpg` | original glyph |
 | | Carnival De Luz Promo | none found | original glyph |
+| | The Greatest Show on Earth Tour (planned, 2027) | none (no show yet) | original glyph (`glyph_greatest_show_2027.svg`, big top tent; used inline on p10) |
 | — | (No tour) | — | original glyph (`glyph_no_tour.svg`) |
 
 Totals: photos for 15 of 24 tours (7 of 8 eras; none for 1976-1980), free official icon for 1 tour (U2 360°),

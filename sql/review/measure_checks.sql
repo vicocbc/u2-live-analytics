@@ -81,3 +81,33 @@ SELECT a.album_order, a.album_title, COUNT(*) AS performances,
 FROM p JOIN dbo.dim_song s ON s.song_key = p.song_key JOIN dbo.dim_album a ON a.album_key = s.album_key
 WHERE a.is_studio = 1
 GROUP BY a.album_order, a.album_title ORDER BY a.album_order;
+
+-- ===== T-50: setlist prediction measures (SPEC-09 section 9.7), Gold committed 2026-10-26 06:48:10 UTC =====
+
+PRINT '== T-50 Prediction: picked / candidate songs per release role (expected catalog 16 of 256, promoted_album 6 of 13, companion_release 2 of 12)';
+SELECT s.release_role_2027, p.model_part, COUNT(*) AS candidates, SUM(CAST(p.predicted_in_setlist AS int)) AS picked
+FROM dbo.fact_setlist_prediction p JOIN dbo.dim_song s ON s.song_key = p.song_key
+WHERE p.as_of_date_key = (SELECT MAX(as_of_date_key) FROM dbo.fact_setlist_prediction)
+GROUP BY s.release_role_2027, p.model_part;
+
+PRINT '== T-50 Prediction: first three slots (expected Street of Dreams 0.860, I Will Follow 0.757, Beautiful Day 0.858) and mean probability 0.0717';
+SELECT TOP 3 p.predicted_position, s.song_title, CAST(p.probability AS decimal(6, 3)) AS probability, p.predicted_set, p.model_part
+FROM dbo.fact_setlist_prediction p JOIN dbo.dim_song s ON s.song_key = p.song_key
+WHERE p.predicted_in_setlist = 1 ORDER BY p.predicted_position;
+SELECT CAST(AVG(probability) AS decimal(8, 4)) AS mean_probability, CAST(SUM(probability) AS decimal(8, 3)) AS sum_probability
+FROM dbo.fact_setlist_prediction;
+
+PRINT '== T-50 Backtest: mean per method and metric over album tours from Elevation (2001) on (precision: model 0.6091, B1 0.4818, B2 0.4470, B3 0.4485)';
+SELECT b.method, b.metric, CAST(AVG(b.value) AS decimal(10, 4)) AS mean_value, COUNT(*) AS tours
+FROM dbo.fact_setlist_backtest b JOIN dbo.dim_tour t ON t.tour_key = b.tour_key
+WHERE t.first_show_date >= '2001-01-01' AND t.tour_type = 'album' AND b.method <> 'context'
+GROUP BY b.method, b.metric ORDER BY b.metric, b.method;
+
+PRINT '== T-50 Hit Rate mechanics: 2027 picks played in full at the first e+i show with a setlist (expected 11 of 24)';
+WITH picks AS (SELECT song_key FROM dbo.fact_setlist_prediction WHERE predicted_in_setlist = 1),
+s AS (SELECT TOP 1 fs.show_key FROM dbo.fact_show fs JOIN dbo.dim_tour t ON t.tour_key = fs.tour_key
+      WHERE t.tour_name = 'eXPERIENCE + iNNOCENCE Tour' AND fs.has_setlist = 1 ORDER BY fs.date_key, fs.show_key)
+SELECT COUNT(DISTINCT p.song_key) AS hits
+FROM dbo.fact_performance p
+WHERE p.show_key = (SELECT show_key FROM s) AND p.song_key IN (SELECT song_key FROM picks)
+  AND p.is_snippet = 0 AND p.is_tape = 0 AND p.is_fragment = 0;

@@ -217,6 +217,70 @@
         ]
       },
       {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "31c6ddb0-e449-402c-92ba-89df336cc713",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "RUN_ID": {
+              "value": {
+                "value": "@pipeline().RunId",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          }
+        },
+        "policy": {
+          "timeout": "0.00:30:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Silver setlist features",
+        "dependsOn": [
+          {
+            "activity": "Silver song map",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "2e2db3ca-17d6-41cc-a040-e8090632dbad",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "RUN_ID": {
+              "value": {
+                "value": "@pipeline().RunId",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          }
+        },
+        "policy": {
+          "timeout": "0.00:30:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Silver setlist prediction",
+        "dependsOn": [
+          {
+            "activity": "Silver setlist features",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
         "type": "SqlServerStoredProcedure",
         "typeProperties": {
           "storedProcedureName": "[dbo].[usp_build_gold]",
@@ -252,7 +316,7 @@
         "name": "Gold build",
         "dependsOn": [
           {
-            "activity": "Silver song map",
+            "activity": "Silver setlist prediction",
             "dependencyConditions": [
               "Succeeded"
             ]

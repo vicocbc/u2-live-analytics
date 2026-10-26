@@ -1,0 +1,34 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (sections "T-50"), Gold committed 2026-10-26 06:48:10 UTC, as_of 20270222.
+-- Expected now: Hit Rate blank for the planned tour (no show played yet) and for a played tour (no prediction for it);
+-- Predicted Songs 24 for the planned tour, blank for e+i.
+EVALUATE
+SUMMARIZECOLUMNS (
+    dim_tour[tour_name],
+    TREATAS (
+        { "Carnaval De Luz Presents: The Greatest Show On Earth World Tour", "eXPERIENCE + iNNOCENCE Tour" },
+        dim_tour[tour_name]
+    ),
+    "Hit Rate", [Hit Rate],
+    "Predicted Songs", [Predicted Songs]
+)
+
+-- Mechanics of the per-show step (same TREATAS pattern as the measure): the 24 picks for 2027 played in full at the
+-- first e+i show with a setlist. Expected: show_key 8702266982073352126, hits 11, picks 24.
+-- After the first 2027 show, re-test the measure itself: Hit Rate for that show = hits / 24 (T-SQL with that show_key).
+EVALUATE
+VAR Picks =
+    CALCULATETABLE ( VALUES ( fact_setlist_prediction[song_key] ), fact_setlist_prediction[predicted_in_setlist] = TRUE () )
+VAR FirstShow =
+    CALCULATETABLE (
+        TOPN ( 1, SUMMARIZE ( fact_show, fact_show[show_key], fact_show[date_key] ), fact_show[date_key], ASC, fact_show[show_key], ASC ),
+        dim_tour[tour_name] = "eXPERIENCE + iNNOCENCE Tour",
+        fact_show[has_setlist] = TRUE ()
+    )
+VAR ShowKey = MAXX ( FirstShow, fact_show[show_key] )
+RETURN
+    ROW (
+        "show_key", ShowKey,
+        "hits", CALCULATE ( [Distinct Songs], TREATAS ( { ShowKey }, fact_performance[show_key] ), TREATAS ( Picks, fact_performance[song_key] ) ),
+        "picks", COUNTROWS ( Picks )
+    )

@@ -7,8 +7,13 @@ Owner: data-engineer
 ```
 nb_bronze_seeds ─┐
 nb_u2_load_bronze ───┼─> nb_silver_shows ─┐
-nb_bronze_musicbrainz ┘   nb_silver_catalog ─┼─> nb_silver_song_map ─> [SP] wh_gold.dbo.usp_build_gold ─> semantic model refresh
+nb_bronze_musicbrainz ┘   nb_silver_catalog ─┼─> nb_silver_song_map ─> nb_silver_setlist_features ─>
+    nb_silver_setlist_prediction ─> [SP] wh_gold.dbo.usp_build_gold ─> [SP] usp_assert_gold ─> semantic model refresh
 ```
+
+- The setlist notebooks (SPEC-09, added in T-49) read `show`, `performance`, `song_map`, `song`, `album`, `tour` and
+  `release_track`, so they run after `nb_silver_song_map`; `nb_silver_setlist_prediction` refreshes the `lk_silver`
+  SQL endpoint again after writing, so Gold reads its tables.
 
 - Bronze notebooks run in parallel; MusicBrainz may run monthly instead of weekly (parameter `run_musicbrainz`).
 - Gold is a **Stored procedure** activity on `wh_gold` calling `dbo.usp_build_gold` with
@@ -39,6 +44,7 @@ failures raise, warnings print. Gold: `dbo.usp_dq_gold` inside the build transac
 | Gold | `fact_show` = `dim_show` − 1 | hard |
 | Gold | surrogate keys unique and ≠ `-1` in every dimension | hard |
 | Gold | `lk_silver.dbo.show` contains the current run (endpoint synced) | hard |
+| Gold | setlist facts = Silver; keys resolve; one pre-tour row per candidate; predicted length = positions 1..N; 2026 tracks have `release_role_2027`; planned tours ordered last (SPEC-04, T-49) | hard |
 
 The table `wh_gold.dbo.dq_run_log` (`run_id`, `layer`, `check_name`, `value`, `status`, `checked_at`; DDL in SPEC-04) is
 appended on every run and exposed on the report's "About the data" page as the last refresh status. Notebooks write

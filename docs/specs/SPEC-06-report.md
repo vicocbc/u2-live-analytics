@@ -25,6 +25,7 @@ Owner: dashboard-designer (design, PBIR) · data-analyst (measure needs, insight
 | 7 | Song detail (drill-through) | Timeline of performances, tours, positions (opener/encore share), first/last show links | Q3 |
 | 8 | Show detail (drill-through) | Setlist in order with set names, venue, tour, link to setlist.fm | Q8 |
 | 9 | About the data | Sources and credits (data sources and every image: title, author, licence, link), limitations (unrecorded setlists, unmapped songs), refresh date | — |
+| 10 | Next tour | Predicted 2027 setlist in order (ticket with chance bars, new vs. older songs, main set/encore), the 25 new songs by release with their chance, backtest precision of the model vs. B1–B3, predicted vs. played per show and how the chances move (empty until the first show); see SPEC-09 §9.8 | Q12 |
 
 ## Process
 

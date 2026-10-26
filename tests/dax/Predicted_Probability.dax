@@ -1,0 +1,17 @@
+-- Run through the powerbi-modeling MCP (dax_query_operations Execute) on sm_u2_live.
+-- T-SQL cross-check: sql/review/measure_checks.sql (sections "T-50"), Gold committed 2026-10-26 06:48:10 UTC, as_of 20270222.
+-- Expected: 1 Street of Dreams main new 0.860; 2 I Will Follow main catalog 0.757; 3 Beautiful Day main catalog 0.858.
+-- Filter predicted_in_setlist too: a blank predicted_position compares as 0 in DAX, so "<= 3" alone keeps every unpicked song.
+EVALUATE
+CALCULATETABLE (
+    SUMMARIZECOLUMNS (
+        fact_setlist_prediction[predicted_position],
+        dim_song[song_title],
+        fact_setlist_prediction[predicted_set],
+        fact_setlist_prediction[model_part],
+        "Predicted Probability", ROUND ( [Predicted Probability], 3 )
+    ),
+    fact_setlist_prediction[predicted_in_setlist] = TRUE (),
+    fact_setlist_prediction[predicted_position] <= 3
+)
+ORDER BY fact_setlist_prediction[predicted_position]

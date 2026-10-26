@@ -136,6 +136,7 @@ class Page:
     def __init__(self, name, display, drill=None, hidden=False):
         self.name, self.display, self.drill, self.hidden = name, display, drill, hidden
         self.visuals, self.z = [], 0
+        self.filter_pairs = None  # None: every data visual filters every other; else only these (source, target)
 
     def add(
         self,
@@ -2428,6 +2429,495 @@ def page_about():
     return p
 
 
+# ---------------------------------------------------------------- page 10
+FSP, FSB = "fact_setlist_prediction", "fact_setlist_backtest"
+KICKER = "font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B"
+
+
+def ext_refs(measure, model=(), report=()):
+    """Set the references of the last report measure: model measures (entity, name) and report measures (names)."""
+    refs = [{"entity": e, "name": n} for e, n in model]
+    refs += [{"schema": "extension", "entity": FS, "name": n} for n in report]
+    EXT_MEASURES[FS][-1]["references"] = {"measures": refs}
+    return measure
+
+
+def page_next_tour():
+    """Page 10 (SPEC-09 §9.8, Q12): the predicted 2027 setlist, the new material, how good the model was in the
+    backtest, and (from the first show on) predicted vs played. Left: story column with the setlist ticket (anchor).
+    Right: new songs, backtest, in-tour tracker."""
+    p = Page("p10_next_tour", "Next tour")
+    lw, rx, rw = 656, 728, 528  # left column width (x 40), right column x and width
+    nav(p, 40, 6, lw)
+    asof = "VAR AsOf = [Prediction As-Of Date Key] "
+    picks = (
+        "CALCULATETABLE ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], dim_song[release_role_2027], "
+        "fact_setlist_prediction[predicted_position], fact_setlist_prediction[predicted_set], "
+        "fact_setlist_prediction[model_part], fact_setlist_prediction[probability], "
+        "fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[as_of_date_key] = AsOf"
+    )
+    # promoted album of the predicted tour (Get Back to Now, the album's bonus track, has no album in dim_song)
+    ext_measure(
+        FS,
+        "Promoted Album p10",
+        "VAR K = CALCULATE ( SELECTEDVALUE ( dim_tour[album_promoted_key] ), REMOVEFILTERS (), "
+        "fact_setlist_prediction ) "
+        "RETURN CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K )",
+        description="Title of the album the predicted tour promotes (presentation only).",
+    )
+    ext_measure(
+        FS,
+        "Predicted Tour p10",
+        "CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name_display] ), REMOVEFILTERS (), fact_setlist_prediction )",
+        description="Display name of the tour the prediction is for (presentation only).",
+    )
+    for name, role, what in (
+        ("New Album Songs Predicted p10", "promoted_album", "songs of the promoted album"),
+        ("New EP Songs Predicted p10", "companion_release", "songs of the companion releases (the 2026 EPs)"),
+    ):
+        ext_measure(
+            FS,
+            name,
+            f'CALCULATE ( [New Songs Predicted], dim_song[release_role_2027] = "{role}" )',
+            data_type="Integer",
+            description=f"Predicted setlist slots for {what}.",
+        )
+        ext_refs(None, [(FSP, "New Songs Predicted")])
+    n = 'FORMAT ( [Expected Songs per Show], "#,0", "en-US" )'
+    ext_measure(
+        FS,
+        "Headline p10",
+        f'"Our guess for 2027: " & {n} & " songs a night, " & FORMAT ( [New Songs Predicted], "#,0", "en-US" ) & '
+        '" of them new"',
+        description="Finding-style headline of page 10 (request: promote to the model, data-analyst).",
+    )
+    ext_refs(None, [(FSP, "Expected Songs per Show"), (FSP, "New Songs Predicted")])
+    ext_measure(
+        FS,
+        "First Glimpse p10",
+        asof + "VAR Obs = [Shows Observed] "
+        "VAR Opener = MAXX ( FILTER ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], "
+        "fact_setlist_prediction[predicted_position], fact_setlist_prediction[as_of_date_key] ), "
+        "fact_setlist_prediction[predicted_position] = 1 && fact_setlist_prediction[as_of_date_key] = AsOf ), "
+        "dim_song[song_title] ) "
+        'RETURN IF ( Obs = 0, "Before the first show", "After " & FORMAT ( Obs, "#,0", "en-US" ) & " shows" ) & '
+        '", our model picks <b>" & FORMAT ( [New Album Songs Predicted p10], "#,0", "en-US" ) & "</b> songs from " & '
+        '[Promoted Album p10] & ", <b>" & FORMAT ( [New EP Songs Predicted p10], "#,0", "en-US" ) & '
+        '"</b> from the EPs and <b>" & FORMAT ( [Catalog Songs Predicted], "#,0", "en-US" ) & "</b> older ones" & '
+        'IF ( NOT ISBLANK ( Opener ), ", opening with <b>" & Opener & "</b>" ) & '
+        '". On the album tours since Elevation, <b>" & FORMAT ( [Model Precision at N], "0%", "en-US" ) & '
+        '"</b> of its picks became core songs, vs <b>" & FORMAT ( [Baseline Precision at N], "0%", "en-US" ) & '
+        '"</b> for repeating the last album tour."',
+        description="Intro paragraph of page 10 with the key numbers in bold (request: promote to the model).",
+    )
+    ext_refs(
+        None,
+        [
+            (FSP, "Prediction As-Of Date Key"),
+            (FSP, "Shows Observed"),
+            (FSP, "Catalog Songs Predicted"),
+            (FSB, "Model Precision at N"),
+            (FSB, "Baseline Precision at N"),
+        ],
+        ["New Album Songs Predicted p10", "Promoted Album p10", "New EP Songs Predicted p10"],
+    )
+    header = ext_measure(
+        FS,
+        "Header p10",
+        "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;"
+        'font-weight:600;max-height:72px;overflow:hidden\'>" & [Headline p10] & "</div>'
+        "<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;"
+        'max-height:57px;overflow:hidden\'>" & [First Glimpse p10] & "</div>"',
+        description="HTML: page headline and intro paragraph.",
+    )
+    ext_refs(None, report=["Headline p10", "First Glimpse p10"])
+    html(p, "p10_headline", 40, 54, lw, 144, header, alt="Page headline and introduction")
+
+    # ---- predicted setlist ticket (anchor): header band with the tour glyph and numbers, setlist in two columns
+    def stat(value, label, colour=T["text"]):
+        return (
+            "\"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;"
+            f"color:{colour}'>\" & {value} & \"</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px;"
+            f"white-space:nowrap'>{label}</div></div>\""
+        )
+
+    pill = "font-size:9px;font-weight:700;letter-spacing:.5px;border-radius:7px;padding:0 4px;flex:none;"
+    row = (
+        "VAR Pos = fact_setlist_prediction[predicted_position] VAR Pr = fact_setlist_prediction[probability] "
+        'VAR IsNew = fact_setlist_prediction[model_part] = "new" '
+        'VAR Bar = IF ( IsNew, "' + T["accent"] + '", "' + T["d1"] + '" ) '
+        "RETURN \"<div style='display:flex;align-items:center;gap:6px;min-height:21px;break-inside:avoid'>"
+        '<div style=\'width:16px;text-align:right;color:#A3A9B3;flex:none\'>" & COALESCE ( Pos, "·" ) & "</div>'
+        '<div style=\'flex:1;color:#ECEDEF;line-height:1.2\'>" & dim_song[song_title] & "</div>" & '
+        f"IF ( IsNew, \"<div style='{pill}color:#F2A93B;border:1px solid #F2A93B'>NEW · \" & "
+        'IF ( dim_song[release_role_2027] = "companion_release", "EP", "ALBUM" ) & "</div>" ) & '
+        "\"<div style='width:34px;height:6px;background:#2A2F38;border-radius:3px;flex:none'><div style='height:6px;"
+        'border-radius:3px;background:" & Bar & ";width:" & MAX ( 1, INT ( 34 * Pr ) ) & "px\'></div></div>'
+        '<div style=\'width:28px;text-align:right;color:#ECEDEF;flex:none\'>" & FORMAT ( Pr, "0%", "en-US" ) & '
+        '"</div></div>"'
+    )
+    set_header = (
+        "\"<div style='color:#F2A93B;font-size:10px;letter-spacing:1.4px;font-weight:700;padding:4px 0 2px'>\" & "
+        'IF ( S = "encore", "ENCORE", "MAIN SET" ) & "</div>"'
+    )
+    # songs in predicted order; a set header whenever the set changes (in-tour rows have no position: by chance)
+    key = "COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] )"
+    songs = (
+        "CONCATENATEX ( PickRows, "
+        f"VAR K = {key} "
+        "VAR S = fact_setlist_prediction[predicted_set] "
+        f"VAR PrevK = MAXX ( FILTER ( PickRows, {key} < K ), {key} ) "
+        f"VAR PrevS = MAXX ( FILTER ( PickRows, {key} = PrevK ), fact_setlist_prediction[predicted_set] ) "
+        "RETURN IF ( NOT ISBLANK ( S ) && ( ISBLANK ( PrevK ) || S <> PrevS ), " + set_header + " ) & ( " + row + " ), "
+        f'"", {key}, ASC )'
+    )
+    glyph = svg_inline("glyph_greatest_show_2027.svg", 36)
+    opener_p = (
+        "FORMAT ( CALCULATE ( [Predicted Probability], fact_setlist_prediction[predicted_position] = 1 ), "
+        '"0%", "en-US" )'
+    )
+    band = (
+        "\"<div style='display:flex;gap:16px;align-items:center;padding:12px 16px;background:#262A33;"
+        f"border-bottom:2px dashed #0F1115'>{glyph}<div style='flex:1'><div style='{KICKER}'>\" & "
+        "UPPER ( [Predicted Tour p10] ) & \"</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px'>"
+        'Predicted setlist · " & IF ( [Shows Observed] = 0, "before the first show", "after " & '
+        'FORMAT ( [Shows Observed], "#,0", "en-US" ) & " shows" ) & " · as of " & '
+        'FORMAT ( [Prediction As-Of Date], "yyyy-mm-dd", "en-US" ) & "</div></div>" & '
+        + stat(n, "songs a night")
+        + " & "
+        + stat(
+            'FORMAT ( [New Songs Predicted], "#,0", "en-US" )',
+            'new: " & FORMAT ( [New Album Songs Predicted p10], "#,0", "en-US" ) & " album · " & '
+            'FORMAT ( [New EP Songs Predicted p10], "#,0", "en-US" ) & " EP',
+            T["accent"],
+        )
+        + " & "
+        + stat('FORMAT ( [Catalog Songs Predicted], "#,0", "en-US" )', "older songs")
+        + ' & "</div>"'
+    )
+    swatch = "display:inline-block;width:14px;height:6px;border-radius:3px;background:"
+    legend = (
+        "\"<div style='display:flex;gap:16px;font-size:10px;color:#A3A9B3;margin:0 0 6px'>"
+        f"<span><span style='{swatch}#F2A93B'></span> new 2026 song (NEW tag)</span>"
+        f"<span><span style='{swatch}#6FA8DC'></span> older song</span>"
+        '<span>bar and % = chance it is a core song (opener: " & ' + opener_p + ' & ")</span></div>"'
+    )
+    footnote = (
+        "\"<div style='font-size:10.5px;line-height:1.4;color:#A3A9B3;margin-top:8px;border-top:1px solid #2A2F38;"
+        "padding-top:6px'>Order is approximate: each older song sits where it played on the previous album tour, new "
+        "songs where that tour placed its new songs. The % is the chance of being a core song (played at half the "
+        "shows or more); older songs' chances are not rescaled, so they do not add up to \" & " + n + ' & ". The list '
+        'is the top " & ' + n + ' & ", with new and older slots filled separately.</div>"'
+    )
+    ticket = ext_measure(
+        FS,
+        "Ticket p10",
+        asof + "VAR PickRows = " + picks + ", fact_setlist_prediction[predicted_in_setlist] = TRUE () ) "
+        "RETURN IF ( ISEMPTY ( PickRows ), \"<div style='font-family:Segoe UI;color:#A3A9B3;font-size:14px'>"
+        'No prediction in the current selection.</div>", '
+        "\"<div style='background:#20242C;border-radius:10px;overflow:hidden;font-family:Segoe UI;font-size:12px'>\" & "
+        + band
+        + " & \"<div style='padding:10px 16px 12px'>\" & "
+        + legend
+        + " & \"<div style='columns:2;column-gap:24px'>\" & "
+        + songs
+        + ' & "</div>" & '
+        + footnote
+        + ' & "</div></div>" )',
+        description="HTML: predicted setlist ticket (tour, numbers, songs in predicted order with chance bars, notes).",
+    )
+    ext_refs(
+        None,
+        [
+            (FSP, "Prediction As-Of Date Key"),
+            (FSP, "Prediction As-Of Date"),
+            (FSP, "Shows Observed"),
+            (FSP, "Expected Songs per Show"),
+            (FSP, "New Songs Predicted"),
+            (FSP, "Catalog Songs Predicted"),
+            (FSP, "Predicted Probability"),
+        ],
+        ["Predicted Tour p10", "New Album Songs Predicted p10", "New EP Songs Predicted p10"],
+    )
+    html(
+        p,
+        "p10_setlist_ticket",
+        40,
+        208,
+        lw,
+        480,
+        ticket,
+        alt="Predicted setlist of the next tour in order, main set and encore, with each song's chance; new songs "
+        "tagged NEW",
+    )
+
+    # ---- new material: all 25 songs of the 2026 releases with their chance
+    release = ext_measure(
+        FS,
+        "Release p10",
+        "VAR K = SELECTEDVALUE ( dim_song[album_key] ) "
+        "VAR A = CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K ) "
+        "RETURN IF ( HASONEVALUE ( dim_song[song_title] ), "
+        'IF ( ISBLANK ( A ) || K = -1, [Promoted Album p10] & " (bonus)", A ) )',
+        description="Release of a 2026 song: its album, or the promoted album for its bonus track (presentation only).",
+    )
+    ext_refs(None, report=["Promoted Album p10"])
+    picked = ext_measure(
+        FS,
+        "In Setlist p10",
+        'IF ( HASONEVALUE ( dim_song[song_title] ), IF ( [Predicted Songs] > 0, "✓ picked", "" ) )',
+        description="Text marker for songs in the predicted setlist (second cue next to the colour).",
+    )
+    ext_refs(None, [(FSP, "Predicted Songs")])
+    song_colour = ext_measure(
+        FS,
+        "Song Colour p10",
+        f'IF ( [Predicted Songs] > 0, "{T["accent"]}", "{T["text"]}" )',
+        description="Accent for picked songs (presentation only).",
+    )
+    ext_refs(None, [(FSP, "Predicted Songs")])
+    new_title = ext_measure(
+        FS,
+        "Title p10 new songs",
+        '"All " & FORMAT ( CALCULATE ( [Candidate Songs], NOT ISBLANK ( dim_song[release_role_2027] ) ), "#,0", '
+        '"en-US" ) & " new songs, by release: " & FORMAT ( [New Songs Predicted], "#,0", "en-US" ) & '
+        '" make the setlist"',
+        description="Visual title with the total (presentation only).",
+    )
+    ext_refs(None, [(FSP, "Candidate Songs"), (FSP, "New Songs Predicted")])
+    chance = named(meas(FSP, "Predicted Probability"), "Chance")
+    new_fields = [
+        named(release, "Release"),
+        named(col("dim_song", "song_title"), "Song"),
+        chance,
+        named(picked, "Setlist"),
+    ]
+    table(
+        p,
+        "p10_new_songs_table",
+        rx,
+        16,
+        rw,
+        224,
+        new_fields,
+        "All 25 songs of the 2026 album and EPs by release, with each song's chance; songs in the predicted setlist "
+        "in amber and marked picked; right-click a song for its story",
+        sort=[(release, "Ascending"), (chance, "Descending")],
+        filters=[basic_filter(col("dim_song", "release_role_2027"), ["promoted_album", "companion_release"], "new")],
+        title=new_title,
+        widths=[124, 214, 104, 64],
+        extra_objects={
+            "values": [
+                *props(
+                    wordWrap=lit(False),
+                    backColorPrimary=color(T["bg"]),
+                    backColorSecondary=color(T["bg"]),
+                    fontColorPrimary=color(T["text"]),
+                    fontColorSecondary=color(T["text"]),
+                ),
+                {
+                    "properties": {"fontColor": {"solid": {"color": {"expr": song_colour}}}},
+                    "selector": {
+                        "data": [{"dataViewWildcard": {"matchingOption": 1}}],
+                        "metadata": "dim_song.song_title",
+                    },
+                },
+            ],
+            "columnFormatting": [data_bars(f"{FSP}.Predicted Probability")],
+        },
+    )
+
+    def tie_count(role, p_var, picked_only):
+        cond = "fact_setlist_prediction[predicted_in_setlist] && " if picked_only else ""
+        return (
+            f'COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = "{role}" && {cond}'
+            f"ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( {p_var}, 6 ) ) )"
+        )
+
+    def last_pick(role):
+        return (
+            f'MINX ( FILTER ( R, dim_song[release_role_2027] = "{role}" && '
+            "fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[probability] )"
+        )
+
+    ties = ext_measure(
+        FS,
+        "Ties Note p10",
+        asof + "VAR R = " + picks + ", REMOVEFILTERS ( dim_song ), NOT ISBLANK ( dim_song[release_role_2027] ) ) "
+        f"VAR PA = {last_pick('promoted_album')} VAR PE = {last_pick('companion_release')} "
+        f"VAR TA = {tie_count('promoted_album', 'PA', False)} VAR KA = {tie_count('promoted_album', 'PA', True)} "
+        f"VAR TE = {tie_count('companion_release', 'PE', False)} VAR KE = {tie_count('companion_release', 'PE', True)} "
+        "VAR TieA = TA > KA VAR TieE = TE > KE "
+        'RETURN IF ( TieA || TieE, "Toss-ups the model cannot settle: " & '
+        'IF ( TieA, KA & " of the " & TA & " album songs tied at " & FORMAT ( PA, "0%", "en-US" ) & " got a slot" ) & '
+        'IF ( TieA && TieE, ", and " ) & '
+        'IF ( TieE, KE & " of the " & TE & " EP songs tied at " & FORMAT ( PE, "0%", "en-US" ) & '
+        'IF ( TieA, "", " got a slot" ) ) & ". Which ones is arbitrary.", '
+        '"No ties among the new-song picks." )',
+        description="Annotation: new songs whose slot is decided by a tie in the model's score (SPEC-09 honesty note).",
+    )
+    ext_refs(None, [(FSP, "Prediction As-Of Date Key")])
+    card_text(
+        p,
+        "p10_ties_note",
+        rx,
+        244,
+        rw,
+        40,
+        ties,
+        size=12.5,
+        color_=T["accent"],
+        family="Segoe UI",
+        italic=True,
+        alt="Note on tied new songs",
+    )
+
+    # ---- how good is this? backtest
+    pp = 'FORMAT ( [Model vs. Baseline] * 100, "+0.0;-0.0;0.0", "en-US" ) & " pp"'
+    good = ext_measure(
+        FS,
+        "Backtest Intro p10",
+        "\"<div style='display:flex;gap:14px;align-items:flex-start;font-family:Segoe UI'>"
+        "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;"
+        "color:#F2A93B;flex:none'>\" & " + pp + " & \"</div><div style='font-size:12px;line-height:1.4;"
+        f"color:#A3A9B3'><span style='{KICKER}'>HOW GOOD IS THIS?</span> Replayed on every album tour since Zoo TV, "
+        "knowing only what came before its first show: share of its picks that became core songs, vs "
+        '" & [Selected Baseline] & " (repeat the last album tour), B2 (career\'s most played) and B3 '
+        '(latest tour: Sphere for 2027).</div></div>"',
+        description="HTML: backtest section intro with the model's lead over the baseline as a big number.",
+    )
+    ext_refs(None, [(FSB, "Model vs. Baseline"), (FSB, "Selected Baseline")])
+    html(p, "p10_backtest_intro", rx, 292, rw, 72, good, alt="How good is the model: lead over the simple baseline")
+    method = col(FSB, "method")
+    bar_colour = color_measure(
+        "Method Colour p10",
+        f'IF ( SELECTEDVALUE ( {FSB}[method] ) = "model", "{T["accent"]}", "{T["neutral"]}" )',
+        refs=[],
+    )
+    bar(
+        p,
+        "p10_backtest_bar",
+        rx,
+        368,
+        rw,
+        92,
+        named(method, "Method"),
+        named(meas(FSB, "Mean Precision at N"), "Precision"),
+        "Backtest precision on the album tours since Elevation: the model against the three simple baselines",
+        title="Share of the picks that became core songs, album tours since Elevation",
+        filters=[basic_filter(method, ["model", "B1", "B2", "B3"], "methods")],
+        fill=fill_by(bar_colour),
+        margin=12,
+    )
+    ei = ext_measure(
+        FS,
+        "Closest Analog Note p10",
+        'VAR EI = "eXPERIENCE + iNNOCENCE Tour" '
+        "VAR M = CALCULATE ( [Model Precision at N], dim_tour[tour_name_display] = EI ) "
+        "VAR B = CALCULATE ( [Baseline Precision at N], dim_tour[tour_name_display] = EI ) "
+        'RETURN IF ( NOT ISBLANK ( M ), "On the e+i tour (2018), the closest match to 2027 with a new album next to '
+        'a companion record, the model " & '
+        'IF ( ABS ( M - B ) < 0.005, "only tied", IF ( M > B, "beat", "lost to" ) ) & '
+        '" " & [Selected Baseline] & ": " & FORMAT ( M, "0%", "en-US" ) & " vs " & FORMAT ( B, "0%", "en-US" ) & "." )',
+        description="Annotation: the model against the baseline on the closest analog tour (SPEC-09 honesty note).",
+    )
+    ext_refs(None, [(FSB, "Model Precision at N"), (FSB, "Baseline Precision at N"), (FSB, "Selected Baseline")])
+    card_text(
+        p,
+        "p10_analog_note",
+        rx,
+        464,
+        rw,
+        36,
+        ei,
+        size=12.5,
+        color_=T["accent"],
+        family="Segoe UI",
+        italic=True,
+        alt="Note on the closest analog tour",
+    )
+
+    # ---- from the first show on: predicted vs played, and how the chances move (empty until the first show)
+    started = ext_measure(
+        FS,
+        "Tour Started p10",
+        "CALCULATE ( [Shows Observed], REMOVEFILTERS ( dim_date ) )",
+        data_type="Integer",
+        description="Shows of the predicted tour played at the latest prediction (0 before the first show).",
+    )
+    ext_refs(None, [(FSP, "Shows Observed")])
+    tracker = ext_measure(
+        FS,
+        "Tracker Intro p10",
+        "VAR Obs = [Tour Started p10] VAR H = CALCULATE ( [Hit Rate], REMOVEFILTERS ( dim_date ) ) "
+        "RETURN \"<div style='font-family:Segoe UI;font-size:12px;line-height:1.4;color:#A3A9B3'>"
+        f"<span style='{KICKER}'>ONCE THE TOUR STARTS</span> \" & IF ( Obs = 0 || ISBLANK ( H ), "
+        '"No show of the tour yet, so these charts are empty. After each show they compare the predicted setlist '
+        'with what was played and follow how the chances move.", '
+        '"After <b style=\'color:#ECEDEF\'>" & FORMAT ( Obs, "#,0", "en-US" ) & '
+        '"</b> shows, <b style=\'color:#ECEDEF\'>" & FORMAT ( H, "0%", "en-US" ) & '
+        '"</b> of the predicted songs were played per show, on average." ) & "</div>"',
+        description="HTML: in-tour section intro, an empty-state message before the first show.",
+    )
+    ext_refs(None, [(FSP, "Hit Rate")], ["Tour Started p10"])
+    html(p, "p10_tracker_intro", rx, 504, rw, 40, tracker, alt="Once the tour starts: predicted versus played")
+
+    def line(vname, x, y_field, alt, title, series=None, filters=None):
+        roles = {"Category": [named(col("dim_date", "date"), "Date")], "Y": [y_field]}
+        obj = {
+            "lineStyles": props(lineChartType=lit("straight"), strokeWidth=lit(2), showMarker=lit(True)),
+            "valueAxis": props(
+                show=lit(True), gridlineShow=lit(False), labelColor=color(T["muted"]), start=lit(0), end=lit(1)
+            ),
+            "categoryAxis": props(
+                show=lit(True), gridlineShow=lit(False), labelColor=color(T["muted"]), fontSize=lit(9)
+            ),
+        }
+        if series:
+            roles["Series"] = [series]
+            obj["legend"] = props(show=lit(True), position=lit("Top"), labelColor=color(T["muted"]), fontSize=lit(8))
+        else:
+            obj["dataPoint"] = props(fill=color(T["accent"]))
+        return p.add(
+            vname,
+            "lineChart",
+            x,
+            548,
+            256,
+            140,
+            roles=roles,
+            alt=alt,
+            title=title,
+            filters=filters,
+            objects=obj,
+            vco={"background": props(show=lit(False))},
+        )
+
+    line(
+        "p10_hit_rate_line",
+        rx,
+        named(meas(FSP, "Hit Rate"), "Predicted songs played"),
+        "Per show of the tour: share of the predicted songs that were played (empty before the first show)",
+        "Predicted vs played, per show",
+    )
+    line(
+        "p10_chance_line",
+        rx + 272,
+        named(meas(FSP, "Predicted Probability"), "Average chance"),
+        "Average chance of the picked songs after each show, new versus older songs (empty before the first show)",
+        "How the chances move (click a new song)",
+        series=named(col(FSP, "model_part"), "Songs"),
+        filters=[
+            bool_filter(col(FSP, "predicted_in_setlist"), True, "picked"),
+            measure_filter(started, 0, "started"),
+        ],
+    )
+    # the prediction story and the backtest are separate stories: only the new-song table filters the chance chart
+    p.filter_pairs = {("p10_new_songs_table", "p10_chance_line")}
+    footer(p, 40, lw, note="Prediction model and backtest: SPEC-09")
+    return p
+
+
 # ---------------------------------------------------------------- writing
 def write_page(p, order):
     folder = DEF / "pages" / p.name
@@ -2468,7 +2958,14 @@ def write_page(p, order):
     ]
     if len(data_visuals) > 1:
         page["visualInteractions"] = [
-            {"source": s, "target": d, "type": "DataFilter"} for s in data_visuals for d in data_visuals if s != d
+            {
+                "source": s,
+                "target": d,
+                "type": "DataFilter" if p.filter_pairs is None or (s, d) in p.filter_pairs else "NoFilter",
+            }
+            for s in data_visuals
+            for d in data_visuals
+            if s != d
         ]
     (folder / "page.json").write_text(json.dumps(page, indent=2, ensure_ascii=False), encoding="utf-8")
     for v in p.visuals:
@@ -2496,7 +2993,7 @@ def write_report(page_names):
     pk.append({"name": "RegisteredResources", "type": "RegisteredResources", "items": items})
     rj["resourcePackages"] = pk
     rj["publicCustomVisuals"] = sorted(set(rj.get("publicCustomVisuals", [])) | {HTML, DENEB})
-    (DEF / "report.json").write_text(json.dumps(rj, indent=4, ensure_ascii=False), encoding="utf-8")
+    (DEF / "report.json").write_text(json.dumps(rj, indent=2, ensure_ascii=False), encoding="utf-8")
     ext = {
         "$schema": S_EXT,
         "name": "extension",
@@ -2533,9 +3030,13 @@ if __name__ == "__main__":
         page_show_detail,
         page_about,
         page_spike,
+        page_next_tour,
     ]
     for b in builders:
         write_page(b(), order)
+    # built last so the report measures of pages 1-9 keep their place; shown before About in the navigation
+    order.remove("p10_next_tour")
+    order.insert(order.index("p09_about"), "p10_next_tour")
     write_report(order)
     print(
         "pages:",

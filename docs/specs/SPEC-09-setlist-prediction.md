@@ -216,10 +216,15 @@ Exact definitions (T-48), so the T-SQL reproduction gives the same numbers:
 
 | Table | Grain | Notes |
 | --- | --- | --- |
-| `fact_setlist_prediction` | (`as_of_date_key`, `tour_key`, `song_key`) | From `setlist_prediction`; `tour_key` of the planned tour; `probability` float, `predicted_in_setlist` bit, `predicted_position` int, `predicted_set` varchar(10), `model_part` varchar(10), `model_version` varchar(20) |
-| `fact_setlist_backtest` | (`tour_key`, `method`, `metric`) | From `setlist_backtest` |
-| `dim_tour` (new columns) | | `tour_type` varchar(20), `is_planned` bit, added with `ALTER TABLE` (SPEC-04 rule) |
-| `dim_song` (new columns) | | `release_role_2027` varchar(30) (null for catalog), `is_single` bit |
+| `fact_setlist_prediction` | (`as_of_date_key`, `tour_key`, `song_key`) | From `setlist_prediction` where `is_backtest = 0`; `tour_key` of the planned tour; `shows_observed` int (0 = pre-tour), `probability` float, `predicted_in_setlist` bit, `predicted_position` int, `predicted_set` varchar(10), `model_part` varchar(10), `model_version` varchar(20) |
+| `fact_setlist_backtest` | (`tour_key`, `method`, `metric`) | From `setlist_backtest`: `method` varchar(10), `metric` varchar(30), `value` float, `model_version` varchar(20) |
+| `fact_setlist_model_coef` (T-49) | (`tour_key`, `model_part`, `feature`) | From `setlist_model_coef` (104 rows: the catalog and new-material model of each of the 8 target tours), for "coefficients so the result can be explained": `feature` varchar(40) incl. `intercept`, `coef_standardized` float (null for `intercept`), `coef_raw` float, `n_train` int, `n_positive` int, `model_version` varchar(20). The page filters the planned tour |
+| `dim_tour` (new columns) | | `tour_type` varchar(20), `is_planned` bit, added with `ALTER TABLE` (SPEC-04 rule, `alter_003`). `tour_order` puts a planned tour (null dates) after every played tour |
+| `dim_song` (new columns) | | `release_role_2027` varchar(30) (`promoted_album` / `companion_release` for the 25 `release_track` songs; null for catalog), `is_single` bit |
+
+The two Silver notebooks run in `pl_refresh` after `nb_silver_song_map` and before the Gold build
+(`nb_silver_setlist_features` → `nb_silver_setlist_prediction`, which refreshes the `lk_silver` SQL endpoint).
+Gold checks: SPEC-04 acceptance criteria (T-49).
 
 Additive only: no existing Gold column changes, so SPEC-05 relationships stay. New measures (data-analyst, SPEC-05
 conventions): `Predicted probability`, `Predicted songs`, `Hit rate` (predicted and played / predicted, for shows
