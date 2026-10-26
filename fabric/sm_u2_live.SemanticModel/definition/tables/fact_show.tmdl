@@ -346,6 +346,465 @@ table fact_show
 		displayFolder: Albums
 		lineageTag: 256feba0-b738-4147-8792-3b045185204f
 
+	/// HTML: page headline and intro paragraph from the model text measures (T-35).
+	measure 'Header p01' = "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p01] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p01] & "</div>"
+		displayFolder: Report\p01 Overview
+		lineageTag: 04cbb8a2-7a8e-4b61-836d-c619dc29f360
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Header p01 · p01_headline' = "<div style='height:144px;overflow:hidden'>" & [Header p01] & "</div>"
+		displayFolder: Report\p01 Overview
+		lineageTag: 74e2522e-b962-4c3a-adae-99236dd9487c
+
+	/// HTML: three KPI tiles (icon, number, delta vs previous era) for HTML Content Secure.
+	measure 'KPI Tiles p01' = "<div style='display:flex;gap:28px'>" & "<div style='display:flex;gap:10px;align-items:flex-start'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='28' height='28' aria-hidden='true'><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 16h36v6a4 4 0 000 8v6H6v-6a4 4 0 000-8z'/><path d='M30 16v20' stroke-dasharray='2 3'/></g></svg><div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:46px;line-height:1;color:#F2A93B'>" & FORMAT ( [Shows], "#,0", "en-US" ) & "</div><div style='color:#ECEDEF;font-size:13px'>shows</div><div style='font-size:11px;font-weight:600;color:" & IF ( [Shows vs Previous Era] > 0, "#93C47D", IF ( [Shows vs Previous Era] < 0, "#E06666", "#A3A9B3" ) ) & "'>" & IF ( ISBLANK ( [Shows vs Previous Era] ), "all eras", IF ( [Shows vs Previous Era] > 0, "▲ +", "▼ " ) & FORMAT ( [Shows vs Previous Era], "#,0", "en-US" ) & " vs previous era" ) & "</div></div></div>" & "<div style='display:flex;gap:10px;align-items:flex-start'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='28' height='28' aria-hidden='true'><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M18 36V12l20-4v24'/><circle cx='13' cy='36' r='5'/><circle cx='33' cy='32' r='5'/></g></svg><div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:46px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Distinct Songs], "#,0", "en-US" ) & "</div><div style='color:#ECEDEF;font-size:13px'>different songs</div><div style='font-size:11px;font-weight:600;color:" & IF ( [Distinct Songs vs Previous Era] > 0, "#93C47D", IF ( [Distinct Songs vs Previous Era] < 0, "#E06666", "#A3A9B3" ) ) & "'>" & IF ( ISBLANK ( [Distinct Songs vs Previous Era] ), "all eras", IF ( [Distinct Songs vs Previous Era] > 0, "▲ +", "▼ " ) & FORMAT ( [Distinct Songs vs Previous Era], "#,0", "en-US" ) & " vs previous era" ) & "</div></div></div>" & "<div style='display:flex;gap:10px;align-items:flex-start'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='28' height='28' aria-hidden='true'><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 42s-13-12-13-23a13 13 0 0126 0c0 11-13 23-13 23z'/><circle cx='24' cy='19' r='5'/></g></svg><div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:46px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Countries], "#,0", "en-US" ) & "</div><div style='color:#ECEDEF;font-size:13px'>countries</div><div style='font-size:11px;font-weight:600;color:" & IF ( [Countries vs Previous Era] > 0, "#93C47D", IF ( [Countries vs Previous Era] < 0, "#E06666", "#A3A9B3" ) ) & "'>" & IF ( ISBLANK ( [Countries vs Previous Era] ), "all eras", IF ( [Countries vs Previous Era] > 0, "▲ +", "▼ " ) & FORMAT ( [Countries vs Previous Era], "#,0", "en-US" ) & " vs previous era" ) & "</div></div></div>" & "</div>"
+		displayFolder: Report\p01 Overview
+		lineageTag: 68ee37e6-e153-4a85-950a-c0252bbd7674
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'KPI Tiles p01 · p01_kpi_tiles' = "<div style='height:88px;overflow:hidden'>" & [KPI Tiles p01] & "</div>"
+		displayFolder: Report\p01 Overview
+		lineageTag: 8603475e-0fc3-4b57-ad86-0a76c3435943
+
+	/// Hex colour for conditional formatting (presentation only).
+	measure 'Top Song Bar Color' = IF ( RANKX ( ALLSELECTED ( dim_song[song_title] ), [Performances] ) = 1, "#F2A93B", "#6FA8DC" )
+		displayFolder: Report\p01 Overview
+		lineageTag: 1e93680a-e8ed-4069-b55b-da6ae4735d68
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p01 top10' = "The ten songs played most, of " & FORMAT ( CALCULATE ( [Distinct Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & ""
+		displayFolder: Report\p01 Overview
+		lineageTag: 11c16048-33c5-47d7-9e2e-2aa65c397adc
+
+	/// Rank of song_title by [Performances] for an exact Top N (ties broken alphabetically).
+	measure 'Rank 1 song_title by Performances' = VAR Cur = CALCULATE ( [Performances], REMOVEFILTERS ( dim_date ) ) VAR Me = SELECTEDVALUE ( dim_song[song_title] ) RETURN IF ( NOT ISBLANK ( Cur ) && NOT ISBLANK ( Me ), COUNTROWS ( FILTER ( ALLSELECTED ( dim_song[song_title] ), VAR V = CALCULATE ( [Performances], REMOVEFILTERS ( dim_date ) ) RETURN NOT ISBLANK ( V ) && ( V > Cur || ( V = Cur && dim_song[song_title] < Me ) ) ) ) + 1 )
+		formatString: #,0
+		displayFolder: Report\p01 Overview
+		lineageTag: 5c489548-7ae1-4ace-ab64-d80591789388
+
+	/// HTML: page headline and intro paragraph from the model text measures (T-35).
+	measure 'Header p02' = "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p02] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p02] & "</div>"
+		displayFolder: Report\p02 On the Road
+		lineageTag: 68f2c512-57a6-430a-9f70-b7778151b8d3
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Header p02 · p02_headline' = "<div style='height:88px;overflow:hidden'>" & [Header p02] & "</div>"
+		displayFolder: Report\p02 On the Road
+		lineageTag: 270913ad-e1e8-489b-b44c-cc43a3c594b7
+
+	/// HTML: the most-visited city and its number of shows.
+	measure 'Top City Card p02' = "<div style='font-family:Segoe UI'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>" & MAXX ( TOPN ( 1, VALUES ( dim_venue[city_name] ), [Shows] ), dim_venue[city_name] ) & " · " & FORMAT ( MAXX ( TOPN ( 1, VALUES ( dim_venue[city_name] ), [Shows] ), [Shows] ), "#,0", "en-US" ) & "</div><div style='color:#ECEDEF;font-size:13px;margin-top:4px'>shows in the most-visited city (photo: Croke Park, Dublin, 1987)</div></div>"
+		displayFolder: Report\p02 On the Road
+		lineageTag: 83f61c35-80ec-44de-93be-92d9ef320311
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Top City Card p02 · p02_top_city' = "<div style='height:68px;overflow:hidden'>" & [Top City Card p02] & "</div>"
+		displayFolder: Report\p02 On the Road
+		lineageTag: 4cf38213-0de4-47b4-82ab-c3e3b2ab1de0
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p02 cities' = "All " & FORMAT ( CALCULATE ( [Cities], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " cities, most shows first"
+		displayFolder: Report\p02 On the Road
+		lineageTag: f2edd955-2ada-4f81-a04e-f0a7768006c4
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p02 shows' = "" & FORMAT ( CALCULATE ( [Shows], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " shows · right-click one for its setlist"
+		displayFolder: Report\p02 On the Road
+		lineageTag: 056aa253-d434-4453-85d0-87a97e3b4058
+
+	/// Bound to model measure [Top Song Text] (T-35); kept so the text cards keep their binding.
+	measure 'ph Top Song Text' = [Top Song Text]
+		displayFolder: Report\p03 The Songs
+		lineageTag: f2dcaccb-3e43-41b1-b5d5-095668abf7eb
+
+	/// Typography wrapper (presentation only).
+	measure 'ph Top Song Text · p03_top_song_callout' = "<div style='font-family:DIN, Bahnschrift, Segoe UI, sans-serif;font-size:28px;line-height:1.1;color:#F2A93B;font-weight:600;max-height:68px;overflow:hidden'>" & [ph Top Song Text] & "</div>"
+		displayFolder: Report\p03 The Songs
+		lineageTag: a6caa934-61a2-42ac-bcd0-90941fdf39c3
+
+	/// HTML: page headline and intro paragraph from the model text measures (T-35).
+	measure 'Header p03' = "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p03] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p03] & "</div>"
+		displayFolder: Report\p03 The Songs
+		lineageTag: e4eff346-e7e8-4dde-ac9b-29c79008a4f3
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Header p03 · p03_headline' = "<div style='height:144px;overflow:hidden'>" & [Header p03] & "</div>"
+		displayFolder: Report\p03 The Songs
+		lineageTag: 52ecf3e0-89a9-4edc-ba20-50d8646235c9
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p03 songs' = "All " & FORMAT ( CALCULATE ( [Distinct Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " songs, most played first · right-click for the story"
+		displayFolder: Report\p03 The Songs
+		lineageTag: b5279834-928e-435a-bbc6-b2fde0faef3a
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p03 rarities' = "All " & FORMAT ( CALCULATE ( [Rarities], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " rarities (played twice or less), most recent first"
+		displayFolder: Report\p03 The Songs
+		lineageTag: 3166edea-8f0d-4441-8dfe-4cdecd87e5ff
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p03 covers' = "All " & FORMAT ( CALCULATE ( [Cover Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " other people's songs, most played first"
+		displayFolder: Report\p03 The Songs
+		lineageTag: dc82888f-3a25-429d-95b2-869fa19b78ef
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p03 guests' = "All " & FORMAT ( CALCULATE ( [Guest Artists], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " guests on stage, most frequent first"
+		displayFolder: Report\p03 The Songs
+		lineageTag: 58451c63-1e30-42d4-a890-2a069a5a607d
+
+	/// HTML: page headline and intro paragraph from the model text measures (T-35).
+	measure 'Header p04' = "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p04] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p04] & "</div>"
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: 1714fd6d-ff63-4c66-a61f-b6fd1624537f
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Header p04 · p04_headline' = "<div style='height:144px;overflow:hidden'>" & [Header p04] & "</div>"
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: 7b545103-fb8e-4eae-b42c-9f8647be2e8c
+
+	/// Bound to model measure [Annotation p04] (T-35); kept so the text cards keep their binding.
+	measure 'ph Annotation p04' = [Annotation p04]
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: ca9346d6-f4e2-47b4-8e96-aaa598ba26e2
+
+	/// Typography wrapper (presentation only).
+	measure 'ph Annotation p04 · p04_area_note' = "<div style='font-family:Segoe UI;font-size:13px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:16px;overflow:hidden'>" & [ph Annotation p04] & "</div>"
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: 72b67c28-4ab5-4bc8-92a3-0bf03e1e5109
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p04 albums' = "Which albums stay: all " & FORMAT ( CALCULATE ( [Studio Albums], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " studio albums, share of songs per decade"
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: 70bb357d-ca28-46f1-a543-e04238d539ad
+
+	/// HTML photo card (photo_zoo_tv_1992_kiel): base64 photo, gradient, number, caption, credit.
+	measure 'Photo Card p04' = VAR Img = [Image Data URI] RETURN "<div style='position:relative;width:100%;height:240px;overflow:hidden;background:#0F1115'>" & IF ( NOT ISBLANK ( Img ), "<img src='" & Img & "' style='width:100%;height:240px;object-fit:cover;display:block'>" ) & "<div style='position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(to bottom, rgba(15,17,21,0), rgba(15,17,21,.92) 55%)'></div><div style='position:absolute;left:20px;right:20px;bottom:12px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>" & FORMAT ( CALCULATE ( [Promoted Album Share %], dim_tour[tour_name] = "Zoo TV" ), "0%", "en-US" ) & "</div><div style='color:#ECEDEF;font-size:13px;margin-top:4px'>" & "of the songs on Zoo TV came from Achtung Baby" & "</div><div style='color:#A3A9B3;font-size:9px;margin-top:4px'>" & [Image Credit] & "</div></div></div>"
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: cbf9f34f-4f10-43e1-8d88-8f6eee430c36
+
+	/// Short name of the album the tour promoted (inactive relationship, looked up by key).
+	measure 'Promoted Album Label' = VAR K = SELECTEDVALUE ( dim_tour[album_promoted_key] ) RETURN IF ( NOT ISBLANK ( K ) && K <> -1, LOOKUPVALUE ( dim_album[album_label], dim_album[album_key], K ) )
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: 328eddd0-0045-4227-83da-d29ef325e118
+
+	/// 1 for tours with a promoted album (table filter).
+	measure 'Has Promoted Album' = VAR K = SELECTEDVALUE ( dim_tour[album_promoted_key] ) RETURN IF ( NOT ISBLANK ( K ) && K <> -1, 1, 0 )
+		formatString: #,0
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: 5de3d5a5-8f25-47f6-a19f-46b112b6ed47
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p04 tours' = "All " & FORMAT ( CALCULATE ( [Tours with Promoted Album], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " tours with a new album: share from it"
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: dec21859-d916-4c5c-9e9d-707b99204897
+
+	/// HTML: page headline and intro paragraph from the model text measures (T-35).
+	measure 'Header p05' = "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p05] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p05] & "</div>"
+		displayFolder: Report\p05 Setlist Evolution
+		lineageTag: c124df62-2331-48ec-93d9-565c6f2d30fa
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Header p05 · p05_headline' = "<div style='height:144px;overflow:hidden'>" & [Header p05] & "</div>"
+		displayFolder: Report\p05 Setlist Evolution
+		lineageTag: 6314363b-be73-4eaa-ad60-dc19513a20f1
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p05 heatmap' = "All " & FORMAT ( CALCULATE ( [Distinct Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " songs by decade, most played first (scroll for more)"
+		displayFolder: Report\p05 Setlist Evolution
+		lineageTag: 0d325725-8b3f-45ad-9212-1cfed23cfddc
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p05 variety' = "All " & FORMAT ( CALCULATE ( CALCULATE ( DISTINCTCOUNT ( fact_show[tour_key] ), REMOVEFILTERS ( dim_tour ) ), REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " tours, most fixed setlist first"
+		displayFolder: Report\p05 Setlist Evolution
+		lineageTag: 8b70dfff-0d06-4742-a634-bf375f16f7ab
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p05 openers' = "Top openers: 3 of " & FORMAT ( CALCULATE ( [Opener Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " openers"
+		displayFolder: Report\p05 Setlist Evolution
+		lineageTag: 0be7eddb-d2f0-40d8-9bf1-9a04501feec7
+
+	/// Rank of song_title by [Opener Count] for an exact Top N (ties broken alphabetically).
+	measure 'Rank 2 song_title by Opener Count' = VAR Cur = CALCULATE ( [Opener Count], REMOVEFILTERS ( dim_date ) ) VAR Me = SELECTEDVALUE ( dim_song[song_title] ) RETURN IF ( NOT ISBLANK ( Cur ) && NOT ISBLANK ( Me ), COUNTROWS ( FILTER ( ALLSELECTED ( dim_song[song_title] ), VAR V = CALCULATE ( [Opener Count], REMOVEFILTERS ( dim_date ) ) RETURN NOT ISBLANK ( V ) && ( V > Cur || ( V = Cur && dim_song[song_title] < Me ) ) ) ) + 1 )
+		formatString: #,0
+		displayFolder: Report\p05 Setlist Evolution
+		lineageTag: 2ec04ad5-ecec-4239-9394-d021fdf42ab9
+
+	/// HTML: residency callouts on the Sphere photo.
+	measure 'Residency Callouts p06' = "<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#ECEDEF'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='16' height='16' role='img' aria-label='Sphere residency: globe'><title>Sphere residency: globe</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='24' cy='24' r='17'/><path d='M8 19h32M8 29h32'/><ellipse cx='24' cy='24' rx='7' ry='17'/></g></svg> RESIDENCY · SPHERE, LAS VEGAS · 2023-24</div><div style='display:flex;gap:28px;margin-top:8px'>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>" & FORMAT ( CALCULATE ( [Shows], REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ), "#,0", "en-US" ) & "</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>shows</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>" & FORMAT ( [Residency Songs per Show], "0", "en-US" ) & "</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>songs a night</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>" & FORMAT ( [Residency Achtung Baby Share %], "0%", "en-US" ) & "</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>from Achtung Baby</div></div>" & "</div></div>"
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: fff56d3d-04bb-491b-b44c-90b88124c05b
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Residency Callouts p06 · p06_residency_callouts' = "<div style='height:120px;overflow:hidden'>" & [Residency Callouts p06] & "</div>"
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: 799b76c7-82e0-4358-bbf4-80758b162862
+
+	/// HTML: page headline and intro paragraph from the model text measures (T-35).
+	measure 'Header p06' = "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p06] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p06] & "</div>"
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: fc2c942b-82d1-4bea-832b-4d6ef1824695
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Header p06 · p06_headline' = "<div style='height:144px;overflow:hidden'>" & [Header p06] & "</div>"
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: 155f7076-1ac0-4cf4-9c97-2587edd7d69f
+
+	/// HTML: residency vs touring head-to-head with bars and differences.
+	measure 'Head to Head p06' = "<div style='display:grid;grid-template-columns:140px 1fr 1fr 110px;row-gap:12px;align-items:center;font-family:Segoe UI'><div></div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;color:#F2A93B'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='14' height='14' role='img' aria-label='Sphere residency: globe'><title>Sphere residency: globe</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='24' cy='24' r='17'/><path d='M8 19h32M8 29h32'/><ellipse cx='24' cy='24' rx='7' ry='17'/></g></svg> RESIDENCY</div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;color:#A3A9B3'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='14' height='14' role='img' aria-label='Innocence + Experience: light bulb'><title>Innocence + Experience: light bulb</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M18 30c-4-3-6-7-6-11a12 12 0 0124 0c0 4-2 8-6 11v4H18z'/><path d='M19 39h10'/></g></svg> TOURING</div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;color:#A3A9B3'>DIFFERENCE</div>" & "<div style='color:#ECEDEF;font-size:13px'>Songs a night</div>" & "<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#F2A93B;width:" & INT ( 140 * DIVIDE ( COALESCE ( [Residency Songs per Show], 0 ), 30 ) ) & "px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#F2A93B'>" & FORMAT ( COALESCE ( [Residency Songs per Show], 0 ), "0.0", "en-US" ) & "</span></div>" & "<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#6E7581;width:" & INT ( 140 * DIVIDE ( COALESCE ( [Touring Songs per Show], 0 ), 30 ) ) & "px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#ECEDEF'>" & FORMAT ( COALESCE ( [Touring Songs per Show], 0 ), "0.0", "en-US" ) & "</span></div>" & "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;color:" & IF ( COALESCE ( [Difference Songs per Show], 0 ) >= 0, "#F2A93B", "#E06666" ) & "'>" & IF ( COALESCE ( [Difference Songs per Show], 0 ) > 0, "+", "" ) & FORMAT ( COALESCE ( [Difference Songs per Show], 0 ), "0.0", "en-US" ) & "</div>" & "<div style='color:#ECEDEF;font-size:13px'>Different songs</div>" & "<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#F2A93B;width:" & INT ( 140 * DIVIDE ( COALESCE ( [Residency Distinct Songs], 0 ), MAX ( [Residency Distinct Songs], [Touring Distinct Songs] ) ) ) & "px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#F2A93B'>" & FORMAT ( COALESCE ( [Residency Distinct Songs], 0 ), "#,0", "en-US" ) & "</span></div>" & "<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#6E7581;width:" & INT ( 140 * DIVIDE ( COALESCE ( [Touring Distinct Songs], 0 ), MAX ( [Residency Distinct Songs], [Touring Distinct Songs] ) ) ) & "px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#ECEDEF'>" & FORMAT ( COALESCE ( [Touring Distinct Songs], 0 ), "#,0", "en-US" ) & "</span></div>" & "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;color:" & IF ( COALESCE ( [Difference Distinct Songs], 0 ) >= 0, "#F2A93B", "#E06666" ) & "'>" & IF ( COALESCE ( [Difference Distinct Songs], 0 ) > 0, "+", "" ) & FORMAT ( COALESCE ( [Difference Distinct Songs], 0 ), "#,0", "en-US" ) & "</div>" & "<div style='color:#ECEDEF;font-size:13px'>Achtung Baby share</div>" & "<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#F2A93B;width:" & INT ( 140 * DIVIDE ( COALESCE ( [Residency Achtung Baby Share %], 0 ), 1 ) ) & "px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#F2A93B'>" & FORMAT ( COALESCE ( [Residency Achtung Baby Share %], 0 ), "0%", "en-US" ) & "</span></div>" & "<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;background:#6E7581;width:" & INT ( 140 * DIVIDE ( COALESCE ( [Touring Achtung Baby Share %], 0 ), 1 ) ) & "px'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:#ECEDEF'>" & FORMAT ( COALESCE ( [Touring Achtung Baby Share %], 0 ), "0%", "en-US" ) & "</span></div>" & "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;color:" & IF ( COALESCE ( [Difference Achtung Baby Share (pp)], 0 ) >= 0, "#F2A93B", "#E06666" ) & "'>" & IF ( COALESCE ( [Difference Achtung Baby Share (pp)], 0 ) > 0, "+", "" ) & FORMAT ( COALESCE ( [Difference Achtung Baby Share (pp)], 0 ), "0", "en-US" ) & " pp</div>" & "</div>"
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: a1039495-c679-40d3-a029-8b57342e6072
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Head to Head p06 · p06_head_to_head' = "<div style='height:180px;overflow:hidden'>" & [Head to Head p06] & "</div>"
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: 47fa8f00-f42d-4ae9-82bf-516bd22cfd00
+
+	/// Bound to model measure [Annotation p06] (T-35); kept so the text cards keep their binding.
+	measure 'ph Annotation p06' = [Annotation p06]
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: 606d00d6-07db-4d3e-b4a0-9c4040bb9957
+
+	/// Typography wrapper (presentation only).
+	measure 'ph Annotation p06 · p06_note' = "<div style='font-family:Segoe UI;font-size:13px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:20px;overflow:hidden'>" & [ph Annotation p06] & "</div>"
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: 2d06f56a-2cfa-4828-a302-d0c3a6259360
+
+	/// Show date as a decimal year: residency shows always, other shows of the compared tours.
+	measure 'Show Year Decimal' = IF ( CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0, CALCULATE ( VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 ), REMOVEFILTERS ( dim_tour ) ), IF ( ISFILTERED ( dim_tour[tour_name_display] ), VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 ), CALCULATE ( VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 ), KEEPFILTERS ( dim_tour[era] = "2015-2019 Innocence and Experience" ) ) ) )
+		formatString: 0
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: 3b8ea0ba-b3a6-425c-82f9-29b6c5d78592
+
+	/// Songs in the show: residency shows always, other shows of the compared tours (default 2015-2019).
+	measure 'Songs in Show p06' = IF ( CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0, CALCULATE ( [Performances], REMOVEFILTERS ( dim_tour ) ), IF ( ISFILTERED ( dim_tour[tour_name_display] ), [Performances], CALCULATE ( [Performances], KEEPFILTERS ( dim_tour[era] = "2015-2019 Innocence and Experience" ) ) ) )
+		formatString: #,0
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: d3de2781-03c2-4c5e-b0d1-3c9d1c2b50b9
+
+	/// Accent for residency shows, grey for touring shows (presentation only).
+	measure 'Show Dot Colour p06' = IF ( CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0, "#F2A93B", "#6E7581" )
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: 95ebd5f8-f617-4d90-9d71-3f7039916e4d
+
+	/// Dynamic title of the p06 every-show chart.
+	measure 'Title p06 every show' = "Every show, one dot: Sphere (amber) vs " & IF ( ISFILTERED ( dim_tour[tour_name_display] ), IF ( COUNTROWS ( VALUES ( dim_tour[tour_name_display] ) ) <= 2, CONCATENATEX ( VALUES ( dim_tour[tour_name_display] ), dim_tour[tour_name_display], " and " ), COUNTROWS ( VALUES ( dim_tour[tour_name_display] ) ) & " tours" ), "the 2015-2019 tours" ) & " (grey) · right-click a dot for its setlist"
+		displayFolder: Report\p06 Sphere vs Touring
+		lineageTag: c4e0014e-abc4-4829-9bb8-609d7f32a9ca
+
+	/// HTML: song drill-through card, or a prompt when no single song is in context.
+	measure 'Song Card p07' = IF ( HASONEVALUE ( dim_song[song_title] ), "<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>SONG · " & UPPER ( COALESCE ( CALCULATE ( SELECTEDVALUE ( dim_album[album_label] ), dim_song ), "not on a studio album" ) ) & IF ( NOT ISBLANK ( SELECTEDVALUE ( dim_song[first_release_year] ) ), " (" & SELECTEDVALUE ( dim_song[first_release_year] ) & ")" ) & "</div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:36px;line-height:1.05;color:#ECEDEF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & [Selected Song] & "</div><div style='display:flex;gap:30px;margin-top:12px'>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#F2A93B'>" & FORMAT ( [Performances], "#,0", "en-US" ) & "</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>performances</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#ECEDEF'>" & FORMAT ( [First Played Date], "yyyy-mm-dd", "en-US" ) & "</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>live debut</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Last Played Date], "yyyy-mm-dd", "en-US" ) & "</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>last played</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Years Since Last Played], "0", "en-US" ) & "</div><div style='font-size:12px;color:#ECEDEF;margin-top:4px'>years since</div></div>" & "</div></div>", "<div style='font-family:Segoe UI;color:#A3A9B3;font-size:14px;padding-top:8px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;color:#ECEDEF'>Nothing selected yet</div>Right-click a song on the Songs page and choose Drill through → Song to see its story.</div>" )
+		displayFolder: Report\p07 Song Detail
+		lineageTag: 36221282-9258-4d91-a1cd-fba9bbe09cb7
+
+	/// 1 when exactly one song is in context (drill-through page filter).
+	measure 'Is One Song' = IF ( HASONEVALUE ( dim_song[song_title] ), 1, 0 )
+		formatString: #,0
+		displayFolder: Report\p07 Song Detail
+		lineageTag: 4d295fd7-30b6-474a-b52d-c6752be65f95
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Song Card p07 · p07_song_card' = "<div style='height:136px;overflow:hidden'>" & [Song Card p07] & "</div>"
+		displayFolder: Report\p07 Song Detail
+		lineageTag: c338816b-678c-44e6-8456-fe5c2f16050a
+
+	/// Visual title with the Top N cut and the total (presentation only).
+	measure 'Title p07 shows' = "Every time it was played: " & FORMAT ( CALCULATE ( [Shows Played], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " shows · right-click one for its setlist"
+		displayFolder: Report\p07 Song Detail
+		lineageTag: 9e2d5951-c9a9-4d35-8b34-f6a01feece2f
+
+	/// HTML: where in the night the song is played (opener, encore, closer shares).
+	measure 'Position p07' = IF ( HASONEVALUE ( dim_song[song_title] ), "<div style='font-family:Segoe UI'>" & "<div style='display:grid;grid-template-columns:90px 1fr 56px;align-items:center;gap:8px;margin:6px 0'><span style='color:#ECEDEF;font-size:13px'>Opener</span><div style='height:12px;border-radius:2px;background:#93C47D;width:" & FORMAT ( MAX ( 100 * COALESCE ( DIVIDE ( [Opener Count], [Performances] ), 0 ), IF ( [Opener Count] > 0, 1, 0 ) ), "0.0", "en-US" ) & "%'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:18px;color:#ECEDEF'>" & FORMAT ( COALESCE ( DIVIDE ( [Opener Count], [Performances] ), 0 ), "0%", "en-US" ) & "</span></div>" & "<div style='display:grid;grid-template-columns:90px 1fr 56px;align-items:center;gap:8px;margin:6px 0'><span style='color:#ECEDEF;font-size:13px'>Encore</span><div style='height:12px;border-radius:2px;background:#B4A7D6;width:" & FORMAT ( MAX ( 100 * COALESCE ( DIVIDE ( [Encore Count], [Performances] ), 0 ), IF ( [Encore Count] > 0, 1, 0 ) ), "0.0", "en-US" ) & "%'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:18px;color:#ECEDEF'>" & FORMAT ( COALESCE ( DIVIDE ( [Encore Count], [Performances] ), 0 ), "0%", "en-US" ) & "</span></div>" & "<div style='display:grid;grid-template-columns:90px 1fr 56px;align-items:center;gap:8px;margin:6px 0'><span style='color:#ECEDEF;font-size:13px'>Closer</span><div style='height:12px;border-radius:2px;background:#F6B26B;width:" & FORMAT ( MAX ( 100 * COALESCE ( DIVIDE ( [Closer Count], [Performances] ), 0 ), IF ( [Closer Count] > 0, 1, 0 ) ), "0.0", "en-US" ) & "%'></div><span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:18px;color:#ECEDEF'>" & FORMAT ( COALESCE ( DIVIDE ( [Closer Count], [Performances] ), 0 ), "0%", "en-US" ) & "</span></div>" & "<div style='color:#A3A9B3;font-size:11px;margin-top:6px'>Share of the song's performances; the rest were in the main set.</div></div>", "" )
+		displayFolder: Report\p07 Song Detail
+		lineageTag: d4e1752f-99fc-4b0d-91bd-2832bf1ab90c
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Position p07 · p07_position' = "<div style='height:180px;overflow:hidden'>" & [Position p07] & "</div>"
+		displayFolder: Report\p07 Song Detail
+		lineageTag: bc167afb-c2ed-4baa-820c-8b5bee937ccc
+
+	/// HTML: show ticket stub with the setlist in position order, or a prompt when no show is selected.
+	measure 'Ticket p08' = VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) VAR SetRows = CALCULATETABLE ( SUMMARIZE ( fact_performance, fact_performance[setlist_position], fact_performance[set_name], dim_song[song_title], fact_performance[is_live_debut], fact_performance[is_cover], fact_performance[guest_artist], fact_performance[is_snippet], fact_performance[is_tape] ) ) VAR Tapes = COUNTROWS ( FILTER ( SetRows, fact_performance[is_tape] ) ) VAR Snips = COUNTROWS ( FILTER ( SetRows, fact_performance[is_snippet] && NOT fact_performance[is_tape] ) ) VAR Extras = Tapes + Snips VAR NoTour = CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name] ), fact_show ) = "(No tour)" RETURN IF ( HASONEVALUE ( dim_show[show_label] ), "<div style='display:flex;background:#20242C;border-radius:10px;overflow:hidden;height:600px;font-family:Segoe UI'><div style='width:230px;padding:18px;border-right:2px dashed #0F1115;background:#262A33'>" & SUBSTITUTE ( SUBSTITUTE ( CALCULATE ( [Tour Icon SVG], fact_show ), "width='48'", "width='40'" ), "height='48'", "height='40'" ) & "<div style='color:#F2A93B;font-size:11px;letter-spacing:1.5px;font-weight:700;margin-top:10px'>" & UPPER ( CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name_display] ), fact_show ) ) & "</div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:36px;line-height:1.05;color:#ECEDEF'>" & UPPER ( FORMAT ( D, "d mmm", "en-US" ) ) & "<br>" & YEAR ( D ) & "</div><div style='margin-top:10px;font-size:12.5px;color:#A3A9B3'><b style='color:#ECEDEF'>" & CALCULATE ( SELECTEDVALUE ( dim_venue[venue_name] ), fact_show ) & "</b><br>" & CALCULATE ( SELECTEDVALUE ( dim_venue[city_name] ), fact_show ) & ", " & CALCULATE ( SELECTEDVALUE ( dim_venue[country_name] ), fact_show ) & "</div>" & "<div style='margin-top:14px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Performances], "#,0", "en-US" ) & "</div><div style='font-size:12px;color:#A3A9B3'>songs" & IF ( Extras > 0, " + " & Extras & IF ( Tapes > 0 && Snips = 0, IF ( Tapes = 1, " tape", " tapes" ), IF ( Snips > 0 && Tapes = 0, IF ( Snips = 1, " snippet", " snippets" ), " tapes/snippets" ) ) ) & "</div></div>" & IF ( NoTour, "<div style='margin-top:14px;font-size:12px;color:#A3A9B3'>One-off show, outside a tour</div>", "<div style='margin-top:14px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Tour Avg Songs per Show], "0.0", "en-US" ) & "</div><div style='font-size:12px;color:#A3A9B3'>songs a night on this tour</div></div>" ) & "<div style='margin-top:14px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#F2A93B'>" & FORMAT ( COALESCE ( [Live Debuts], 0 ), "#,0", "en-US" ) & "</div><div style='font-size:12px;color:#A3A9B3'>live debuts ★</div></div>" & "<div style='margin-top:14px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>" & FORMAT ( COALESCE ( [Covers Played], 0 ), "#,0", "en-US" ) & "</div><div style='font-size:12px;color:#A3A9B3'>covers</div></div>" & "</div><div style='flex:1;padding:16px 20px;columns:2;column-gap:28px;font-size:12px'>" & CONCATENATEX ( SetRows, VAR P = fact_performance[setlist_position] VAR S = fact_performance[set_name] VAR PrevP = MAXX ( FILTER ( SetRows, fact_performance[setlist_position] < P ), fact_performance[setlist_position] ) VAR PrevS = MAXX ( FILTER ( SetRows, fact_performance[setlist_position] = PrevP ), fact_performance[set_name] ) RETURN IF ( ISBLANK ( PrevP ) || S <> PrevS, "<div style='color:#F2A93B;font-size:10px;letter-spacing:1.4px;font-weight:700;padding-top:8px'>" & UPPER ( S ) & "</div>" ) & ( VAR Dim = fact_performance[is_snippet] || fact_performance[is_tape] RETURN "<div style='display:flex;align-items:center;gap:8px;padding:2px 0;opacity:" & IF ( Dim, "0.55", "1" ) & "'><span style='color:#A3A9B3;width:20px;text-align:right;flex:none'>" & P & "</span><span style='color:#ECEDEF;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>" & dim_song[song_title] & "</span><span style='margin-left:auto;display:flex;gap:4px;flex:none'>" & IF ( fact_performance[is_live_debut], "<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#F2A93B;border:1px solid #F2A93B'>★ debut</span>" ) & IF ( fact_performance[is_cover], "<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#A3A9B3;border:1px solid #2A2F38'>cover</span>" ) & IF ( NOT ISBLANK ( fact_performance[guest_artist] ), "<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#A3A9B3;border:1px solid #2A2F38'>with " & fact_performance[guest_artist] & "</span>" ) & IF ( fact_performance[is_tape], "<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#A3A9B3;border:1px dashed #6E7581'>tape</span>" ) & IF ( fact_performance[is_snippet], "<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;color:#A3A9B3;border:1px dashed #6E7581'>snippet</span>" ) & "</span></div>" ), "", fact_performance[setlist_position], ASC ) & "</div></div>", "<div style='font-family:Segoe UI;color:#A3A9B3;font-size:14px;padding-top:8px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;color:#ECEDEF'>Nothing selected yet</div>Right-click a show in a shows list (Road page, Sphere dots, or a song's list) and choose Drill through → Show.</div>" )
+		displayFolder: Report\p08 Show Detail
+		lineageTag: c8126234-4567-44a1-a1f9-88608583637e
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Ticket p08 · p08_ticket' = "<div style='height:608px;overflow:hidden'>" & [Ticket p08] & "</div>"
+		displayFolder: Report\p08 Show Detail
+		lineageTag: 22fe06c7-0822-4720-9a59-b8171e851e33
+
+	/// Web link of the selected show on setlist.fm.
+	measure 'Setlist URL p08' = IF ( HASONEVALUE ( dim_show[show_label] ), SELECTEDVALUE ( dim_show[setlist_url] ) )
+		displayFolder: Report\p08 Show Detail
+		lineageTag: 706b0fdc-ef66-4e84-bd6b-cb7ba5ad31bb
+
+	/// HTML: link to the selected show on setlist.fm.
+	measure 'Setlist Link p08' = IF ( NOT ISBLANK ( [Setlist URL p08] ), "<a href='" & [Setlist URL p08] & "' target='_blank' style='font-family:Segoe UI;font-size:15px;color:#F2A93B;text-decoration:none;font-weight:600'>Open this show on setlist.fm ↗</a>" )
+		displayFolder: Report\p08 Show Detail
+		lineageTag: af079787-dc0c-45c1-acf5-d5690f329d8b
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Setlist Link p08 · p08_setlist_link' = "<div style='height:20px;overflow:hidden'>" & [Setlist Link p08] & "</div>"
+		displayFolder: Report\p08 Show Detail
+		lineageTag: 0819d411-8bd2-4ab7-89ce-bfb4d6b301e6
+
+	/// HTML: author line with LinkedIn link.
+	measure 'Author p09' = "<div style='font-family:Segoe UI;font-size:16px;color:#ECEDEF'>Built by <b>Vinicius Baccarini</b> · <a href='https://www.linkedin.com/in/vin%C3%ADcius-baccarini/' target='_blank' style='color:#F2A93B;text-decoration:none;font-weight:600'>LinkedIn ↗</a></div>"
+		displayFolder: Report\p09 About
+		lineageTag: de5a8423-4d34-4303-a353-d88e6fad06e7
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Author p09 · p09_author' = "<div style='height:20px;overflow:hidden'>" & [Author p09] & "</div>"
+		displayFolder: Report\p09 About
+		lineageTag: ef305a99-c3fd-4dc7-a314-1d66081d11ea
+
+	/// HTML: data limitations with numbers from the model.
+	measure 'Limitations p09' = "<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>LIMITATIONS</div><div style='display:flex;gap:30px;margin-top:6px'>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Shows] - [Shows with Setlist], "#,0", "en-US" ) & "</div><div style='font-size:12px;color:#A3A9B3;margin-top:4px'>shows without a setlist</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;line-height:1;color:#ECEDEF'>" & IF ( [Unmapped Song Share %] < 0.001, "< 0.1%", FORMAT ( [Unmapped Song Share %], "0.0%", "en-US" ) ) & "</div><div style='font-size:12px;color:#A3A9B3;margin-top:4px'>performances not matched to a song</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Last Refresh Date], "yyyy-mm-dd", "en-US" ) & "</div><div style='font-size:12px;color:#A3A9B3;margin-top:4px'>last refresh</div></div>" & "</div><div style='font-size:12px;color:#A3A9B3;margin-top:10px'>Early club shows (1976-1980) are often missing. Snippets and tapes are flagged and not counted as performances.</div></div>"
+		displayFolder: Report\p09 About
+		lineageTag: 7d8f748b-0f1d-46af-8312-98333e31d6b5
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Limitations p09 · p09_limitations' = "<div style='height:192px;overflow:hidden'>" & [Limitations p09] & "</div>"
+		displayFolder: Report\p09 About
+		lineageTag: 5a2689d2-d7e7-47dc-8022-f0f8ac55aee4
+
+	/// HTML: T-32 spike that tests inline SVG, an SVG data URI, a base64 JPEG and the model photo in HTML Content Secure.
+	measure 'Spike HTML' = "<div style='font-family:Segoe UI;color:#ECEDEF;font-size:13px'><p><b>1 · inline SVG:</b> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48' height='48' role='img' aria-label='Zoo TV: television set'><title>Zoo TV: television set</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><rect x='8' y='16' width='32' height='22' rx='3'/><path d='M18 8l6 8 6-8'/><path d='M14 22h14'/></g></svg></p><p><b>2 · SVG data URI in img:</b> <img width='48' src='data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48' height='48' role='img' aria-label='Zoo TV: television set'><title>Zoo TV: television set</title><g fill='none' stroke='%23ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><rect x='8' y='16' width='32' height='22' rx='3'/><path d='M18 8l6 8 6-8'/><path d='M14 22h14'/></g></svg>'></p><p><b>3 · base64 JPEG literal in img:</b><br><img width='160' src='data:image/jpeg;base64,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'></p><p><b>4 · photo from the model ([Image Data URI]):</b><br>" & IF ( ISBLANK ( [Image Data URI] ), "<i>report_image is empty: load seeds/report_images.csv first</i>", "<img width='240' src='" & [Image Data URI] & "'>" ) & "</p></div>"
+		displayFolder: Report\p00 Spike
+		lineageTag: 12e45625-15c8-42f8-917a-8a9d45ccd65b
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Spike HTML · p00_html_spike' = "<div style='height:492px;overflow:hidden'>" & [Spike HTML] & "</div>"
+		displayFolder: Report\p00 Spike
+		lineageTag: e811db33-3cb6-4a8e-8add-5c449f376cac
+
+	/// Title of the album the predicted tour promotes (presentation only).
+	measure 'Promoted Album p10' = VAR K = CALCULATE ( SELECTEDVALUE ( dim_tour[album_promoted_key] ), REMOVEFILTERS (), fact_setlist_prediction ) RETURN CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K )
+		displayFolder: Report\p10 2027
+		lineageTag: 6685f2c1-a02d-4a31-bf9e-4edd0ae85eb8
+
+	/// Display name of the tour the prediction is for (presentation only).
+	measure 'Predicted Tour p10' = CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name_display] ), REMOVEFILTERS (), fact_setlist_prediction )
+		displayFolder: Report\p10 2027
+		lineageTag: eb037af7-63b4-4ab9-b052-71764aa921b0
+
+	/// Predicted setlist slots for songs of the promoted album.
+	measure 'New Album Songs Predicted p10' = CALCULATE ( [New Songs Predicted], dim_song[release_role_2027] = "promoted_album" )
+		formatString: #,0
+		displayFolder: Report\p10 2027
+		lineageTag: 663c62e9-e3af-41d9-afe1-ed4407427eb1
+
+	/// Predicted setlist slots for songs of the companion releases (the 2026 EPs).
+	measure 'New EP Songs Predicted p10' = CALCULATE ( [New Songs Predicted], dim_song[release_role_2027] = "companion_release" )
+		formatString: #,0
+		displayFolder: Report\p10 2027
+		lineageTag: 3b55fb50-6556-4b88-9ded-3a0515704a9f
+
+	/// Finding-style headline of page 10 (request: promote to the model, data-analyst).
+	measure 'Headline p10' = "Our guess for 2027: " & FORMAT ( [Expected Songs per Show], "#,0", "en-US" ) & " songs a night, " & FORMAT ( [New Songs Predicted], "#,0", "en-US" ) & " of them new"
+		displayFolder: Report\p10 2027
+		lineageTag: 5f394fff-5f3e-488b-833d-33dc19bd2250
+
+	/// Intro paragraph of page 10 with the key numbers in bold (request: promote to the model).
+	measure 'First Glimpse p10' = VAR AsOf = [Prediction As-Of Date Key] VAR Obs = [Shows Observed] VAR Opener = MAXX ( FILTER ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], fact_setlist_prediction[predicted_position], fact_setlist_prediction[as_of_date_key] ), fact_setlist_prediction[predicted_position] = 1 && fact_setlist_prediction[as_of_date_key] = AsOf ), dim_song[song_title] ) RETURN IF ( Obs = 0, "Before the first show", "After " & FORMAT ( Obs, "#,0", "en-US" ) & " shows" ) & ", our model picks <b>" & FORMAT ( [New Album Songs Predicted p10], "#,0", "en-US" ) & "</b> songs from " & [Promoted Album p10] & ", <b>" & FORMAT ( [New EP Songs Predicted p10], "#,0", "en-US" ) & "</b> from the EPs and <b>" & FORMAT ( [Catalog Songs Predicted], "#,0", "en-US" ) & "</b> older ones" & IF ( NOT ISBLANK ( Opener ), ", opening with <b>" & Opener & "</b>" ) & ". On the album tours since Elevation, <b>" & FORMAT ( [Model Precision at N], "0%", "en-US" ) & "</b> of its picks became core songs, vs <b>" & FORMAT ( [Baseline Precision at N], "0%", "en-US" ) & "</b> for repeating the last album tour."
+		displayFolder: Report\p10 2027
+		lineageTag: c0d9c868-ac22-47b3-a91a-3f3ae804022a
+
+	/// HTML: page headline and intro paragraph.
+	measure 'Header p10' = "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p10] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p10] & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: 901931bf-3b66-4d14-8387-e3114684c1d0
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Header p10 · p10_headline' = "<div style='height:136px;overflow:hidden'>" & [Header p10] & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: b5a5db78-7dcc-467d-b4bf-bdc5aff031a9
+
+	/// HTML: predicted setlist ticket (tour, numbers, songs in predicted order with chance bars, notes).
+	measure 'Ticket p10' = VAR AsOf = [Prediction As-Of Date Key] VAR PickRows = CALCULATETABLE ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], dim_song[release_role_2027], fact_setlist_prediction[predicted_position], fact_setlist_prediction[predicted_set], fact_setlist_prediction[model_part], fact_setlist_prediction[probability], fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[as_of_date_key] = AsOf, fact_setlist_prediction[predicted_in_setlist] = TRUE () ) RETURN IF ( ISEMPTY ( PickRows ), "<div style='font-family:Segoe UI;color:#A3A9B3;font-size:14px'>No prediction in the current selection.</div>", "<div style='background:#20242C;border-radius:10px;overflow:hidden;font-family:Segoe UI;font-size:12px'>" & "<div style='display:flex;gap:16px;align-items:center;padding:12px 16px;background:#262A33;border-bottom:2px dashed #0F1115'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='36' height='36' role='img' aria-label='The Greatest Show on Earth Tour (planned 2027): big top tent'><title>The Greatest Show on Earth Tour (planned 2027): big top tent</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M24 5v8'/><path d='M24 5l7 2.5-7 2.5'/><path d='M7 27L24 13l17 14'/><path d='M7 27q4.25 4 8.5 0q4.25 4 8.5 0q4.25 4 8.5 0q4.25 4 8.5 0'/><path d='M10 30v10M38 30v10M6 40h36'/><path d='M19 40l5-9 5 9'/></g></svg><div style='flex:1'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>" & UPPER ( [Predicted Tour p10] ) & "</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px'>Predicted setlist · " & IF ( [Shows Observed] = 0, "before the first show", "after " & FORMAT ( [Shows Observed], "#,0", "en-US" ) & " shows" ) & " · as of " & FORMAT ( [Prediction As-Of Date], "yyyy-mm-dd", "en-US" ) & "</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Expected Songs per Show], "#,0", "en-US" ) & "</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px;white-space:nowrap'>songs a night</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#F2A93B'>" & FORMAT ( [New Songs Predicted], "#,0", "en-US" ) & "</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px;white-space:nowrap'>new: " & FORMAT ( [New Album Songs Predicted p10], "#,0", "en-US" ) & " album · " & FORMAT ( [New EP Songs Predicted p10], "#,0", "en-US" ) & " EP</div></div>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Catalog Songs Predicted], "#,0", "en-US" ) & "</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px;white-space:nowrap'>older songs</div></div>" & "</div>" & "<div style='padding:10px 16px 12px'>" & "<div style='display:flex;gap:16px;font-size:10px;color:#A3A9B3;margin:0 0 6px'><span><span style='display:inline-block;width:14px;height:6px;border-radius:3px;background:#F2A93B'></span> new 2026 song (NEW tag)</span><span><span style='display:inline-block;width:14px;height:6px;border-radius:3px;background:#6FA8DC'></span> older song</span><span>bar and % = chance it is a core song (opener: " & FORMAT ( CALCULATE ( [Predicted Probability], fact_setlist_prediction[predicted_position] = 1 ), "0%", "en-US" ) & ")</span></div>" & "<div style='columns:2;column-gap:24px'>" & CONCATENATEX ( PickRows, VAR K = COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ) VAR S = fact_setlist_prediction[predicted_set] VAR PrevK = MAXX ( FILTER ( PickRows, COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ) < K ), COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ) ) VAR PrevS = MAXX ( FILTER ( PickRows, COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ) = PrevK ), fact_setlist_prediction[predicted_set] ) RETURN IF ( NOT ISBLANK ( S ) && ( ISBLANK ( PrevK ) || S <> PrevS ), "<div style='color:#F2A93B;font-size:10px;letter-spacing:1.4px;font-weight:700;padding:4px 0 2px'>" & IF ( S = "encore", "ENCORE", "MAIN SET" ) & "</div>" ) & ( VAR Pos = fact_setlist_prediction[predicted_position] VAR Pr = fact_setlist_prediction[probability] VAR IsNew = fact_setlist_prediction[model_part] = "new" VAR Bar = IF ( IsNew, "#F2A93B", "#6FA8DC" ) RETURN "<div style='display:flex;align-items:center;gap:6px;min-height:21px;break-inside:avoid'><div style='width:16px;text-align:right;color:#A3A9B3;flex:none'>" & COALESCE ( Pos, "·" ) & "</div><div style='flex:1;color:#ECEDEF;line-height:1.2'>" & dim_song[song_title] & "</div>" & IF ( IsNew, "<div style='font-size:9px;font-weight:700;letter-spacing:.5px;border-radius:7px;padding:0 4px;flex:none;color:#F2A93B;border:1px solid #F2A93B'>NEW · " & IF ( dim_song[release_role_2027] = "companion_release", "EP", "ALBUM" ) & "</div>" ) & "<div style='width:34px;height:6px;background:#2A2F38;border-radius:3px;flex:none'><div style='height:6px;border-radius:3px;background:" & Bar & ";width:" & MAX ( 1, INT ( 34 * Pr ) ) & "px'></div></div><div style='width:28px;text-align:right;color:#ECEDEF;flex:none'>" & FORMAT ( Pr, "0%", "en-US" ) & "</div></div>" ), "", COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] ), ASC ) & "</div>" & "<div style='font-size:10.5px;line-height:1.4;color:#A3A9B3;margin-top:8px;border-top:1px solid #2A2F38;padding-top:6px'>Order is approximate: each older song sits where it played on the previous album tour, new songs where that tour placed its new songs. The % is the chance of being a core song (played at half the shows or more); older songs' chances are not rescaled, so they do not add up to " & FORMAT ( [Expected Songs per Show], "#,0", "en-US" ) & ". The list is the top " & FORMAT ( [Expected Songs per Show], "#,0", "en-US" ) & ", with new and older slots filled separately.</div>" & "</div></div>" )
+		displayFolder: Report\p10 2027
+		lineageTag: 91a4b699-78e8-48c3-aa6b-0120a7e35bba
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Ticket p10 · p10_setlist_ticket' = "<div style='height:472px;overflow:hidden'>" & [Ticket p10] & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: 608287cd-2b75-44de-badb-68b760b318b1
+
+	/// Release of a 2026 song: its album, or the promoted album for its bonus track (presentation only).
+	measure 'Release p10' = VAR K = SELECTEDVALUE ( dim_song[album_key] ) VAR A = CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K ) RETURN IF ( HASONEVALUE ( dim_song[song_title] ), IF ( ISBLANK ( A ) || K = -1, [Promoted Album p10] & " (bonus)", A ) )
+		displayFolder: Report\p10 2027
+		lineageTag: cfab81fa-2d42-406f-846a-143702af29e7
+
+	/// Text marker for songs in the predicted setlist (second cue next to the colour).
+	measure 'In Setlist p10' = IF ( HASONEVALUE ( dim_song[song_title] ), IF ( [Predicted Songs] > 0, "✓ picked", "" ) )
+		displayFolder: Report\p10 2027
+		lineageTag: a33ef29e-3cdf-416a-832f-36184814dcf0
+
+	/// Accent for picked songs (presentation only).
+	measure 'Song Colour p10' = IF ( [Predicted Songs] > 0, "#F2A93B", "#ECEDEF" )
+		displayFolder: Report\p10 2027
+		lineageTag: 4343dbd0-81f5-45f1-9472-f1111b13b599
+
+	/// Visual title with the total (presentation only).
+	measure 'Title p10 new songs' = "All " & FORMAT ( CALCULATE ( [Candidate Songs], NOT ISBLANK ( dim_song[release_role_2027] ) ), "#,0", "en-US" ) & " new songs, by release: " & FORMAT ( [New Songs Predicted], "#,0", "en-US" ) & " make the setlist"
+		displayFolder: Report\p10 2027
+		lineageTag: 3db5c3be-ad75-49c8-8948-71398f4a8955
+
+	/// Annotation: new songs whose slot is decided by a tie in the model's score (SPEC-09 honesty note).
+	measure 'Ties Note p10' = VAR AsOf = [Prediction As-Of Date Key] VAR R = CALCULATETABLE ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], dim_song[release_role_2027], fact_setlist_prediction[predicted_position], fact_setlist_prediction[predicted_set], fact_setlist_prediction[model_part], fact_setlist_prediction[probability], fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[as_of_date_key] = AsOf, REMOVEFILTERS ( dim_song ), NOT ISBLANK ( dim_song[release_role_2027] ) ) VAR PA = MINX ( FILTER ( R, dim_song[release_role_2027] = "promoted_album" && fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[probability] ) VAR PE = MINX ( FILTER ( R, dim_song[release_role_2027] = "companion_release" && fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[probability] ) VAR TA = COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = "promoted_album" && ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( PA, 6 ) ) ) VAR KA = COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = "promoted_album" && fact_setlist_prediction[predicted_in_setlist] && ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( PA, 6 ) ) ) VAR TE = COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = "companion_release" && ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( PE, 6 ) ) ) VAR KE = COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = "companion_release" && fact_setlist_prediction[predicted_in_setlist] && ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( PE, 6 ) ) ) VAR TieA = TA > KA VAR TieE = TE > KE RETURN IF ( TieA || TieE, "Toss-ups the model cannot settle: " & IF ( TieA, KA & " of the " & TA & " album songs tied at " & FORMAT ( PA, "0%", "en-US" ) & " got a slot" ) & IF ( TieA && TieE, ", and " ) & IF ( TieE, KE & " of the " & TE & " EP songs tied at " & FORMAT ( PE, "0%", "en-US" ) & IF ( TieA, "", " got a slot" ) ) & ". Which ones is arbitrary.", "No ties among the new-song picks." )
+		displayFolder: Report\p10 2027
+		lineageTag: 83c97f6c-f5fc-47fd-84fd-1f96793cd79a
+
+	/// Typography wrapper (presentation only).
+	measure 'Ties Note p10 · p10_ties_note' = "<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:28px;overflow:hidden'>" & [Ties Note p10] & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: 4bf2bc67-b27d-419c-b07b-91a7a6e1dcb1
+
+	/// HTML: backtest section intro with the model's lead over the baseline as a big number.
+	measure 'Backtest Intro p10' = "<div style='display:flex;gap:14px;align-items:flex-start;font-family:Segoe UI'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#F2A93B;flex:none'>" & FORMAT ( [Model vs. Baseline] * 100, "+0.0;-0.0;0.0", "en-US" ) & " pp" & "</div><div style='font-size:12px;line-height:1.4;color:#A3A9B3'><span style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>HOW GOOD IS THIS?</span> Replayed on every album tour since Zoo TV, knowing only what came before its first show: more of its picks became core songs (played at half the shows or more) than with " & [Selected Baseline] & ", the best simple rule.</div></div>"
+		displayFolder: Report\p10 2027
+		lineageTag: ea0bd9f7-4d52-4195-b86d-ad731570485e
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Backtest Intro p10 · p10_backtest_intro' = "<div style='height:48px;overflow:hidden'>" & [Backtest Intro p10] & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: 46c35be2-5d8d-4518-9a3b-f1e73d445c5d
+
+	/// HTML: backtest precision of the model and the three baselines as labelled bars.
+	measure 'Backtest Bars p10' = VAR P_model = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "model" ) VAR P_B1 = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "B1" ) VAR P_B2 = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "B2" ) VAR P_B3 = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "B3" ) RETURN "<div style='font-family:Segoe UI;font-size:12px'><div style='font-size:11px;color:#A3A9B3;margin-bottom:4px'>Share of the picks that became core songs, album tours since Elevation</div>" & "<div style='display:flex;align-items:center;gap:10px;height:22px'><div style='width:216px;flex:none;white-space:nowrap;color:#F2A93B;font-weight:700;'>Model</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;background:#F2A93B;width:" & FORMAT ( 100 * COALESCE ( P_model, 0 ), "0", "en-US" ) & "%'></div></div><div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:15px;color:#F2A93B'>" & FORMAT ( P_model, "0%", "en-US" ) & "</div></div>" & "<div style='display:flex;align-items:center;gap:10px;height:22px'><div style='width:216px;flex:none;white-space:nowrap;color:#ECEDEF;'>B1 · repeat the last album tour</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;background:#6E7581;width:" & FORMAT ( 100 * COALESCE ( P_B1, 0 ), "0", "en-US" ) & "%'></div></div><div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:15px;color:#ECEDEF'>" & FORMAT ( P_B1, "0%", "en-US" ) & "</div></div>" & "<div style='display:flex;align-items:center;gap:10px;height:22px'><div style='width:216px;flex:none;white-space:nowrap;color:#ECEDEF;'>B2 · career's most played songs</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;background:#6E7581;width:" & FORMAT ( 100 * COALESCE ( P_B2, 0 ), "0", "en-US" ) & "%'></div></div><div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:15px;color:#ECEDEF'>" & FORMAT ( P_B2, "0%", "en-US" ) & "</div></div>" & "<div style='display:flex;align-items:center;gap:10px;height:22px'><div style='width:216px;flex:none;white-space:nowrap;color:#ECEDEF;'>B3 · latest tour (Sphere for 2027)</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;background:#6E7581;width:" & FORMAT ( 100 * COALESCE ( P_B3, 0 ), "0", "en-US" ) & "%'></div></div><div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:15px;color:#ECEDEF'>" & FORMAT ( P_B3, "0%", "en-US" ) & "</div></div>" & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: c874799b-c2ae-4a8f-86a1-3328755e8722
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Backtest Bars p10 · p10_backtest_bars' = "<div style='height:104px;overflow:hidden'>" & [Backtest Bars p10] & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: 6fe27a76-f690-4991-b833-ce86fa2ff5e9
+
+	/// Annotation: the model against the baseline on the closest analog tour (SPEC-09 honesty note).
+	measure 'Closest Analog Note p10' = VAR EI = "eXPERIENCE + iNNOCENCE Tour" VAR M = CALCULATE ( [Model Precision at N], dim_tour[tour_name_display] = EI ) VAR B = CALCULATE ( [Baseline Precision at N], dim_tour[tour_name_display] = EI ) RETURN IF ( NOT ISBLANK ( M ), "On the e+i tour (2018), the closest match to 2027 with a new album next to a companion record, the model " & IF ( ABS ( M - B ) < 0.005, "only tied", IF ( M > B, "beat", "lost to" ) ) & " " & [Selected Baseline] & ": " & FORMAT ( M, "0%", "en-US" ) & " vs " & FORMAT ( B, "0%", "en-US" ) & "." )
+		displayFolder: Report\p10 2027
+		lineageTag: a9b9868e-819a-4a42-90e9-aac4f276e0ae
+
+	/// Typography wrapper (presentation only).
+	measure 'Closest Analog Note p10 · p10_analog_note' = "<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:28px;overflow:hidden'>" & [Closest Analog Note p10] & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: 13a57e96-7e86-4044-8a30-2a0161ad52f7
+
+	/// Shows of the predicted tour played at the latest prediction (0 before the first show).
+	measure 'Tour Started p10' = CALCULATE ( [Shows Observed], REMOVEFILTERS ( dim_date ) )
+		formatString: #,0
+		displayFolder: Report\p10 2027
+		lineageTag: 93b2777b-03fe-4f7e-a4ca-a83e74e21236
+
+	/// HTML: in-tour section intro, an empty-state message before the first show.
+	measure 'Tracker Intro p10' = VAR Obs = [Tour Started p10] VAR H = CALCULATE ( [Hit Rate], REMOVEFILTERS ( dim_date ) ) RETURN "<div style='font-family:Segoe UI;font-size:12px;line-height:1.4;color:#A3A9B3'><span style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>ONCE THE TOUR STARTS</span> " & IF ( Obs = 0 || ISBLANK ( H ), "No show of the tour yet, so these charts are empty. After each show they compare the predicted setlist with what was played and follow how the chances move.", "After <b style='color:#ECEDEF'>" & FORMAT ( Obs, "#,0", "en-US" ) & "</b> shows, <b style='color:#ECEDEF'>" & FORMAT ( H, "0%", "en-US" ) & "</b> of the predicted songs were played per show, on average." ) & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: eff06323-a0af-400e-b4c1-d2b052807dc3
+
+	/// Clipping wrapper so the HTML visual never scrolls (presentation only).
+	measure 'Tracker Intro p10 · p10_tracker_intro' = "<div style='height:36px;overflow:hidden'>" & [Tracker Intro p10] & "</div>"
+		displayFolder: Report\p10 2027
+		lineageTag: d8123489-0e1c-4642-b5b8-66e059ec90a7
+
 	/// Foreign key to dim_show (one row per show, so also the grain key).
 	column show_key
 		dataType: int64

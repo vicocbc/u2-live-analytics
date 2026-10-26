@@ -293,6 +293,17 @@ table fact_performance
 		displayFolder: Songs\Show structure
 		lineageTag: bb40516c-8430-4752-87db-e7e4b0194e80
 
+	/// Album Share % with blanks instead of 0.0% (matrix).
+	measure 'Album Share (no zeros)' = VAR S = [Album Share %] RETURN IF ( S >= 0.0005, S )
+		formatString: 0.0%
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: 4bf2e974-f677-4049-8e9d-6bd0de983d66
+
+	/// Matrix cell text: blank before the album existed, 0% when not played, < 0.1% when tiny.
+	measure 'Album Share Cell' = VAR S = [Album Share %] VAR Dec = VALUE ( LEFT ( SELECTEDVALUE ( dim_date[decade] ), 4 ) ) VAR Rel = SELECTEDVALUE ( dim_album[release_year] ) RETURN IF ( S > 0, IF ( S < 0.0005, "< 0.1%", FORMAT ( S, "0.0%", "en-US" ) ), IF ( NOT ISBLANK ( Dec ) && NOT ISBLANK ( Rel ) && Dec + 9 >= Rel, "0%" ) )
+		displayFolder: Report\p04 Albums on Stage
+		lineageTag: 8d1e82d7-3906-414f-8f4a-fbc9eace08c0
+
 	/// Foreign key to dim_show.
 	column show_key
 		dataType: int64
