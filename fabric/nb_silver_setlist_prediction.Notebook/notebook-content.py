@@ -65,6 +65,7 @@ SKLEARN_TOLERANCE = 1e-3                              # max |coefficient differe
 
 # CELL ********************
 
+import dataclasses
 import json
 import platform
 import statistics
@@ -327,6 +328,8 @@ sk_worst = max(sk_diffs.values()) if sk_diffs else None
 dq.check("setlist_logistic_matches_sklearn", sk_worst is not None and sk_worst <= SKLEARN_TOLERANCE, "warning",
          value=f"{sk_worst:.2e} (scikit-learn {SKLEARN_VERSION})" if sk_worst is not None else "skipped")
 
+# wh_gold.dbo.dq_run_log.value is varchar(200): longer values (failure lists) keep their first 200 characters
+dq.results = [dataclasses.replace(r, value=str(r.value)[:200]) if len(str(r.value)) > 200 else r for r in dq.results]
 if WRITE_DQ:
     dq.write(spark)
 dq.raise_on_hard_failures()

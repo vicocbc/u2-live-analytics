@@ -56,6 +56,7 @@ EXPECTED_NEW_TRACKS = 25                                       # release_track r
 
 # CELL ********************
 
+import dataclasses
 import json
 import datetime as dt
 from collections import Counter
@@ -253,8 +254,11 @@ late_singles = feat.filter("is_single AND song_title IN ('Red Hill Mining Town',
 dq.check("setlist_feature_reissue_singles_not_singles", late_singles == 0, "hard", value=late_singles)
 core_by_tour = {r.target_tour_name: r.n for r in feat.filter("is_core").groupBy("target_tour_name")
                 .agg(F.count("*").alias("n")).collect()}
-dq.check("setlist_feature_core_set_sizes", True, "warning", value=json.dumps(core_by_tour, ensure_ascii=False))
+dq.check("setlist_feature_core_set_sizes", True, "warning",
+         value=f"{min(core_by_tour.values())}-{max(core_by_tour.values())} songs over {len(core_by_tour)} tours")
 
+# wh_gold.dbo.dq_run_log.value is varchar(200): longer values (failure lists) keep their first 200 characters
+dq.results = [dataclasses.replace(r, value=str(r.value)[:200]) if len(str(r.value)) > 200 else r for r in dq.results]
 if WRITE_DQ:
     dq.write(spark)
 dq.raise_on_hard_failures()
@@ -272,7 +276,7 @@ exit_value = {
     "run_id": RUN_ID, "u2lib": u2lib.__version__, "setlist_feature": n_feat,
     "targets": len(per_target), "backtest_tours": len(EXPECTED_BACKTEST_TOURS), "planned_tours": planned,
     "rows_per_target": {n: r.rows for n, r in per_target.items()},
-    "planned_new_material": len(planned_new), "last_tour_2027": last_2027,
+    "planned_new_material": len(planned_new), "last_tour_2027": last_2027, "core_set_sizes": core_by_tour,
     **dq.summary(),
 }
 print(json.dumps(exit_value, indent=2, ensure_ascii=False, default=str))
