@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
   "name": "p10_tracker_intro",
   "position": {
-    "x": 728,
+    "x": 736,
     "y": 500,
     "z": 9000,
     "height": 44,
-    "width": 528,
+    "width": 520,
     "tabOrder": 9000
   },
   "visual": {

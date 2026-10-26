@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
   "name": "p10_chance_line",
   "position": {
-    "x": 1000,
+    "x": 1004,
     "y": 548,
     "z": 11000,
     "height": 140,
-    "width": 256,
+    "width": 252,
     "tabOrder": 11000
   },
   "visual": {

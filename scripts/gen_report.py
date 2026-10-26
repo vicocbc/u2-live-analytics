@@ -2448,8 +2448,8 @@ def page_next_tour():
     backtest, and (from the first show on) predicted vs played. Left: story column with the setlist ticket (anchor).
     Right: new songs, backtest, in-tour tracker."""
     p = Page("p10_next_tour", "2027")  # short tab label: 8 tabs share navs as narrow as 656 px
-    lw, rx, rw = 656, 728, 528  # left column width (x 40), right column x and width
-    nav(p, 40, 6, lw)
+    lw, rx, rw = 656, 736, 520  # left column width (x 40), right column x and width
+    nav(p, 40, 6, 696)  # wider than the column: with a selected tab, 656 px cut "Overview" (T-52)
     asof = "VAR AsOf = [Prediction As-Of Date Key] "
     picks = (
         "CALCULATETABLE ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], dim_song[release_role_2027], "
@@ -2907,7 +2907,7 @@ def page_next_tour():
             "lineChart",
             x,
             548,
-            256,
+            (rw - 16) // 2,
             140,
             roles=roles,
             alt=alt,
@@ -2926,7 +2926,7 @@ def page_next_tour():
     )
     line(
         "p10_chance_line",
-        rx + 272,
+        rx + (rw + 16) // 2,
         named(meas(FSP, "Predicted Probability"), "Average chance"),
         "Average chance of the picked songs after each show, new versus older songs (empty before the first show)",
         "How the chances move (click a new song)",

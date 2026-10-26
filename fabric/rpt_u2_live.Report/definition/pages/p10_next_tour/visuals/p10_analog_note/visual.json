@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
   "name": "p10_analog_note",
   "position": {
-    "x": 728,
+    "x": 736,
     "y": 456,
     "z": 8000,
     "height": 36,
-    "width": 528,
+    "width": 520,
     "tabOrder": 8000
   },
   "visual": {

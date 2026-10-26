@@ -254,17 +254,17 @@ column (528 px). Built straight in `scripts/gen_report.py`; Vini reviews the ren
 
 | Element | x, y, w, h | Tag | Fields | Q |
 | --- | --- | --- | --- | --- |
-| `p10_nav` | 40, 6, 656, 44 | NAT page navigator | page 10 appears as "2027", before About (T-52: 8 tabs, 9 pt, no cell padding; p07/p08 navs widened to 656) | — |
+| `p10_nav` | 40, 6, 696, 44 | NAT page navigator | page 10 appears as "2027", before About (T-52: 8 tabs, 9 pt, no cell padding; p07/p08 navs widened to 656; p10 nav 696 because 656 cut "Overview" with a selected tab, right column moved to x 736) | — |
 | `p10_headline` | 40, 54, 656, 144 | HTML | `Headline p10`, `First Glimpse p10` (report measures from `Expected Songs per Show`, `New Songs Predicted`, `Catalog Songs Predicted`, `Model/Baseline Precision at N`; **request** to promote to the model) | Q12 |
 | `p10_setlist_ticket` | 40, 208, 656, 480 | HTML (anchor) | `Ticket p10`: `fact_setlist_prediction` rows of the latest as-of date with `predicted_in_setlist`, in `predicted_position` order, set header when `predicted_set` changes; per song position, title, NEW · ALBUM/EP tag (`model_part`, `dim_song[release_role_2027]`), chance bar and % (`probability`); band with glyph, tour, as-of date, `Expected Songs per Show`, `New Songs Predicted` (album/EP split), `Catalog Songs Predicted`; footnote: order approximate, chances not rescaled, list = top N | Q12 |
-| `p10_new_songs_table` | 728, 16, 528, 216 | NAT table, all 25 rows (vertical scroll on purpose; columns 104/196/92/58 px, no horizontal scroll), data bars, picked songs in `accent` + "✓ picked" | `Release p10`, `dim_song[song_title]`, `Predicted Probability`, `In Setlist p10`; filter `release_role_2027` in (promoted_album, companion_release) | Q12 |
-| `p10_ties_note` | 728, 236, 528, 36 | HTML italic `accent` | `Ties Note p10` (tied scores among the last new-song slots, from the data) | Q12 |
-| `p10_backtest_intro` | 728, 280, 528, 56 | HTML | `Model vs. Baseline` as the big number, `Selected Baseline` named as the best simple rule | Q12 |
-| `p10_backtest_bars` | 728, 340, 528, 112 | HTML labelled bars (T-52: the native bar chart rendered only its placeholder at 92 px) | `Backtest Bars p10`: `Mean Precision at N` per `fact_setlist_backtest[method]` (Model in `accent`; B1 repeat the last album tour, B2 career's most played, B3 latest tour in `neutral`), value labels | Q12 |
-| `p10_analog_note` | 728, 456, 528, 36 | HTML italic `accent` | `Closest Analog Note p10` (e+i: model vs B1) | Q12 |
-| `p10_tracker_intro` | 728, 500, 528, 44 | HTML | `Tracker Intro p10`: empty-state text until the first show, then shows played and `Hit Rate` | Q12 |
-| `p10_hit_rate_line` | 728, 548, 256, 140 | NAT line | `dim_date[date]`, `Hit Rate` (empty before the first show) | Q12 |
-| `p10_chance_line` | 1000, 548, 256, 140 | NAT line, legend new/catalog | `dim_date[date]`, `Predicted Probability`, series `model_part`; filters `predicted_in_setlist` = true, `Tour Started p10` > 0 | Q12 |
+| `p10_new_songs_table` | 736, 16, 520, 216 | NAT table, all 25 rows (vertical scroll on purpose; columns 104/196/92/58 px, no horizontal scroll), data bars, picked songs in `accent` + "✓ picked" | `Release p10`, `dim_song[song_title]`, `Predicted Probability`, `In Setlist p10`; filter `release_role_2027` in (promoted_album, companion_release) | Q12 |
+| `p10_ties_note` | 736, 236, 520, 36 | HTML italic `accent` | `Ties Note p10` (tied scores among the last new-song slots, from the data) | Q12 |
+| `p10_backtest_intro` | 736, 280, 520, 56 | HTML | `Model vs. Baseline` as the big number, `Selected Baseline` named as the best simple rule | Q12 |
+| `p10_backtest_bars` | 736, 340, 520, 112 | HTML labelled bars (T-52: the native bar chart rendered only its placeholder at 92 px) | `Backtest Bars p10`: `Mean Precision at N` per `fact_setlist_backtest[method]` (Model in `accent`; B1 repeat the last album tour, B2 career's most played, B3 latest tour in `neutral`), value labels | Q12 |
+| `p10_analog_note` | 736, 456, 520, 36 | HTML italic `accent` | `Closest Analog Note p10` (e+i: model vs B1) | Q12 |
+| `p10_tracker_intro` | 736, 500, 520, 44 | HTML | `Tracker Intro p10`: empty-state text until the first show, then shows played and `Hit Rate` | Q12 |
+| `p10_hit_rate_line` | 736, 548, 252, 140 | NAT line | `dim_date[date]`, `Hit Rate` (empty before the first show) | Q12 |
+| `p10_chance_line` | 1004, 548, 252, 140 | NAT line, legend new/catalog | `dim_date[date]`, `Predicted Probability`, series `model_part`; filters `predicted_in_setlist` = true, `Tour Started p10` > 0 | Q12 |
 
 Interactions: the prediction and the backtest are separate stories, so visuals do **not** filter each other on this
 page (clicking a backtest tour or a song would empty the ticket); the one exception is new-songs table → chance chart

@@ -2,11 +2,11 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.4.0/schema.json",
   "name": "p10_new_songs_table",
   "position": {
-    "x": 728,
+    "x": 736,
     "y": 16,
     "z": 4000,
     "height": 216,
-    "width": 528,
+    "width": 520,
     "tabOrder": 4000
   },
   "visual": {
