@@ -77,7 +77,7 @@ Warehouse has no recursive CTEs and only a subset of types (`varchar` with UTF-8
 | Lakehouse | `lk_silver` | Cleaned, typed, deduplicated, conformed names. One table per business entity. Gold reads it through its SQL analytics endpoint. |
 | Warehouse | `wh_gold` | Star schema (schema `dbo`) + `dq_run_log`. Built by stored procedures. Only thing the semantic model reads. |
 | Environment | `env_u2` | Spark environment with the `u2lib` wheel attached as a custom library. |
-| Notebooks | `nb_u2_load_bronze` (setlist.fm, in production), `nb_bronze_musicbrainz`, `nb_bronze_seeds`, `nb_silver_shows`, `nb_silver_catalog`, `nb_silver_song_map` | PySpark. One notebook per step; parameters cell first. |
+| Notebooks | `nb_u2_load_bronze` (setlist.fm, in production), `nb_bronze_musicbrainz`, `nb_bronze_seeds`, `nb_silver_shows`, `nb_silver_catalog`, `nb_silver_song_map`, `nb_silver_setlist_features`, `nb_silver_setlist_prediction` (SPEC-09) | PySpark. One notebook per step; parameters cell first. |
 | Stored procedures | `wh_gold.dbo.usp_build_gold` (calls `usp_build_dimensions`, `usp_build_facts`, `usp_dq_gold`) | T-SQL. Source in `sql/wh_gold/`. |
 | Pipeline | `pl_refresh` | Bronze notebooks → Silver notebooks → Stored procedure activity `usp_build_gold` → semantic model refresh. Weekly schedule. |
 | Semantic model | `sm_u2_live` | Direct Lake on `wh_gold` tables (no views: views fall back to DirectQuery). Authored as TMDL (PBIP). |

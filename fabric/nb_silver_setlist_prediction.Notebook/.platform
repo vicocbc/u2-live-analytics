@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_silver_setlist_prediction",
+    "description": "Silver setlist prediction, backtest and model coefficients (SPEC-09 9.5-9.6)"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "2e2db3ca-17d6-41cc-a040-e8090632dbad"
+  }
+}

@@ -73,12 +73,59 @@ show (no leakage). "Played" means a full performance (no tapes, snippets or frag
 Targets (backtest tours only): `play_rate` = share of the target tour's shows that played the song; `is_core` =
 `play_rate ≥ 0.5`; `in_first_show` = played at the tour's first show.
 
+**Rules fixed in T-47** (code: `u2lib.features`, `u2lib.setlist`; unit-tested):
+
+- *Target tours.* Every `album` tour that has a previous album tour (October … e+i) plus the planned tour. October …
+  Lovetown are **training-only** rows: without them Zoo TV, the first backtest tour, would have nothing to train on.
+  Anniversary tours and the residency are never targets (checked in the notebook).
+- *Shows and "played".* Only shows with a setlist (`show.has_setlist`) count, in rates and in history. A play is a
+  `performance` row that is not a tape or a snippet, maps through `song_map` to a `song_id`, and whose song is not a
+  fragment; a song played twice in a show counts once (first position). Relative position = rank among the show's
+  played songs / (played songs − 1); the opener is the first played song.
+- *Planned tour cutoff.* Silver has no date for a planned tour; the notebooks take the announced first show from a
+  parameter (`PLANNED_FIRST_SHOW`, 2027-02-23).
+- *Candidates.* Original, non-fragment songs released before the cutoff or already played before it; **every** song of
+  the promoted album or a companion release, even if released after the first show (The Unforgettable Fire came out a
+  month into its tour); covers played on the previous album tour.
+- *Release of a song.* 2026 trilogy tracks take release and date from `release_track` (T-46: *Get Back to Now* has no
+  `song.first_album_id`); other songs take `first_album_id`'s release date, else 1 January of `first_release_year`.
+- *Singles, as of the cutoff* (T-46 findings 1, 2 and 4):
+  - a single released more than 12 months after its album is a reissue and never counts (drops exactly *Running to
+    Stand Still* 2009 and *Red Hill Mining Town* 2017);
+  - a 1 January `single_date` is a year-only MusicBrainz date: an earlier year counts, a later year does not, and the
+    same year counts only if the album itself was out before the cutoff. This keeps *The Unforgettable Fire*
+    (stored 1984-01-01, really 1985) out of the 1984 tour, and keeps *Discothèque* (1997-01-01) in for PopMart;
+    *New Year's Day* (1983-01-01, a real 1 January release) is wrongly left out of the War tour, a training-only tour;
+  - `is_single`/`single_order` in `setlist_feature` are **as known before the cutoff**: a single released after the
+    tour started is not a single for that tour (e.g. *Even Better Than the Real Thing* for Zoo TV). `single_order` is
+    re-ranked per album among the singles that count, by stored date, title key, id; ties of a 1 January date are not
+    corrected (no seed override needed: the only wrong order, The Unforgettable Fire before Pride, never applies,
+    because by the time both count the songs are catalog). For 2026 this gives per-release orders (Days of Ash: Song
+    of the Future 1; Carnaval de luz: Street of Dreams 1, Silencio 2, The Greatest Show on Earth 3), consistent with the
+    per-album orders of the history; the seed's trilogy-wide `single_order` stays in `release_track` and `song`.
+- *Previous and last tour* (T-46 finding 5). `prev_album_tour_*` = latest `album` tour that started before the cutoff;
+  `last_tour_*` = the qualifying tour (any type except `(No tour)`, ≥ 10 shows with a setlist before the cutoff) with
+  the latest last show: Sphere for 2027, so B3 shows the residency trap.
+- *Other definitions.* `tours_played_share`: album tours before the cutoff whose last show is on or after the song's
+  start (earlier of release and first play). `career_rate`: shows since that start. `tours_since_last_played`:
+  qualifying tours whose first show is after the song's last play. `played_pre_tour`: shows after the last show of the
+  last qualifying tour and before the cutoff (Carnival De Luz Promo and the Mount Temple / Bewley's sets for 2027).
+  `is_new_material`: `promoted_album`, or `companion_release` whose album no earlier tour promoted (the 2026 EPs yes,
+  *Songs of Innocence* on e+i no). `is_title_track` (promoted album or companion only): song key equals or contains the
+  album key, or appears word-bounded in the tour name.
+- *Extra columns* (for the model, ordering and checks): `is_planned_tour`, `song_title`, `album_id`, `release_date`,
+  `is_original`, `prev_album_tour_name`, `last_tour_name`, `career_shows_played`, `career_avg_position`,
+  `history_shows`, `history_max_date`.
+- *No leakage.* `build_features` keeps only shows before the cutoff and asserts it per song; the notebook re-checks from
+  the written table that `history_max_date` < cutoff and that `history_shows` equals the count of shows with a setlist
+  before the cutoff (hard checks).
+
 ## 9.5 Model · `nb_silver_setlist_prediction`
 
 Two parts, kept simple on purpose: there are only about ten comparable tours, so anything heavier overfits.
 
-1. **Catalog songs:** logistic regression on `is_core` (scikit-learn from the Fabric runtime; record the version in
-   the notebook), trained on every backtest tour before the target. Report the coefficients so the result can be
+1. **Catalog songs:** logistic regression on `is_core` (fit in `u2lib`, cross-checked against the Fabric runtime's
+   scikit-learn, whose version the notebook records; see the T-48 rules below), trained on every earlier album tour. Report the coefficients so the result can be
    explained on the report page.
 2. **New material:**
    - *How many:* expected number of new songs per show = median `is_new_material` share per show on the previous
@@ -99,6 +146,42 @@ Output `lk_silver.dbo.setlist_prediction`: `target_tour_name`, `as_of_date`, `so
 `predicted_in_setlist`, `predicted_position`, `predicted_set` (`main`/`encore`), `model_part` (`catalog`/`new`),
 `model_version`.
 
+**Rules fixed in T-48** (code: `u2lib.prediction`, `u2lib.setlist`; all fixed before the first backtest, none tuned on
+a test tour):
+
+- *Logistic regression in `u2lib`, scikit-learn as a cross-check.* The fit is a pure-Python Newton solver of the
+  objective scikit-learn's `LogisticRegression(C = 1/L2)` minimises (L2 penalty, intercept not penalised) on
+  standardised features, `L2 = 1`. It is deterministic (no random state) and testable in CI, where scikit-learn is not
+  installed. The notebook refits every model with the runtime's scikit-learn and logs the largest coefficient
+  difference (warning above 1e-3) and `scikit_learn` in the exit value's `versions` (the version of the Fabric
+  Runtime 2.0 is recorded from the first run, not assumed here). `setlist_model_coef` keeps the coefficients
+  (standardised and per original unit) of every model for the report.
+- *Catalog features* (rows with `is_new_material` false): `prev_album_tour_rate`, `last_tour_rate`, `career_rate`,
+  `tours_played_share`, recency = 1 / (1 + `tours_since_last_played`) (0 if never played), played before the tour
+  (`played_pre_tour` > 0), `is_single`. Training = feature rows of every earlier `album` tour whose last show is before
+  the target's first show (asserted).
+- *New material.* A second logistic regression on the new-material rows of the same training tours, features
+  `is_single`, 1/`single_order`, played before the tour, `is_title_track` (this is the "calibrate the weights on past
+  album tours"). Facts that never occur in the history get hand-set logit penalties: featured artist −1, spoken word
+  −2, bonus track −2.
+- *How many.* N = median over the last three album tours of their median played songs per show. New album songs =
+  round(median of those tours' median per-show share of their promoted album × N). New companion songs (only when the
+  target has new companion material, i.e. 2027) = round(e+i's median per-show share of *Songs of Innocence* × N).
+  Within each group the probabilities are rescaled (capped at 1) to sum to the group's count, and the top songs by
+  score fill the group's slots; the rest of the N slots go to the catalog songs with the highest probability.
+- *Order.* Opener = the best-scoring new single when new material opened at least half the shows of the last three
+  album tours (data: Zoo TV, PopMart, Elevation, Vertigo, i+e, e+i 100 %, U2 360° 40 %), else the catalog song with the
+  highest `prev_opener_rate` × probability. Other songs by relative position: catalog songs at their
+  `prev_avg_position` (else `career_avg_position`, else 0.5), new songs at the previous album tour's average position
+  of its new songs, ties by score; catalog songs with `prev_encore_rate` ≥ 0.5 form the encore (`predicted_set`).
+- *Rows written.* Pre-tour predictions for the planned tour **and for every backtest tour** (`is_backtest` true), so
+  the data-analyst can reproduce every model metric in T-SQL; plus `shows_observed` (0 for the pre-tour row). Gold
+  (T-49) keeps the planned tour's rows (`is_backtest = 0`). In-tour rows (one set per `as_of_date` = the day before
+  each show after the first) have `predicted_in_setlist` = top N by posterior and no position or set. A planned tour
+  whose `is_planned` flag is cleared after its first show (T-53) is named in the notebook parameter `PREDICTION_TOURS`
+  so it is never backtested or trained on.
+- *`model_version`* = `sl<model>-u2lib<version>` (e.g. `sl1.0-u2lib0.5.0`, ≤ 20 characters).
+
 ## 9.6 Backtest
 
 For each album tour from Zoo TV (1992) to e+i (2018), train on the tours before it and predict as of its first show.
@@ -113,6 +196,21 @@ For each album tour from Zoo TV (1992) to e+i (2018), train on the tours before 
 Baselines (same metrics): **B1** the previous album tour's core set; **B2** the N most-played songs of the career so
 far; **B3** the latest tour of any type, which would be Sphere for 2027 and shows the anniversary/residency trap.
 Results in `lk_silver.dbo.setlist_backtest` (tour, method, metric, value).
+
+Exact definitions (T-48), so the T-SQL reproduction gives the same numbers:
+
+- Every method predicts N songs, N = the model's expected songs per show for that tour. **B1** = top N by
+  `prev_album_tour_rate`, **B2** = top N by `career_shows_played`, **B3** = top N by `last_tour_rate`; ties by
+  `career_shows_played` descending, then `song_id` in code-point order (`COLLATE Latin1_General_100_BIN2_UTF8`). The
+  baselines' probabilities for the Brier score are `prev_album_tour_rate`, `career_rate` (null = 0) and
+  `last_tour_rate`.
+- `precision_at_n` = predicted songs with `is_core` / N. `jaccard_first_show` = |predicted ∩ first show| / |predicted
+  ∪ first show|, where the first show is the tour's earliest show with a setlist (by date, then `setlist_id`) and its
+  set is every song played there (full performances, candidates or not). `brier_play_rate` = mean over the tour's
+  candidate rows of (probability − `play_rate`)². `new_count_error` = predicted new songs (model: the new-song slots;
+  baselines: `is_new_material` songs in their set) − the tour's median per show of promoted-album songs.
+- Extra `method = 'context'` rows per tour: `songs_per_show_predicted`/`_actual`, `core_size_actual`,
+  `new_per_show_predicted`/`_actual`.
 
 ## 9.7 Gold and model
 
@@ -165,3 +263,8 @@ and how close was the prediction once the tour began?*
 - Should the EP songs count as "new material" for the promoted share on the existing Q4 page, or only here?
   (Default: only here; Q4 keeps `album_promoted`.)
 - `m` = 5 for the in-tour update is a starting value; tune it on the backtest tours' first ten shows.
+- (T-48) The catalog probabilities are calibrated on `is_core`, not on `play_rate`: their sum for 2027 (≈ 12 for 16
+  catalog slots) is below the slot count, so "expected songs per show" on the page should use N, not the sum of
+  probabilities. Recalibrating on `play_rate` is a possible v2, judged on the backtest only.
+- (T-48) The scikit-learn version of Fabric Runtime 2.0 is read from the first run's exit value and written into
+  `docs/run-log.md`; if the runtime has no scikit-learn, the cross-check is skipped and logged (the model does not need it).

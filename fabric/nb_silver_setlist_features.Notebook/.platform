@@ -1,0 +1,12 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Notebook",
+    "displayName": "nb_silver_setlist_features",
+    "description": "Silver setlist_feature for the 2027 setlist prediction (SPEC-09 9.4)"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "31c6ddb0-e449-402c-92ba-89df336cc713"
+  }
+}
