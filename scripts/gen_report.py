@@ -4,10 +4,12 @@ Why a generator: no visual was ever created in Desktop to copy from, and ~60 vis
 Every visual gets a stable name (folder name), position on the 8 px grid, alt text and tab order.
 Writes into fabric/rpt_u2_live.Report/:
   definition/report.json            theme (RegisteredResources/u2-theme.json), registered images, custom visuals
-  definition/reportExtensions.json  report-level measures (HTML blocks, placeholders until T-35)
   definition/pages/<page>/...       page.json + visuals/<visual>/visual.json
   StaticResources/RegisteredResources/<image files>
-Usage: python scripts/gen_report.py [--pages p00_spike,p01_overview,...]
+No report-level measures: every measure a visual uses lives in the semantic model sm_u2_live (Power BI "Publish to
+web" rejects reports with report-level measures). The report-support measures (HTML blocks, titles, colours, ranks)
+are owned by the data-analyst: SPEC-05 "Report-support measures (Publish to web)", display folders Report/pNN.
+Usage: python scripts/gen_report.py
 """
 
 import argparse
@@ -32,7 +34,6 @@ SCHEMA = "https://developer.microsoft.com/json-schemas/fabric/item/report/defini
 S_VISUAL = f"{SCHEMA}/visualContainer/2.4.0/schema.json"
 S_PAGE = f"{SCHEMA}/page/2.1.0/schema.json"
 S_PAGES = f"{SCHEMA}/pagesMetadata/1.1.0/schema.json"
-S_EXT = f"{SCHEMA}/reportExtension/1.0.0/schema.json"
 
 HTML = "htmlContent443BE3AD55E043BF878BED274D3A6865"  # HTML Content Secure (certified)
 DENEB = "deneb7E15AEF80B9E4D4F8E12924291ECE89A"  # Deneb (certified)
@@ -72,9 +73,9 @@ def col(entity, prop):
     return {"Column": {"Expression": {"SourceRef": {"Entity": entity}}, "Property": prop}}
 
 
-def meas(entity, prop, ext=False):
-    src = {"Schema": "extension", "Entity": entity} if ext else {"Entity": entity}
-    return {"Measure": {"Expression": {"SourceRef": src}, "Property": prop}}
+def meas(entity, prop):
+    """Reference to a model measure (sm_u2_live)."""
+    return {"Measure": {"Expression": {"SourceRef": {"Entity": entity}}, "Property": prop}}
 
 
 def named(field, display):
@@ -101,34 +102,9 @@ def props(**kw):
     return [{"properties": {k: v for k, v in kw.items()}}]
 
 
-# ---------------------------------------------------------------- report-level measures
-EXT_MEASURES = {}  # entity -> list of measures
-
-
-def ext_measure(entity, name, expression, data_type="Text", refs=(), category=None, description=None):
-    m = {"name": name, "dataType": data_type, "expression": expression}
-    if category:
-        m["dataCategory"] = category
-    if description:
-        m["description"] = description
-    if refs:
-        m["references"] = {"measures": [{"entity": e, "name": n} for e, n in refs]}
-    EXT_MEASURES.setdefault(entity, []).append(m)
-    return meas(entity, name, ext=True)
-
-
-def placeholder(name, text=None):
-    """Report-level stand-in 'ph <name>' for the model text measure [<name>] (data-analyst, T-35).
-
-    Since T-35 it only forwards to the model measure; `text` (the old sketch wording) is ignored.
-    """
-    return ext_measure(
-        "fact_show",
-        f"ph {name}",
-        f"[{name}]",
-        refs=[("fact_show", name)],
-        description=f"Bound to model measure [{name}] (T-35); kept so the text cards keep their binding.",
-    )
+def placeholder(name):
+    """Model measure 'ph <name>' (forwards to [<name>]; kept so the text cards keep their binding)."""
+    return meas("fact_show", f"ph {name}")
 
 
 # ---------------------------------------------------------------- visual builder
@@ -304,62 +280,22 @@ def style(size=10, color_=T["muted"], family="Segoe UI", weight=None, italic=Fal
 DIN = "DIN, Bahnschrift, 'Segoe UI', sans-serif"
 
 
-def wrap(field, before, after, suffix, description):
-    """Report-level measure '<measure> · <suffix>' = before & [measure] & after (HTML around a text measure)."""
-    m = field["Measure"]
-    name, ent = m["Property"], m["Expression"]["SourceRef"]["Entity"]
-    is_ext = m["Expression"]["SourceRef"].get("Schema") == "extension"
-    new = ext_measure(
-        FS,
-        f"{name} · {suffix}",
-        f'"{before}" & [{name}] & "{after}"',
-        refs=[] if is_ext else [(ent, name)],
-        description=description,
-    )
-    if is_ext:
-        EXT_MEASURES[FS][-1]["references"] = {"measures": [{"schema": "extension", "entity": ent, "name": name}]}
-    return new
+def wrap(field, suffix):
+    """Model measure '<measure> · <suffix>': presentation wrapper (HTML typography or clipping) around a measure."""
+    return meas(FS, f"{field['Measure']['Property']} · {suffix}")
 
 
-def card_text(
-    page,
-    vname,
-    x,
-    y,
-    w,
-    h,
-    field,
-    size=32,
-    color_=T["text"],
-    family=DIN,
-    italic=False,
-    alt=None,
-    weight=600,
-    line=1.1,
-):
-    """A text measure (headline, callout, note) shown left-aligned and wrapped in HTML Content Secure.
-
-    The wrapper fixes the typography and clips to the box (height minus a safety margin), so the visual never shows
-    a scrollbar: if a text is longer than the box it is cut at a line, and the fix is a shorter text measure.
-    """
-    css = (
-        f"font-family:{family.replace(chr(39), '')};font-size:{size}px;line-height:{line};color:{color_};"
-        f"font-weight:{weight};{'font-style:italic;' if italic else ''}max-height:{h - 8}px;overflow:hidden"
-    )
-    wrapper = wrap(field, f"<div style='{css}'>", "</div>", vname, "Typography wrapper (presentation only).")
-    return html(page, vname, x, y, w, h, wrapper, alt=alt or "Text", clip=False)
+def card_text(page, vname, x, y, w, h, field, alt=None):
+    """A text measure (headline, callout, note) in HTML Content Secure, through its model wrapper measure
+    '<measure> · <vname>' (typography and clipping, so the visual never shows a scrollbar)."""
+    return html(page, vname, x, y, w, h, wrap(field, vname), alt=alt or "Text", clip=False)
 
 
 def html(page, vname, x, y, w, h, field, alt, filters=None, clip=True, links=False):
-    """HTML Content Secure visual. clip=True wraps the measure in a fixed-height, overflow-hidden div."""
+    """HTML Content Secure visual. clip=True binds the model measure '<measure> · <vname>' (fixed-height,
+    overflow-hidden wrapper) instead of the measure itself."""
     if clip:
-        field = wrap(
-            field,
-            f"<div style='height:{h - 8}px;overflow:hidden'>",
-            "</div>",
-            vname,
-            "Clipping wrapper so the HTML visual never scrolls (presentation only).",
-        )
+        field = wrap(field, vname)
     return page.add(
         vname,
         HTML,
@@ -479,22 +415,9 @@ def back_button(page, x, y):
     )
 
 
-TOPN_COLUMNS = (
-    "REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), "
-    "REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), "
-    "REMOVEFILTERS ( dim_tour[tour_name_display] )"
-)
-
-
-def title_measure(name, prefix, count_expr, suffix="", refs=()):
-    """Visual title stating the Top N cut and the total, e.g. 'Other people's songs: top 3 of 179 covers'."""
-    return ext_measure(
-        FS,
-        name,
-        f'"{prefix}" & FORMAT ( CALCULATE ( {count_expr}, {TOPN_COLUMNS} ), "#,0", "en-US" ) & "{suffix}"',
-        refs=refs,
-        description="Visual title with the Top N cut and the total (presentation only).",
-    )
+def title_measure(name):
+    """Model measure with a visual title stating the cut and the total, e.g. 'All 384 cities, most shows first'."""
+    return meas(FS, name)
 
 
 def button_state(**kw):
@@ -513,20 +436,8 @@ def footer(page, x=40, w=900, note=None):
 # ---------------------------------------------------------------- pages
 def page_spike():
     p = Page("p00_spike", "Image spike (T-32)", hidden=True)
-    b64 = SPIKE_JPEG
     glyph = (IMAGES / "glyph_zoo_tv.svg").read_text(encoding="utf-8").strip().replace('"', "'")
-    expr = (
-        "\"<div style='font-family:Segoe UI;color:#ECEDEF;font-size:13px'>"
-        "<p><b>1 · inline SVG:</b> " + glyph.replace('"', '""') + "</p>"
-        "<p><b>2 · SVG data URI in img:</b> <img width='48' src='data:image/svg+xml;utf8,"
-        + glyph.replace("#", "%23").replace('"', '""')
-        + "'></p>"
-        "<p><b>3 · base64 JPEG literal in img:</b><br><img width='160' src='data:image/jpeg;base64," + b64 + "'></p>"
-        '<p><b>4 · photo from the model ([Image Data URI]):</b><br>" & '
-        'IF ( ISBLANK ( [Image Data URI] ), "<i>report_image is empty: load seeds/report_images.csv first</i>", '
-        '"<img width=\'240\' src=\'" & [Image Data URI] & "\'>" ) & "</p></div>"'
-    )
-    m = ext_measure("fact_show", "Spike HTML", expr, refs=[("fact_show", "Image Data URI")])
+    m = meas("fact_show", "Spike HTML")
     html(
         p,
         "p00_html_spike",
@@ -771,51 +682,13 @@ def years_spec(measure_name, label_peak=True):
 
 
 def kpi_tiles_measure():
-    icons = {k: svg_inline(f"icon_kpi_{k}.svg", 28) for k in ("shows", "songs", "countries")}
-
-    def tile(icon, value, label, delta, accent=False):
-        num_style = "font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:46px;line-height:1;color:" + (
-            T["accent"] if accent else T["text"]
-        )
-        return (
-            f"\"<div style='display:flex;gap:10px;align-items:flex-start'>{icons[icon]}<div>"
-            f'<div style=\'{num_style}\'>" & FORMAT ( {value}, "#,0", "en-US" ) & "</div>'
-            f"<div style='color:#ECEDEF;font-size:13px'>{label}</div>"
-            f'<div style=\'font-size:11px;font-weight:600;color:" & IF ( {delta} > 0, "#93C47D", '
-            f'IF ( {delta} < 0, "#E06666", "#A3A9B3" ) ) & "\'>" & '
-            f'IF ( ISBLANK ( {delta} ), "all eras", IF ( {delta} > 0, "▲ +", "▼ " ) & '
-            f'FORMAT ( {delta}, "#,0", "en-US" ) & " vs previous era" ) & "</div></div></div>"'
-        )
-
-    body = (
-        "\"<div style='display:flex;gap:28px'>\" & "
-        + tile("shows", "[Shows]", "shows", "[Shows vs Previous Era]", True)
-        + " & "
-        + tile("songs", "[Distinct Songs]", "different songs", "[Distinct Songs vs Previous Era]")
-        + " & "
-        + tile("countries", "[Countries]", "countries", "[Countries vs Previous Era]")
-        + ' & "</div>"'
-    )
-    return ext_measure(
-        FS,
-        "KPI Tiles p01",
-        body,
-        refs=[
-            (FS, "Shows"),
-            (FP, "Distinct Songs"),
-            (FS, "Countries"),
-            (FS, "Shows vs Previous Era"),
-            (FP, "Distinct Songs vs Previous Era"),
-            (FS, "Countries vs Previous Era"),
-        ],
-        description="HTML: three KPI tiles (icon, number, delta vs previous era) for HTML Content Secure.",
-    )
+    """Model measure: three KPI tiles (icon, number, delta vs previous era)."""
+    return meas(FS, "KPI Tiles p01")
 
 
-def color_measure(name, expr, refs):
-    return ext_measure(
-        FS, name, expr, refs=refs, description="Hex colour for conditional formatting (presentation only)."
-    )
+def color_measure(name):
+    """Model measure returning a hex colour for conditional formatting."""
+    return meas(FS, name)
 
 
 def fill_by(measure_field):
@@ -902,46 +775,18 @@ def bar(page, vname, x, y, w, h, cat, val, alt, title=None, filters=None, fill=N
     )
 
 
-def photo_card_measure(name, image_id_note, number_expr, caption_expr, refs, height):
-    """HTML photo card: base64 photo filling a box of fixed height, a gradient on the lower half, number and caption."""
-    expr = (
-        f"VAR Img = [Image Data URI] RETURN \"<div style='position:relative;width:100%;height:{height}px;"
-        "overflow:hidden;background:#0F1115'>\" & IF ( NOT ISBLANK ( Img ), \"<img src='\" & Img & \"' style='width:"
-        f"100%;height:{height}px;object-fit:cover;display:block'>\" ) & "
-        "\"<div style='position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(to bottom, "
-        "rgba(15,17,21,0), rgba(15,17,21,.92) 55%)'></div><div style='position:absolute;left:20px;right:20px;"
-        "bottom:12px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;"
-        "line-height:1;color:#F2A93B'>\" & "
-        + number_expr
-        + " & \"</div><div style='color:#ECEDEF;font-size:13px;margin-top:4px'>\" & "
-        + caption_expr
-        + " & \"</div><div style='color:#A3A9B3;font-size:9px;margin-top:4px'>\" & [Image Credit] & "
-        '"</div></div></div>"'
-    )
-    return ext_measure(
-        FS,
-        name,
-        expr,
-        refs=[(FS, "Image Data URI"), (FS, "Image Credit"), *refs],
-        description=f"HTML photo card ({image_id_note}): base64 photo, gradient, number, caption, credit.",
-    )
+def photo_card_measure(name):
+    """Model measure: HTML photo card (base64 photo, gradient, number, caption, credit)."""
+    return meas(FS, name)
 
 
-def page_header(p, headline, glimpse, x=40, w=600, nav_w=None, h=152):
-    """Navigation, then headline (up to two lines) and intro (up to three lines) in one HTML block, so a one-line
-    headline leaves no gap above the intro."""
+def page_header(p, x=40, w=600, nav_w=None, h=152):
+    """Navigation, then the model measure 'Header pNN' (headline up to two lines and intro up to three lines in one
+    HTML block, so a one-line headline leaves no gap above the intro)."""
     nav(p, x, 6, nav_w or min(w, 720))
-    combined = ext_measure(
-        FS,
-        f"Header {p.name[:3]}",
-        "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;"
-        f'font-weight:600;max-height:72px;overflow:hidden\'>" & [{headline[0]}] & "</div>'
-        "<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;"
-        f'max-height:57px;overflow:hidden\'>" & [{glimpse[0]}] & "</div>"',
-        refs=[(FS, headline[0]), (FS, glimpse[0])],
-        description="HTML: page headline and intro paragraph from the model text measures (T-35).",
+    html(
+        p, f"{p.name[:3]}_headline", x, 54, w, h, meas(FS, f"Header {p.name[:3]}"), alt="Page headline and introduction"
     )
-    html(p, f"{p.name[:3]}_headline", x, 54, w, h, combined, alt="Page headline and introduction")
 
 
 def measure_filter(field, more_than, name, kind=1):
@@ -953,10 +798,7 @@ def measure_filter(field, more_than, name, kind=1):
         "type": "Advanced",
         "filter": {
             "Version": 2,
-            "From": [
-                {"Name": "m", "Entity": ent, "Type": 0}
-                | ({"Schema": "extension"} if field["Measure"]["Expression"]["SourceRef"].get("Schema") else {})
-            ],
+            "From": [{"Name": "m", "Entity": ent, "Type": 0}],
             "Where": [
                 {
                     "Condition": {
@@ -980,25 +822,12 @@ def measure_filter(field, more_than, name, kind=1):
 RANK_COUNT = [0]
 
 
-def topn_filter(field, by, n, name, ascending=False):
-    """Exact Top N: rank measure (ties broken by name) with a visual filter rank <= n."""
+def topn_filter(field, by, n, name):
+    """Exact Top N: model rank measure 'Rank <k> <column> by <measure>' (ties broken by name), filter rank <= n."""
     c = field["Column"]
-    colref = f"{c['Expression']['SourceRef']['Entity']}[{c['Property']}]"
     m = by["Measure"]["Property"]
-    op = "<" if ascending else ">"
     RANK_COUNT[0] += 1
-    rank = ext_measure(
-        FS,
-        f"Rank {RANK_COUNT[0]} {c['Property']} by {m}",
-        f"VAR Cur = CALCULATE ( [{m}], REMOVEFILTERS ( dim_date ) ) VAR Me = SELECTEDVALUE ( {colref} ) "
-        f"RETURN IF ( NOT ISBLANK ( Cur ) && NOT ISBLANK ( Me ), "
-        f"COUNTROWS ( FILTER ( ALLSELECTED ( {colref} ), "
-        f"VAR V = CALCULATE ( [{m}], REMOVEFILTERS ( dim_date ) ) RETURN "
-        f"NOT ISBLANK ( V ) && "
-        f"( V {op} Cur || ( V = Cur && {colref} < Me ) ) ) ) + 1 )",
-        data_type="Integer",
-        description=f"Rank of {c['Property']} by [{m}] for an exact Top N (ties broken alphabetically).",
-    )
+    rank = meas(FS, f"Rank {RANK_COUNT[0]} {c['Property']} by {m}")
     return measure_filter(rank, n, name, kind=4)
 
 
@@ -1095,41 +924,6 @@ def slicer(page, vname, x, y, w, h, field, alt, mode="Dropdown"):
     )
 
 
-def svg_inline(file, size):
-    return (
-        (IMAGES / file)
-        .read_text(encoding="utf-8")
-        .strip()
-        .replace('"', "'")
-        .replace("width='48' height='48'", f"width='{size}' height='{size}'")
-    )
-
-
-def big(value_expr, label, colour=T["accent"], size=40, label_colour=T["text"]):
-    return (
-        "\"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:"
-        + str(size)
-        + "px;line-height:1;color:"
-        + colour
-        + "'>\" & "
-        + value_expr
-        + " & \"</div><div style='font-size:12px;color:"
-        + label_colour
-        + ";margin-top:4px'>"
-        + label
-        + '</div></div>"'
-    )
-
-
-def prompt_html(message):
-    """Shown on a drill-through page opened without a single item in context."""
-    return (
-        "\"<div style='font-family:Segoe UI;color:#A3A9B3;font-size:14px;padding-top:8px'>"
-        "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;color:#ECEDEF'>"
-        f'Nothing selected yet</div>{message}</div>"'
-    )
-
-
 def subtitle(text_):
     return {"subTitle": props(show=lit(True), text=lit(text_), fontColor=color(T["muted"]), fontSize=lit(9))}
 
@@ -1174,13 +968,7 @@ def page_overview():
     scrim(p, "p01_scrim_left", "left", 640, 0, 280, 400)
     scrim(p, "p01_scrim_bottom", "bottom", 640, 168, 640, 232)
     scrim(p, "p01_scrim_top", "top", 640, 0, 640, 64)
-    page_header(
-        p,
-        ("Headline p01", ""),
-        ("First Glimpse p01", ""),
-        w=580,
-        nav_w=760,
-    )
+    page_header(p, w=580, nav_w=760)
     html(p, "p01_kpi_tiles", 40, 212, 580, 96, kpi_tiles_measure(), alt="Shows, songs and countries")
     text(
         p,
@@ -1225,11 +1013,7 @@ def page_overview():
         years_spec("Shows"),
         "Shows per year 1976 to 2026, shaded by era, busiest year highlighted, tour icons at each tour start",
     )
-    top_color = color_measure(
-        "Top Song Bar Color",
-        'IF ( RANKX ( ALLSELECTED ( dim_song[song_title] ), [Performances] ) = 1, "#F2A93B", "#6FA8DC" )',
-        refs=[(FP, "Performances")],
-    )
+    top_color = color_measure("Top Song Bar Color")
     bar(
         p,
         "p01_top_songs",
@@ -1240,9 +1024,7 @@ def page_overview():
         col("dim_song", "song_title"),
         named(meas(FP, "Performances"), "Times played"),
         "The ten most performed songs, number one highlighted",
-        title=title_measure(
-            "Title p01 top10", "The ten songs played most, of ", "[Distinct Songs]", "", [(FP, "Distinct Songs")]
-        ),
+        title=title_measure("Title p01 top10"),
         filters=[topn_filter(col("dim_song", "song_title"), meas(FP, "Performances"), 10, "top10")],
         fill=fill_by(top_color),
         margin=75,
@@ -1254,7 +1036,7 @@ def page_overview():
 # ---------------------------------------------------------------- page 2
 def page_road():
     p = Page("p02_on_the_road", "Road")
-    page_header(p, ("Headline p02", ""), ("First Glimpse p02", ""), w=720, h=96)
+    page_header(p, w=720, h=96)
     p.add(
         "p02_venues_map",
         "azureMap",
@@ -1295,19 +1077,7 @@ def page_road():
         "Croke Park, Dublin 1987, by Damian McDonagh",
     )
     scrim(p, "p02_scrim_bottom", "bottom", 800, 72, 480, 144)
-    top_city = "TOPN ( 1, VALUES ( dim_venue[city_name] ), [Shows] )"
-    city = ext_measure(
-        FS,
-        "Top City Card p02",
-        "\"<div style='font-family:Segoe UI'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;"
-        "font-size:40px;line-height:1;color:#F2A93B'>\" & "
-        f'MAXX ( {top_city}, dim_venue[city_name] ) & " · " & '
-        f'FORMAT ( MAXX ( {top_city}, [Shows] ), "#,0", "en-US" ) & '
-        "\"</div><div style='color:#ECEDEF;font-size:13px;margin-top:4px'>shows in the most-visited city "
-        '(photo: Croke Park, Dublin, 1987)</div></div>"',
-        refs=[(FS, "Shows")],
-        description="HTML: the most-visited city and its number of shows.",
-    )
+    city = meas(FS, "Top City Card p02")
     html(p, "p02_top_city", 816, 136, 448, 76, city, alt="The most-visited city and its number of shows")
     table(
         p,
@@ -1325,7 +1095,7 @@ def page_road():
         ],
         "Every city with its number of shows and first and last visit, most shows first",
         sort=[(meas(FS, "Shows"), "Descending")],
-        title=title_measure("Title p02 cities", "All ", "[Cities]", " cities, most shows first", [(FS, "Cities")]),
+        title=title_measure("Title p02 cities"),
     )
     p.add(
         "p02_continent_decade",
@@ -1360,9 +1130,7 @@ def page_road():
         sort=[(col("dim_show", "show_label"), "Descending")],
         filters=[measure_filter(meas(FS, "Shows"), 0, "has_show")],
         widths=[236],
-        title=title_measure(
-            "Title p02 shows", "", "[Shows]", " shows · right-click one for its setlist", [(FS, "Shows")]
-        ),
+        title=title_measure("Title p02 shows"),
     )
     footer(p, 40, 740, note="Bubble size = shows in the city")
     return p
@@ -1381,11 +1149,9 @@ def page_songs():
         480,
         76,
         placeholder("Top Song Text"),
-        size=28,
-        color_=T["accent"],
         alt="The most played song and how often",
     )
-    page_header(p, ("Headline p03", ""), ("First Glimpse p03", ""), x=552, w=704)
+    page_header(p, x=552, w=704)
     p.add(
         "p03_explore_scatter",
         "scatterChart",
@@ -1434,13 +1200,7 @@ def page_songs():
         ],
         "Every song with its album, most played first",
         sort=[(meas(FP, "Performances"), "Descending")],
-        title=title_measure(
-            "Title p03 songs",
-            "All ",
-            "[Distinct Songs]",
-            " songs, most played first · right-click for the story",
-            [(FP, "Distinct Songs")],
-        ),
+        title=title_measure("Title p03 songs"),
         widths=[230, 170, 56],
     )
     rare = {
@@ -1479,13 +1239,7 @@ def page_songs():
         "Every rarity (played twice or less), most recent first",
         filters=[rare],
         sort=[(meas(FP, "Last Played Date"), "Descending")],
-        title=title_measure(
-            "Title p03 rarities",
-            "All ",
-            "[Rarities]",
-            " rarities (played twice or less), most recent first",
-            [(FP, "Rarities")],
-        ),
+        title=title_measure("Title p03 rarities"),
         widths=[180, 90],
     )
     table(
@@ -1505,13 +1259,7 @@ def page_songs():
         filters=[
             bool_filter(col("dim_song", "is_original"), False, "covers"),
         ],
-        title=title_measure(
-            "Title p03 covers",
-            "All ",
-            "[Cover Songs]",
-            " other people's songs, most played first",
-            [(FP, "Distinct Songs")],
-        ),
+        title=title_measure("Title p03 covers"),
         widths=[160, 140, 50],
     )
     table(
@@ -1524,12 +1272,7 @@ def page_songs():
         [named(col(FP, "guest_artist"), "Guest"), named(meas(FP, "Guest Appearances"), "Times")],
         "Every guest who joined U2 on stage, most frequent first",
         sort=[(meas(FP, "Guest Appearances"), "Descending")],
-        title=title_measure(
-            "Title p03 guests",
-            "All ",
-            "[Guest Artists]",
-            " guests on stage, most frequent first",
-        ),
+        title=title_measure("Title p03 guests"),
         widths=[300, 60],
     )
     footer(p, 552, 704)
@@ -1539,7 +1282,7 @@ def page_songs():
 # ---------------------------------------------------------------- page 4
 def page_albums():
     p = Page("p04_albums_on_stage", "Albums")
-    page_header(p, ("Headline p04", ""), ("First Glimpse p04", ""), w=736)
+    page_header(p, w=736)
     perf = meas(FP, "Performances")
     p.add(
         "p04_album_share_columns",
@@ -1563,40 +1306,10 @@ def page_albums():
         },
         vco={"background": props(show=lit(False))},
     )
-    card_text(
-        p,
-        "p04_area_note",
-        400,
-        206,
-        376,
-        24,
-        placeholder("Annotation p04"),
-        size=13,
-        color_=T["accent"],
-        family="Segoe UI",
-        italic=True,
-    )
+    card_text(p, "p04_area_note", 400, 206, 376, 24, placeholder("Annotation p04"))
     studio = basic_filter(col("dim_album", "album_type"), ["studio"], "studio")
-    share = ext_measure(
-        FP,
-        "Album Share (no zeros)",
-        "VAR S = [Album Share %] RETURN IF ( S >= 0.0005, S )",
-        data_type="Double",
-        refs=[(FP, "Album Share %")],
-        description="Album Share % with blanks instead of 0.0% (matrix).",
-    )
-    EXT_MEASURES[FP][-1]["formatString"] = "0.0%"
-    cell = ext_measure(
-        FP,
-        "Album Share Cell",
-        "VAR S = [Album Share %] "
-        "VAR Dec = VALUE ( LEFT ( SELECTEDVALUE ( dim_date[decade] ), 4 ) ) "
-        "VAR Rel = SELECTEDVALUE ( dim_album[release_year] ) "
-        'RETURN IF ( S > 0, IF ( S < 0.0005, "< 0.1%", FORMAT ( S, "0.0%", "en-US" ) ), '
-        'IF ( NOT ISBLANK ( Dec ) && NOT ISBLANK ( Rel ) && Dec + 9 >= Rel, "0%" ) )',
-        refs=[(FP, "Album Share %")],
-        description="Matrix cell text: blank before the album existed, 0% when not played, < 0.1% when tiny.",
-    )
+    share = meas(FP, "Album Share (no zeros)")
+    cell = meas(FP, "Album Share Cell")
     p.add(
         "p04_album_decade_matrix",
         "pivotTable",
@@ -1610,12 +1323,7 @@ def page_albums():
             "Values": [named(cell, "Share")],
         },
         alt="Heatmap: share of all songs played that came from each studio album, per decade, albums in release order",
-        title=title_measure(
-            "Title p04 albums",
-            "Which albums stay: all ",
-            "[Studio Albums]",
-            " studio albums, share of songs per decade",
-        ),
+        title=title_measure("Title p04 albums"),
         filters=[studio, bool_filter(col("dim_album", "is_studio"), True, "is_studio")],
         sort=[(col("dim_album", "album_label"), "Ascending")],  # album_label sorts by album_order
         objects={
@@ -1634,14 +1342,7 @@ def page_albums():
         },
         vco={"background": props(show=lit(False))},
     )
-    card = photo_card_measure(
-        "Photo Card p04",
-        "photo_zoo_tv_1992_kiel",
-        'FORMAT ( CALCULATE ( [Promoted Album Share %], dim_tour[tour_name] = "Zoo TV" ), "0%", "en-US" )',
-        '"of the songs on Zoo TV came from Achtung Baby"',
-        refs=[(FP, "Promoted Album Share %")],
-        height=240,
-    )
+    card = photo_card_measure("Photo Card p04")
     html(
         p,
         "p04_photo_card",
@@ -1655,20 +1356,8 @@ def page_albums():
         clip=False,
     )
     promo = meas(FP, "Promoted Album Share %")
-    album = ext_measure(
-        FS,
-        "Promoted Album Label",
-        "VAR K = SELECTEDVALUE ( dim_tour[album_promoted_key] ) "
-        "RETURN IF ( NOT ISBLANK ( K ) && K <> -1, LOOKUPVALUE ( dim_album[album_label], dim_album[album_key], K ) )",
-        description="Short name of the album the tour promoted (inactive relationship, looked up by key).",
-    )
-    has_album = ext_measure(
-        FS,
-        "Has Promoted Album",
-        "VAR K = SELECTEDVALUE ( dim_tour[album_promoted_key] ) RETURN IF ( NOT ISBLANK ( K ) && K <> -1, 1, 0 )",
-        data_type="Integer",
-        description="1 for tours with a promoted album (table filter).",
-    )
+    album = meas(FS, "Promoted Album Label")
+    has_album = meas(FS, "Has Promoted Album")
     table(
         p,
         "p04_promoted_share_table",
@@ -1685,12 +1374,7 @@ def page_albums():
         "Every tour that promoted an album, in order, with the album and the share of songs that came from it",
         sort=[(col("dim_tour", "tour_name_display"), "Ascending")],  # tour_name_display sorts by tour_order
         filters=[measure_filter(has_album, 0, "promoted")],
-        title=title_measure(
-            "Title p04 tours",
-            "All ",
-            "[Tours with Promoted Album]",
-            " tours with a new album: share from it",
-        ),
+        title=title_measure("Title p04 tours"),
         widths=[24, 186, 104, 84],
         extra_objects={
             "columnFormatting": [data_bars("fact_performance.Promoted Album Share %")],
@@ -1729,7 +1413,7 @@ def page_albums():
 # ---------------------------------------------------------------- page 5
 def page_setlists():
     p = Page("p05_setlist_evolution", "Setlists")
-    page_header(p, ("Headline p05", ""), ("First Glimpse p05", ""), w=760)
+    page_header(p, w=760)
     perf = meas(FP, "Performances")
     p.add(
         "p05_song_era_heatmap",
@@ -1744,13 +1428,7 @@ def page_setlists():
             "Values": [named(perf, "Times")],
         },
         alt="Heatmap of every song by decade, most played first: brighter cells mean more performances",
-        title=title_measure(
-            "Title p05 heatmap",
-            "All ",
-            "[Distinct Songs]",
-            " songs by decade, most played first (scroll for more)",
-            [(FP, "Distinct Songs")],
-        ),
+        title=title_measure("Title p05 heatmap"),
         sort=[(perf, "Descending")],
         objects={
             "values": [gradient(perf, "fact_performance.Performances")],
@@ -1801,12 +1479,7 @@ def page_setlists():
         ],
         "Every tour, most fixed setlist first: variety = different songs divided by songs per night",
         sort=[(var, "Ascending")],
-        title=title_measure(
-            "Title p05 variety",
-            "All ",
-            "CALCULATE ( DISTINCTCOUNT ( fact_show[tour_key] ), REMOVEFILTERS ( dim_tour ) )",
-            " tours, most fixed setlist first",
-        ),
+        title=title_measure("Title p05 variety"),
         vco=subtitle("Variety = different songs ÷ songs per night; 1 = the same set every night"),
         extra_objects={"columnFormatting": [data_bars("fact_performance.Setlist Variety")]},
     )
@@ -1845,12 +1518,7 @@ def page_setlists():
         col("dim_song", "song_title"),
         named(meas(FP, "Opener Count"), "Times it opened"),
         "The three songs that opened the show most often",
-        title=title_measure(
-            "Title p05 openers",
-            "Top openers: 3 of ",
-            "[Opener Songs]",
-            " openers",
-        ),
+        title=title_measure("Title p05 openers"),
         filters=[topn_filter(col("dim_song", "song_title"), meas(FP, "Opener Count"), 3, "top3")],
         margin=28,
     )
@@ -1864,164 +1532,19 @@ def page_sphere():
     image(p, "p06_sphere_photo", "photo_sphere_2023_las_vegas.jpg", 0, 0, 520, 720, "U2 at Sphere, Las Vegas 2023")
     scrim(p, "p06_scrim_right", "right", 360, 0, 160, 720)
     scrim(p, "p06_scrim_bottom", "bottom", 0, 400, 520, 320)
-    res = ext_measure(
-        FS,
-        "Residency Callouts p06",
-        "\"<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;"
-        "color:#ECEDEF'>"
-        + svg_inline("glyph_sphere.svg", 16)
-        + " RESIDENCY · SPHERE, LAS VEGAS · 2023-24</div><div style='display:flex;gap:28px;margin-top:8px'>\" & "
-        + big(
-            'FORMAT ( CALCULATE ( [Shows], REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ), "#,0", '
-            '"en-US" )',
-            "shows",
-        )
-        + " & "
-        + big('FORMAT ( [Residency Songs per Show], "0", "en-US" )', "songs a night")
-        + " & "
-        + big('FORMAT ( [Residency Achtung Baby Share %], "0%", "en-US" )', "from Achtung Baby")
-        + ' & "</div></div>"',
-        refs=[(FS, "Shows"), (FP, "Residency Songs per Show"), (FP, "Residency Achtung Baby Share %")],
-        description="HTML: residency callouts on the Sphere photo.",
-    )
+    res = meas(FS, "Residency Callouts p06")
     html(p, "p06_residency_callouts", 32, 568, 470, 128, res, alt="Residency: shows, songs a night, Achtung Baby share")
-    page_header(p, ("Headline p06", ""), ("First Glimpse p06", ""), x=560, w=696)
+    page_header(p, x=560, w=696)
 
-    def row(label, r, t, d, fmt, maxv, suffix=""):
-        bar_ = (
-            "\"<div style='display:flex;align-items:center;gap:8px'><div style='height:10px;border-radius:2px;"
-            'background:{c};width:" & INT ( 140 * DIVIDE ( COALESCE ( {v}, 0 ), ' + maxv + " ) ) & \"px'></div><spa"
-            "n style='font-fam"
-            "ily:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:22px;color:{tc}'>\" & "
-            'FORMAT ( COALESCE ( {v}, 0 ), "' + fmt + '", "en-US" ) & "</span></div>"'
-        )
-        return (
-            "\"<div style='color:#ECEDEF;font-size:13px'>"
-            + label
-            + '</div>" & '
-            + bar_.format(c=T["accent"], v=r, tc=T["accent"])
-            + " & "
-            + bar_.format(c=T["neutral"], v=t, tc=T["text"])
-            + ' & "<div style=\'font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;color:" & '
-            + f'IF ( COALESCE ( {d}, 0 ) >= 0, "#F2A93B", "#E06666" ) & "\'>" & '
-            + f'IF ( COALESCE ( {d}, 0 ) > 0, "+", "" ) & '
-            + f'FORMAT ( COALESCE ( {d}, 0 ), "{fmt.replace("%", "")}", "en-US" ) & "{suffix}</div>"'
-        )
-
-    head = (
-        "\"<div style='display:grid;grid-template-columns:140px 1fr 1fr 110px;row-gap:12px;align-items:center;"
-        "font-family:Segoe UI'><div></div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;"
-        "color:#F2A93B'>"
-        + svg_inline("glyph_sphere.svg", 14)
-        + " RESIDENCY</div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;color:#A3A9B3'>"
-        + svg_inline("glyph_innocence_experience.svg", 14)
-        + " TOURING</div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;color:#A3A9B3'>"
-        'DIFFERENCE</div>" & '
-    )
-    h2h = ext_measure(
-        FS,
-        "Head to Head p06",
-        head
-        + row(
-            "Songs a night",
-            "[Residency Songs per Show]",
-            "[Touring Songs per Show]",
-            "[Difference Songs per Show]",
-            "0.0",
-            "30",
-        )
-        + " & "
-        + row(
-            "Different songs",
-            "[Residency Distinct Songs]",
-            "[Touring Distinct Songs]",
-            "[Difference Distinct Songs]",
-            "#,0",
-            "MAX ( [Residency Distinct Songs], [Touring Distinct Songs] )",
-        )
-        + " & "
-        + row(
-            "Achtung Baby share",
-            "[Residency Achtung Baby Share %]",
-            "[Touring Achtung Baby Share %]",
-            "[Difference Achtung Baby Share (pp)]",
-            "0%",
-            "1",
-            suffix=" pp",
-        )
-        + ' & "</div>"',
-        refs=[
-            (FP, n)
-            for n in (
-                "Residency Songs per Show",
-                "Touring Songs per Show",
-                "Difference Songs per Show",
-                "Residency Distinct Songs",
-                "Touring Distinct Songs",
-                "Difference Distinct Songs",
-                "Residency Achtung Baby Share %",
-                "Touring Achtung Baby Share %",
-                "Difference Achtung Baby Share (pp)",
-            )
-        ],
-        description="HTML: residency vs touring head-to-head with bars and differences.",
-    )
+    h2h = meas(FS, "Head to Head p06")
     html(p, "p06_head_to_head", 560, 212, 696, 188, h2h, alt="Residency versus touring: songs a night, songs, share")
     text(p, "p06_compare_label", 560, 414, 120, 18, [[("COMPARE WITH", style(9, T["muted"], weight="bold"))]])
     slicer(p, "p06_compare_slicer", 664, 404, 240, 36, col("dim_tour", "tour_name_display"), "Tours to compare with")
-    card_text(
-        p,
-        "p06_note",
-        920,
-        410,
-        336,
-        28,
-        placeholder("Annotation p06"),
-        size=13,
-        color_=T["accent"],
-        family="Segoe UI",
-        italic=True,
-    )
-    is_res = "CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0"
-    compare = 'KEEPFILTERS ( dim_tour[era] = "2015-2019 Innocence and Experience" )'
-    year_expr = (
-        "VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) "
-        "RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 )"
-    )
-    year_dec = ext_measure(
-        FS,
-        "Show Year Decimal",
-        f"IF ( {is_res}, CALCULATE ( {year_expr}, REMOVEFILTERS ( dim_tour ) ), "
-        f"IF ( ISFILTERED ( dim_tour[tour_name_display] ), {year_expr}, CALCULATE ( {year_expr}, {compare} ) ) )",
-        data_type="Double",
-        description="Show date as a decimal year: residency shows always, other shows of the compared tours.",
-    )
-    EXT_MEASURES[FS][-1]["formatString"] = "0"
-    songs = ext_measure(
-        FS,
-        "Songs in Show p06",
-        f"IF ( {is_res}, CALCULATE ( [Performances], REMOVEFILTERS ( dim_tour ) ), "
-        f"IF ( ISFILTERED ( dim_tour[tour_name_display] ), [Performances], CALCULATE ( [Performances], {compare} ) ) )",
-        data_type="Integer",
-        refs=[(FP, "Performances")],
-        description="Songs in the show: residency shows always, other shows of the compared tours (default 2015-2019).",
-    )
-    dot_colour = ext_measure(
-        FS,
-        "Show Dot Colour p06",
-        f'IF ( {is_res}, "{T["accent"]}", "{T["neutral"]}" )',
-        description="Accent for residency shows, grey for touring shows (presentation only).",
-    )
-    title = ext_measure(
-        FS,
-        "Title p06 every show",
-        '"Every show, one dot: Sphere (amber) vs " & IF ( ISFILTERED ( dim_tour[tour_name_display] ), '
-        "IF ( COUNTROWS ( VALUES ( dim_tour[tour_name_display] ) ) <= 2, "
-        'CONCATENATEX ( VALUES ( dim_tour[tour_name_display] ), dim_tour[tour_name_display], " and " ), '
-        'COUNTROWS ( VALUES ( dim_tour[tour_name_display] ) ) & " tours" ), "the 2015-2019 tours" ) & " (grey) · ri'
-        'ght-click a dot for its setlist"',
-        description="Dynamic title of the p06 every-show chart.",
-    )
+    card_text(p, "p06_note", 920, 410, 336, 28, placeholder("Annotation p06"))
+    year_dec = meas(FS, "Show Year Decimal")
+    songs = meas(FS, "Songs in Show p06")
+    dot_colour = meas(FS, "Show Dot Colour p06")
+    title = meas(FS, "Title p06 every show")
     p.add(
         "p06_every_show_scatter",
         "scatterChart",
@@ -2056,43 +1579,8 @@ def page_song_detail():
     scrim(p, "p07_scrim_left", "left", 800, 0, 240, 208)
     nav(p, 40, 6, 656)
     back_button(p, 704, 12)
-    card_body = (
-        "\"<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;"
-        "color:#F2A93B'>SONG · \" & UPPER ( COALESCE ( CALCULATE ( SELECTEDVALUE ( dim_album[album_label] ), dim_so"
-        'ng ), "not on a studio '
-        'album" ) ) & IF ( NOT ISBLANK ( SELECTEDVALUE ( dim_song[first_release_year] ) ), " (" & '
-        'SELECTEDVALUE ( dim_song[first_release_year] ) & ")" ) & "</div>'
-        "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:36px;line-height:1.05;"
-        'color:#ECEDEF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis\'>" & [Selected Song] & "</div>'
-        "<div style='display:flex;gap:30px;margin-top:12px'>\" & "
-        + big('FORMAT ( [Performances], "#,0", "en-US" )', "performances", size=30)
-        + " & "
-        + big('FORMAT ( [First Played Date], "yyyy-mm-dd", "en-US" )', "live debut", colour=T["text"], size=30)
-        + " & "
-        + big('FORMAT ( [Last Played Date], "yyyy-mm-dd", "en-US" )', "last played", colour=T["text"], size=30)
-        + " & "
-        + big('FORMAT ( [Years Since Last Played], "0", "en-US" )', "years since", colour=T["text"], size=30)
-        + ' & "</div></div>"'
-    )
-    card = ext_measure(
-        FS,
-        "Song Card p07",
-        "IF ( HASONEVALUE ( dim_song[song_title] ), "
-        + card_body
-        + ", "
-        + prompt_html("Right-click a song on the Songs page and choose Drill through → Song to see its story.")
-        + " )",
-        refs=[(FP, n) for n in ("Selected Song", "Performances", "First Played Date", "Last Played Date")]
-        + [(FP, "Years Since Last Played")],
-        description="HTML: song drill-through card, or a prompt when no single song is in context.",
-    )
-    one_song = ext_measure(
-        FS,
-        "Is One Song",
-        "IF ( HASONEVALUE ( dim_song[song_title] ), 1, 0 )",
-        data_type="Integer",
-        description="1 when exactly one song is in context (drill-through page filter).",
-    )
+    card = meas(FS, "Song Card p07")
+    one_song = meas(FS, "Is One Song")
     html(p, "p07_song_card", 40, 56, 740, 144, card, alt="The selected song: album, performances, debut, last played")
     deneb(
         p,
@@ -2142,39 +1630,10 @@ def page_song_detail():
         sort=[(col("dim_show", "show_label"), "Descending")],
         filters=[measure_filter(meas(FP, "Performances"), 0, "played"), measure_filter(one_song, 0, "one")],
         widths=[270, 140],
-        title=title_measure(
-            "Title p07 shows",
-            "Every time it was played: ",
-            "[Shows Played]",
-            " shows · right-click one for its setlist",
-        ),
+        title=title_measure("Title p07 shows"),
     )
 
-    def pos_row(label, measure, colour):
-        return (
-            f"\"<div style='display:grid;grid-template-columns:90px 1fr 56px;align-items:center;gap:8px;"
-            f"margin:6px 0'><span style='color:#ECEDEF;font-size:13px'>{label}</span>"
-            f"<div style='height:12px;border-radius:2px;background:{colour};width:\" & "
-            f"FORMAT ( MAX ( 100 * COALESCE ( DIVIDE ( [{measure}], [Performances] ), 0 ), "
-            f'IF ( [{measure}] > 0, 1, 0 ) ), "0.0", "en-US" ) & "%\'></div>'
-            "<span style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:18px;color:#ECEDEF'>\" & "
-            f'FORMAT ( COALESCE ( DIVIDE ( [{measure}], [Performances] ), 0 ), "0%", "en-US" ) & "</span></div>"'
-        )
-
-    pos = ext_measure(
-        FS,
-        "Position p07",
-        "IF ( HASONEVALUE ( dim_song[song_title] ), \"<div style='font-family:Segoe UI'>\" & "
-        + pos_row("Opener", "Opener Count", T["d2"])
-        + " & "
-        + pos_row("Encore", "Encore Count", T["d4"])
-        + " & "
-        + pos_row("Closer", "Closer Count", T["d6"])
-        + " & \"<div style='color:#A3A9B3;font-size:11px;margin-top:6px'>Share of the song's performances; the rest "
-        'were in the main set.</div></div>", "" )',
-        refs=[(FP, "Opener Count"), (FP, "Encore Count"), (FP, "Closer Count"), (FP, "Performances")],
-        description="HTML: where in the night the song is played (opener, encore, closer shares).",
-    )
+    pos = meas(FS, "Position p07")
     text(
         p,
         "p07_position_title",
@@ -2205,127 +1664,11 @@ def page_show_detail():
     scrim(p, "p08_scrim_left", "left", 900, 0, 190, 720)
     nav(p, 40, 6, 656)
     back_button(p, 704, 12)
-    header = (
-        "\"<div style='color:#F2A93B;font-size:10px;letter-spacing:1.4px;font-weight:700;padding-top:8px'>\" & "
-        'UPPER ( S ) & "</div>"'
-    )
-    pill = "<span style='font-size:10px;border-radius:8px;padding:0 5px;white-space:nowrap;"
-    row = (
-        "VAR Dim = fact_performance[is_snippet] || fact_performance[is_tape] RETURN "
-        '"<div style=\'display:flex;align-items:center;gap:8px;padding:2px 0;opacity:" & IF ( Dim, "0.55", "1"'
-        " ) & "
-        "\"'><span style='color:#A3A9B3;width:20px;text-align:right;flex:none'>\" & P & \"</span>"
-        "<span style='color:#ECEDEF;overflow:hidden;text-overflow:ellipsis;white-space:nowrap'>\" & "
-        "dim_song[song_title] & \"</span><span style='margin-left:auto;display:flex;gap:4px;flex:none'>\" & "
-        f'IF ( fact_performance[is_live_debut], "{pill}color:#F2A93B;border:1px solid #F2A93B\'>★ debut</span>" ) & '
-        f'IF ( fact_performance[is_cover], "{pill}color:#A3A9B3;border:1px solid #2A2F38\'>cover</span>" ) & '
-        "IF ( NOT ISBLANK ( fact_performance[guest_artist] ), "
-        f'"{pill}color:#A3A9B3;border:1px solid #2A2F38\'>with " & fact_performance[guest_artist] & "</span>" ) & '
-        f'IF ( fact_performance[is_tape], "{pill}color:#A3A9B3;border:1px dashed #6E7581\'>tape</span>" ) & '
-        f'IF ( fact_performance[is_snippet], "{pill}color:#A3A9B3;border:1px dashed #6E7581\'>snippet</span>" ) & '
-        '"</span></div>"'
-    )
     # songs in setlist order; a set header is printed whenever the set changes from the previous position
-    songs = (
-        "CONCATENATEX ( SetRows, "
-        "VAR P = fact_performance[setlist_position] VAR S = fact_performance[set_name] "
-        "VAR PrevP = MAXX ( FILTER ( SetRows, fact_performance[setlist_position] < P ), fact_performance[setlist_posit"
-        "ion] ) "
-        "VAR PrevS = MAXX ( FILTER ( SetRows, fact_performance[setlist_position] = PrevP ), fact_performance[set_na"
-        "me] ) "
-        "RETURN IF ( ISBLANK ( PrevP ) || S <> PrevS, " + header + " ) & ( " + row + " )" + ', "", '
-        "fact_performance[setlist_position], ASC )"
-    )
 
-    def stat(value, label, colour=T["text"]):
-        return (
-            "\"<div style='margin-top:14px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;"
-            f"font-size:26px;line-height:1;color:{colour}'>\" & {value} & \"</div><div style='font-size:12px;"
-            f"color:#A3A9B3'>{label}</div></div>\""
-        )
-
-    stub_stats = (
-        stat(
-            'FORMAT ( [Performances], "#,0", "en-US" )',
-            'songs" & IF ( Extras > 0, " + " & Extras & IF ( Tapes > 0 && Snips = 0, IF ( Tapes = 1, " tape", '
-            '" tapes" ), IF ( Snips > 0 && Tapes = 0, IF ( Snips = 1, " snippet", " snippets" ), '
-            '" tapes/snippets" ) ) ) & "',
-        )
-        + " & "
-        + "IF ( NoTour, \"<div style='margin-top:14px;font-size:12px;color:#A3A9B3'>One-off show, outside a tour</"
-        'div>", '
-        + stat('FORMAT ( [Tour Avg Songs per Show], "0.0", "en-US" )', "songs a night on this tour")
-        + " )"
-        + " & "
-        + stat('FORMAT ( COALESCE ( [Live Debuts], 0 ), "#,0", "en-US" )', "live debuts ★", T["accent"])
-        + " & "
-        + stat('FORMAT ( COALESCE ( [Covers Played], 0 ), "#,0", "en-US" )', "covers")
-    )
-    ticket_body = (
-        "\"<div style='display:flex;background:#20242C;border-radius:10px;overflow:hidden;height:600px;"
-        "font-family:Segoe UI'><div style='width:230px;padding:18px;border-right:2px dashed #0F1115;"
-        "background:#262A33'>\" & SUBSTITUTE ( SUBSTITUTE ( CALCULATE ( [Tour Icon SVG], fact_show ), "
-        "\"width='48'\", \"width='40'\" ), \"height='48'\", \"height='40'\" ) & "
-        "\"<div style='color:#F2A93B;font-size:11px;letter-spacing:1.5px;font-weight:700;margin-top:10px'>\" & "
-        'UPPER ( CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name_display] ), fact_show ) ) & "</div>'
-        "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:36px;line-height:1.05;"
-        'color:#ECEDEF\'>" & UPPER ( FORMAT ( D, "d mmm", "en-US" ) ) & "<br>" & YEAR ( D ) & "</div>'
-        "<div style='margin-top:10px;font-size:12.5px;color:#A3A9B3'><b style='color:#ECEDEF'>\" & "
-        'CALCULATE ( SELECTEDVALUE ( dim_venue[venue_name] ), fact_show ) & "</b><br>" & '
-        'CALCULATE ( SELECTEDVALUE ( dim_venue[city_name] ), fact_show ) & ", " & '
-        'CALCULATE ( SELECTEDVALUE ( dim_venue[country_name] ), fact_show ) & "</div>" & '
-        + stub_stats
-        + " & \"</div><div style='flex:1;padding:16px 20px;columns:2;column-gap:28px;font-size:12px'>\" & "
-        + songs
-        + ' & "</div></div>"'
-    )
-    ticket = ext_measure(
-        FS,
-        "Ticket p08",
-        "VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) "
-        "VAR SetRows = CALCULATETABLE ( SUMMARIZE ( fact_performance, fact_performance[setlist_position], "
-        "fact_performance[set_name], dim_song[song_title], fact_performance[is_live_debut], "
-        "fact_performance[is_cover], fact_performance[guest_artist], fact_performance[is_snippet], "
-        "fact_performance[is_tape] ) ) "
-        "VAR Tapes = COUNTROWS ( FILTER ( SetRows, fact_performance[is_tape] ) ) "
-        "VAR Snips = COUNTROWS ( FILTER ( SetRows, fact_performance[is_snippet] && NOT fact_performance[is_tape] ) ) "
-        "VAR Extras = Tapes + Snips "
-        'VAR NoTour = CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name] ), fact_show ) = "(No tour)" '
-        "RETURN IF ( HASONEVALUE ( dim_show[show_label] ), "
-        + ticket_body
-        + ", "
-        + prompt_html(
-            "Right-click a show in a shows list (Road page, Sphere dots, or a song's list) and choose "
-            "Drill through → Show."
-        )
-        + " )",
-        refs=[
-            (FS, "Tour Icon SVG"),
-            (FP, "Performances"),
-            (FP, "Tour Avg Songs per Show"),
-            (FP, "Live Debuts"),
-            (FP, "Covers Played"),
-        ],
-        description="HTML: show ticket stub with the setlist in position order, or a prompt when no show is selected.",
-    )
+    ticket = meas(FS, "Ticket p08")
     html(p, "p08_ticket", 40, 56, 840, 616, ticket, alt="Ticket for the selected show: tour, date, venue, setlist")
-    ext_measure(
-        FS,
-        "Setlist URL p08",
-        "IF ( HASONEVALUE ( dim_show[show_label] ), SELECTEDVALUE ( dim_show[setlist_url] ) )",
-        description="Web link of the selected show on setlist.fm.",
-    )
-    link = ext_measure(
-        FS,
-        "Setlist Link p08",
-        "IF ( NOT ISBLANK ( [Setlist URL p08] ), \"<a href='\" & [Setlist URL p08] & \"' target='_blank' "
-        "style='font-family:Segoe UI;font-size:15px;color:#F2A93B;text-decoration:none;font-weight:600'>"
-        'Open this show on setlist.fm ↗</a>" )',
-        description="HTML: link to the selected show on setlist.fm.",
-    )
-    EXT_MEASURES[FS][-1]["references"] = {
-        "measures": [{"schema": "extension", "entity": FS, "name": "Setlist URL p08"}]
-    }
+    link = meas(FS, "Setlist Link p08")
     html(p, "p08_setlist_link", 40, 680, 400, 28, link, alt="Open this show on setlist.fm", links=True)
     return p
 
@@ -2347,14 +1690,7 @@ def page_about():
     for i, f in enumerate(tiles):
         image(p, f"p09_mosaic_{i + 1}", f, i * 160, 56, 160, 144, f"era photo {i + 1}", scaling="Fill")
     text(p, "p09_headline", 40, 216, 900, 44, [[("About the data, and the photos", style(24, T["text"], DIN, "bold"))]])
-    author = ext_measure(
-        FS,
-        "Author p09",
-        "\"<div style='font-family:Segoe UI;font-size:16px;color:#ECEDEF'>Built by <b>Vinicius Baccarini</b> · "
-        "<a href='https://www.linkedin.com/in/vin%C3%ADcius-baccarini/' target='_blank' "
-        "style='color:#F2A93B;text-decoration:none;font-weight:600'>LinkedIn ↗</a></div>\"",
-        description="HTML: author line with LinkedIn link.",
-    )
+    author = meas(FS, "Author p09")
     html(p, "p09_author", 40, 262, 560, 28, author, alt="Built by Vinicius Baccarini, LinkedIn link", links=True)
     text(
         p,
@@ -2381,26 +1717,7 @@ def page_about():
             ],
         ],
     )
-    big_m = {"colour": T["text"], "size": 28, "label_colour": T["muted"]}
-    lim = ext_measure(
-        FS,
-        "Limitations p09",
-        "\"<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;"
-        "color:#F2A93B'>LIMITATIONS</div><div style='display:flex;gap:30px;margin-top:6px'>\" & "
-        + big('FORMAT ( [Shows] - [Shows with Setlist], "#,0", "en-US" )', "shows without a setlist", **big_m)
-        + " & "
-        + big(
-            'IF ( [Unmapped Song Share %] < 0.001, "< 0.1%", FORMAT ( [Unmapped Song Share %], "0.0%", "en-US" ) )',
-            "performances not matched to a song",
-            **big_m,
-        )
-        + " & "
-        + big('FORMAT ( [Last Refresh Date], "yyyy-mm-dd", "en-US" )', "last refresh", **big_m)
-        + " & \"</div><div style='font-size:12px;color:#A3A9B3;margin-top:10px'>Early club shows (1976-1980) are "
-        'often missing. Snippets and tapes are flagged and not counted as performances.</div></div>"',
-        refs=[(FS, "Shows"), (FS, "Shows with Setlist"), (FP, "Unmapped Song Share %"), (FS, "Last Refresh Date")],
-        description="HTML: data limitations with numbers from the model.",
-    )
+    lim = meas(FS, "Limitations p09")
     html(p, "p09_limitations", 40, 440, 560, 200, lim, alt="Limitations: shows without a setlist, unmatched songs")
     credits = [
         r
@@ -2432,15 +1749,6 @@ def page_about():
 
 # ---------------------------------------------------------------- page 10
 FSP, FSB = "fact_setlist_prediction", "fact_setlist_backtest"
-KICKER = "font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B"
-
-
-def ext_refs(measure, model=(), report=()):
-    """Set the references of the last report measure: model measures (entity, name) and report measures (names)."""
-    refs = [{"entity": e, "name": n} for e, n in model]
-    refs += [{"schema": "extension", "entity": FS, "name": n} for n in report]
-    EXT_MEASURES[FS][-1]["references"] = {"measures": refs}
-    return measure
 
 
 def page_next_tour():
@@ -2450,196 +1758,12 @@ def page_next_tour():
     p = Page("p10_next_tour", "2027")  # short tab label: 8 tabs share navs as narrow as 656 px
     lw, rx, rw = 656, 736, 520  # left column width (x 40), right column x and width
     nav(p, 40, 6, 696)  # wider than the column: with a selected tab, 656 px cut "Overview" (T-52)
-    asof = "VAR AsOf = [Prediction As-Of Date Key] "
-    picks = (
-        "CALCULATETABLE ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], dim_song[release_role_2027], "
-        "fact_setlist_prediction[predicted_position], fact_setlist_prediction[predicted_set], "
-        "fact_setlist_prediction[model_part], fact_setlist_prediction[probability], "
-        "fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[as_of_date_key] = AsOf"
-    )
-    # promoted album of the predicted tour (Get Back to Now, the album's bonus track, has no album in dim_song)
-    ext_measure(
-        FS,
-        "Promoted Album p10",
-        "VAR K = CALCULATE ( SELECTEDVALUE ( dim_tour[album_promoted_key] ), REMOVEFILTERS (), "
-        "fact_setlist_prediction ) "
-        "RETURN CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K )",
-        description="Title of the album the predicted tour promotes (presentation only).",
-    )
-    ext_measure(
-        FS,
-        "Predicted Tour p10",
-        "CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name_display] ), REMOVEFILTERS (), fact_setlist_prediction )",
-        description="Display name of the tour the prediction is for (presentation only).",
-    )
-    for name, role, what in (
-        ("New Album Songs Predicted p10", "promoted_album", "songs of the promoted album"),
-        ("New EP Songs Predicted p10", "companion_release", "songs of the companion releases (the 2026 EPs)"),
-    ):
-        ext_measure(
-            FS,
-            name,
-            f'CALCULATE ( [New Songs Predicted], dim_song[release_role_2027] = "{role}" )',
-            data_type="Integer",
-            description=f"Predicted setlist slots for {what}.",
-        )
-        ext_refs(None, [(FSP, "New Songs Predicted")])
-    n = 'FORMAT ( [Expected Songs per Show], "#,0", "en-US" )'
-    ext_measure(
-        FS,
-        "Headline p10",
-        f'"Our guess for 2027: " & {n} & " songs a night, " & FORMAT ( [New Songs Predicted], "#,0", "en-US" ) & '
-        '" of them new"',
-        description="Finding-style headline of page 10 (request: promote to the model, data-analyst).",
-    )
-    ext_refs(None, [(FSP, "Expected Songs per Show"), (FSP, "New Songs Predicted")])
-    ext_measure(
-        FS,
-        "First Glimpse p10",
-        asof + "VAR Obs = [Shows Observed] "
-        "VAR Opener = MAXX ( FILTER ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], "
-        "fact_setlist_prediction[predicted_position], fact_setlist_prediction[as_of_date_key] ), "
-        "fact_setlist_prediction[predicted_position] = 1 && fact_setlist_prediction[as_of_date_key] = AsOf ), "
-        "dim_song[song_title] ) "
-        'RETURN IF ( Obs = 0, "Before the first show", "After " & FORMAT ( Obs, "#,0", "en-US" ) & " shows" ) & '
-        '", our model picks <b>" & FORMAT ( [New Album Songs Predicted p10], "#,0", "en-US" ) & "</b> songs from " & '
-        '[Promoted Album p10] & ", <b>" & FORMAT ( [New EP Songs Predicted p10], "#,0", "en-US" ) & '
-        '"</b> from the EPs and <b>" & FORMAT ( [Catalog Songs Predicted], "#,0", "en-US" ) & "</b> older ones" & '
-        'IF ( NOT ISBLANK ( Opener ), ", opening with <b>" & Opener & "</b>" ) & '
-        '". On the album tours since Elevation, <b>" & FORMAT ( [Model Precision at N], "0%", "en-US" ) & '
-        '"</b> of its picks became core songs, vs <b>" & FORMAT ( [Baseline Precision at N], "0%", "en-US" ) & '
-        '"</b> for repeating the last album tour."',
-        description="Intro paragraph of page 10 with the key numbers in bold (request: promote to the model).",
-    )
-    ext_refs(
-        None,
-        [
-            (FSP, "Prediction As-Of Date Key"),
-            (FSP, "Shows Observed"),
-            (FSP, "Catalog Songs Predicted"),
-            (FSB, "Model Precision at N"),
-            (FSB, "Baseline Precision at N"),
-        ],
-        ["New Album Songs Predicted p10", "Promoted Album p10", "New EP Songs Predicted p10"],
-    )
-    header = ext_measure(
-        FS,
-        "Header p10",
-        "\"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;"
-        'font-weight:600;max-height:72px;overflow:hidden\'>" & [Headline p10] & "</div>'
-        "<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;"
-        'max-height:57px;overflow:hidden\'>" & [First Glimpse p10] & "</div>"',
-        description="HTML: page headline and intro paragraph.",
-    )
-    ext_refs(None, report=["Headline p10", "First Glimpse p10"])
+    header = meas(FS, "Header p10")
     html(p, "p10_headline", 40, 54, lw, 144, header, alt="Page headline and introduction")
 
     # ---- predicted setlist ticket (anchor): header band with the tour glyph and numbers, setlist in two columns
-    def stat(value, label, colour=T["text"]):
-        return (
-            "\"<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:26px;line-height:1;"
-            f"color:{colour}'>\" & {value} & \"</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px;"
-            f"white-space:nowrap'>{label}</div></div>\""
-        )
 
-    pill = "font-size:9px;font-weight:700;letter-spacing:.5px;border-radius:7px;padding:0 4px;flex:none;"
-    row = (
-        "VAR Pos = fact_setlist_prediction[predicted_position] VAR Pr = fact_setlist_prediction[probability] "
-        'VAR IsNew = fact_setlist_prediction[model_part] = "new" '
-        'VAR Bar = IF ( IsNew, "' + T["accent"] + '", "' + T["d1"] + '" ) '
-        "RETURN \"<div style='display:flex;align-items:center;gap:6px;min-height:21px;break-inside:avoid'>"
-        '<div style=\'width:16px;text-align:right;color:#A3A9B3;flex:none\'>" & COALESCE ( Pos, "·" ) & "</div>'
-        '<div style=\'flex:1;color:#ECEDEF;line-height:1.2\'>" & dim_song[song_title] & "</div>" & '
-        f"IF ( IsNew, \"<div style='{pill}color:#F2A93B;border:1px solid #F2A93B'>NEW · \" & "
-        'IF ( dim_song[release_role_2027] = "companion_release", "EP", "ALBUM" ) & "</div>" ) & '
-        "\"<div style='width:34px;height:6px;background:#2A2F38;border-radius:3px;flex:none'><div style='height:6px;"
-        'border-radius:3px;background:" & Bar & ";width:" & MAX ( 1, INT ( 34 * Pr ) ) & "px\'></div></div>'
-        '<div style=\'width:28px;text-align:right;color:#ECEDEF;flex:none\'>" & FORMAT ( Pr, "0%", "en-US" ) & '
-        '"</div></div>"'
-    )
-    set_header = (
-        "\"<div style='color:#F2A93B;font-size:10px;letter-spacing:1.4px;font-weight:700;padding:4px 0 2px'>\" & "
-        'IF ( S = "encore", "ENCORE", "MAIN SET" ) & "</div>"'
-    )
-    # songs in predicted order; a set header whenever the set changes (in-tour rows have no position: by chance)
-    key = "COALESCE ( fact_setlist_prediction[predicted_position], 1000 - fact_setlist_prediction[probability] )"
-    songs = (
-        "CONCATENATEX ( PickRows, "
-        f"VAR K = {key} "
-        "VAR S = fact_setlist_prediction[predicted_set] "
-        f"VAR PrevK = MAXX ( FILTER ( PickRows, {key} < K ), {key} ) "
-        f"VAR PrevS = MAXX ( FILTER ( PickRows, {key} = PrevK ), fact_setlist_prediction[predicted_set] ) "
-        "RETURN IF ( NOT ISBLANK ( S ) && ( ISBLANK ( PrevK ) || S <> PrevS ), " + set_header + " ) & ( " + row + " ), "
-        f'"", {key}, ASC )'
-    )
-    glyph = svg_inline("glyph_greatest_show_2027.svg", 36)
-    opener_p = (
-        "FORMAT ( CALCULATE ( [Predicted Probability], fact_setlist_prediction[predicted_position] = 1 ), "
-        '"0%", "en-US" )'
-    )
-    band = (
-        "\"<div style='display:flex;gap:16px;align-items:center;padding:12px 16px;background:#262A33;"
-        f"border-bottom:2px dashed #0F1115'>{glyph}<div style='flex:1'><div style='{KICKER}'>\" & "
-        "UPPER ( [Predicted Tour p10] ) & \"</div><div style='font-size:11px;color:#A3A9B3;margin-top:2px'>"
-        'Predicted setlist · " & IF ( [Shows Observed] = 0, "before the first show", "after " & '
-        'FORMAT ( [Shows Observed], "#,0", "en-US" ) & " shows" ) & " · as of " & '
-        'FORMAT ( [Prediction As-Of Date], "yyyy-mm-dd", "en-US" ) & "</div></div>" & '
-        + stat(n, "songs a night")
-        + " & "
-        + stat(
-            'FORMAT ( [New Songs Predicted], "#,0", "en-US" )',
-            'new: " & FORMAT ( [New Album Songs Predicted p10], "#,0", "en-US" ) & " album · " & '
-            'FORMAT ( [New EP Songs Predicted p10], "#,0", "en-US" ) & " EP',
-            T["accent"],
-        )
-        + " & "
-        + stat('FORMAT ( [Catalog Songs Predicted], "#,0", "en-US" )', "older songs")
-        + ' & "</div>"'
-    )
-    swatch = "display:inline-block;width:14px;height:6px;border-radius:3px;background:"
-    legend = (
-        "\"<div style='display:flex;gap:16px;font-size:10px;color:#A3A9B3;margin:0 0 6px'>"
-        f"<span><span style='{swatch}#F2A93B'></span> new 2026 song (NEW tag)</span>"
-        f"<span><span style='{swatch}#6FA8DC'></span> older song</span>"
-        '<span>bar and % = chance it is a core song (opener: " & ' + opener_p + ' & ")</span></div>"'
-    )
-    footnote = (
-        "\"<div style='font-size:10.5px;line-height:1.4;color:#A3A9B3;margin-top:8px;border-top:1px solid #2A2F38;"
-        "padding-top:6px'>Order is approximate: each older song sits where it played on the previous album tour, new "
-        "songs where that tour placed its new songs. The % is the chance of being a core song (played at half the "
-        "shows or more); older songs' chances are not rescaled, so they do not add up to \" & " + n + ' & ". The list '
-        'is the top " & ' + n + ' & ", with new and older slots filled separately.</div>"'
-    )
-    ticket = ext_measure(
-        FS,
-        "Ticket p10",
-        asof + "VAR PickRows = " + picks + ", fact_setlist_prediction[predicted_in_setlist] = TRUE () ) "
-        "RETURN IF ( ISEMPTY ( PickRows ), \"<div style='font-family:Segoe UI;color:#A3A9B3;font-size:14px'>"
-        'No prediction in the current selection.</div>", '
-        "\"<div style='background:#20242C;border-radius:10px;overflow:hidden;font-family:Segoe UI;font-size:12px'>\" & "
-        + band
-        + " & \"<div style='padding:10px 16px 12px'>\" & "
-        + legend
-        + " & \"<div style='columns:2;column-gap:24px'>\" & "
-        + songs
-        + ' & "</div>" & '
-        + footnote
-        + ' & "</div></div>" )',
-        description="HTML: predicted setlist ticket (tour, numbers, songs in predicted order with chance bars, notes).",
-    )
-    ext_refs(
-        None,
-        [
-            (FSP, "Prediction As-Of Date Key"),
-            (FSP, "Prediction As-Of Date"),
-            (FSP, "Shows Observed"),
-            (FSP, "Expected Songs per Show"),
-            (FSP, "New Songs Predicted"),
-            (FSP, "Catalog Songs Predicted"),
-            (FSP, "Predicted Probability"),
-        ],
-        ["Predicted Tour p10", "New Album Songs Predicted p10", "New EP Songs Predicted p10"],
-    )
+    ticket = meas(FS, "Ticket p10")
     html(
         p,
         "p10_setlist_ticket",
@@ -2653,39 +1777,10 @@ def page_next_tour():
     )
 
     # ---- new material: all 25 songs of the 2026 releases with their chance
-    release = ext_measure(
-        FS,
-        "Release p10",
-        "VAR K = SELECTEDVALUE ( dim_song[album_key] ) "
-        "VAR A = CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K ) "
-        "RETURN IF ( HASONEVALUE ( dim_song[song_title] ), "
-        'IF ( ISBLANK ( A ) || K = -1, [Promoted Album p10] & " (bonus)", A ) )',
-        description="Release of a 2026 song: its album, or the promoted album for its bonus track (presentation only).",
-    )
-    ext_refs(None, report=["Promoted Album p10"])
-    picked = ext_measure(
-        FS,
-        "In Setlist p10",
-        'IF ( HASONEVALUE ( dim_song[song_title] ), IF ( [Predicted Songs] > 0, "✓ picked", "" ) )',
-        description="Text marker for songs in the predicted setlist (second cue next to the colour).",
-    )
-    ext_refs(None, [(FSP, "Predicted Songs")])
-    song_colour = ext_measure(
-        FS,
-        "Song Colour p10",
-        f'IF ( [Predicted Songs] > 0, "{T["accent"]}", "{T["text"]}" )',
-        description="Accent for picked songs (presentation only).",
-    )
-    ext_refs(None, [(FSP, "Predicted Songs")])
-    new_title = ext_measure(
-        FS,
-        "Title p10 new songs",
-        '"All " & FORMAT ( CALCULATE ( [Candidate Songs], NOT ISBLANK ( dim_song[release_role_2027] ) ), "#,0", '
-        '"en-US" ) & " new songs, by release: " & FORMAT ( [New Songs Predicted], "#,0", "en-US" ) & '
-        '" make the setlist"',
-        description="Visual title with the total (presentation only).",
-    )
-    ext_refs(None, [(FSP, "Candidate Songs"), (FSP, "New Songs Predicted")])
+    release = meas(FS, "Release p10")
+    picked = meas(FS, "In Setlist p10")
+    song_colour = meas(FS, "Song Colour p10")
+    new_title = meas(FS, "Title p10 new songs")
     chance = named(meas(FSP, "Predicted Probability"), "Chance")
     new_fields = [
         named(release, "Release"),
@@ -2728,101 +1823,16 @@ def page_next_tour():
         },
     )
 
-    def tie_count(role, p_var, picked_only):
-        cond = "fact_setlist_prediction[predicted_in_setlist] && " if picked_only else ""
-        return (
-            f'COUNTROWS ( FILTER ( R, dim_song[release_role_2027] = "{role}" && {cond}'
-            f"ROUND ( fact_setlist_prediction[probability], 6 ) = ROUND ( {p_var}, 6 ) ) )"
-        )
-
-    def last_pick(role):
-        return (
-            f'MINX ( FILTER ( R, dim_song[release_role_2027] = "{role}" && '
-            "fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[probability] )"
-        )
-
-    ties = ext_measure(
-        FS,
-        "Ties Note p10",
-        asof + "VAR R = " + picks + ", REMOVEFILTERS ( dim_song ), NOT ISBLANK ( dim_song[release_role_2027] ) ) "
-        f"VAR PA = {last_pick('promoted_album')} VAR PE = {last_pick('companion_release')} "
-        f"VAR TA = {tie_count('promoted_album', 'PA', False)} VAR KA = {tie_count('promoted_album', 'PA', True)} "
-        f"VAR TE = {tie_count('companion_release', 'PE', False)} VAR KE = {tie_count('companion_release', 'PE', True)} "
-        "VAR TieA = TA > KA VAR TieE = TE > KE "
-        'RETURN IF ( TieA || TieE, "Toss-ups the model cannot settle: " & '
-        'IF ( TieA, KA & " of the " & TA & " album songs tied at " & FORMAT ( PA, "0%", "en-US" ) & " got a slot" ) & '
-        'IF ( TieA && TieE, ", and " ) & '
-        'IF ( TieE, KE & " of the " & TE & " EP songs tied at " & FORMAT ( PE, "0%", "en-US" ) & '
-        'IF ( TieA, "", " got a slot" ) ) & ". Which ones is arbitrary.", '
-        '"No ties among the new-song picks." )',
-        description="Annotation: new songs whose slot is decided by a tie in the model's score (SPEC-09 honesty note).",
-    )
-    ext_refs(None, [(FSP, "Prediction As-Of Date Key")])
-    card_text(
-        p,
-        "p10_ties_note",
-        rx,
-        236,
-        rw,
-        36,
-        ties,
-        size=12.5,
-        color_=T["accent"],
-        family="Segoe UI",
-        italic=True,
-        alt="Note on tied new songs",
-    )
+    ties = meas(FS, "Ties Note p10")
+    card_text(p, "p10_ties_note", rx, 236, rw, 36, ties, alt="Note on tied new songs")
 
     # ---- how good is this? backtest
-    pp = 'FORMAT ( [Model vs. Baseline] * 100, "+0.0;-0.0;0.0", "en-US" ) & " pp"'
-    good = ext_measure(
-        FS,
-        "Backtest Intro p10",
-        "\"<div style='display:flex;gap:14px;align-items:flex-start;font-family:Segoe UI'>"
-        "<div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;"
-        "color:#F2A93B;flex:none'>\" & " + pp + " & \"</div><div style='font-size:12px;line-height:1.4;"
-        f"color:#A3A9B3'><span style='{KICKER}'>HOW GOOD IS THIS?</span> Replayed on every album tour since Zoo TV, "
-        "knowing only what came before its first show: more of its picks became core songs (played at half the "
-        'shows or more) than with " & [Selected Baseline] & ", the best simple rule.</div></div>"',
-        description="HTML: backtest section intro with the model's lead over the baseline as a big number.",
-    )
-    ext_refs(None, [(FSB, "Model vs. Baseline"), (FSB, "Selected Baseline")])
+    good = meas(FS, "Backtest Intro p10")
     html(p, "p10_backtest_intro", rx, 280, rw, 56, good, alt="How good is the model: lead over the simple baseline")
 
     # backtest precision per method as labelled HTML bars (the native bar chart did not render at this size, T-52)
-    def method_row(m, label):
-        hi = m == "model"
-        tc = T["accent"] if hi else T["text"]
-        return (
-            "\"<div style='display:flex;align-items:center;gap:10px;height:22px'>"
-            f"<div style='width:216px;flex:none;white-space:nowrap;color:{tc};{'font-weight:700;' if hi else ''}'>"
-            f"{label}</div><div style='flex:1;height:10px'><div style='height:10px;border-radius:2px;"
-            f'background:{T["accent"] if hi else T["neutral"]};width:" & '
-            f'FORMAT ( 100 * COALESCE ( P_{m}, 0 ), "0", "en-US" ) & "%\'></div></div>'
-            "<div style='width:40px;flex:none;text-align:right;font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;"
-            f'font-size:15px;color:{tc}\'>" & FORMAT ( P_{m}, "0%", "en-US" ) & "</div></div>"'
-        )
 
-    methods = (
-        ("model", "Model"),
-        ("B1", "B1 · repeat the last album tour"),
-        ("B2", "B2 · career's most played songs"),
-        ("B3", "B3 · latest tour (Sphere for 2027)"),
-    )
-    bars = ext_measure(
-        FS,
-        "Backtest Bars p10",
-        " ".join(
-            f'VAR P_{m} = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "{m}" )'
-            for m, _ in methods
-        )
-        + " RETURN \"<div style='font-family:Segoe UI;font-size:12px'><div style='font-size:11px;color:#A3A9B3;"
-        "margin-bottom:4px'>Share of the picks that became core songs, album tours since Elevation</div>\" & "
-        + " & ".join(method_row(m, label) for m, label in methods)
-        + ' & "</div>"',
-        description="HTML: backtest precision of the model and the three baselines as labelled bars.",
-    )
-    ext_refs(None, [(FSB, "Mean Precision at N")])
+    bars = meas(FS, "Backtest Bars p10")
     html(
         p,
         "p10_backtest_bars",
@@ -2833,57 +1843,12 @@ def page_next_tour():
         bars,
         alt="Backtest precision on the album tours since Elevation: the model against the three simple baselines",
     )
-    ei = ext_measure(
-        FS,
-        "Closest Analog Note p10",
-        'VAR EI = "eXPERIENCE + iNNOCENCE Tour" '
-        "VAR M = CALCULATE ( [Model Precision at N], dim_tour[tour_name_display] = EI ) "
-        "VAR B = CALCULATE ( [Baseline Precision at N], dim_tour[tour_name_display] = EI ) "
-        'RETURN IF ( NOT ISBLANK ( M ), "On the e+i tour (2018), the closest match to 2027 with a new album next to '
-        'a companion record, the model " & '
-        'IF ( ABS ( M - B ) < 0.005, "only tied", IF ( M > B, "beat", "lost to" ) ) & '
-        '" " & [Selected Baseline] & ": " & FORMAT ( M, "0%", "en-US" ) & " vs " & FORMAT ( B, "0%", "en-US" ) & "." )',
-        description="Annotation: the model against the baseline on the closest analog tour (SPEC-09 honesty note).",
-    )
-    ext_refs(None, [(FSB, "Model Precision at N"), (FSB, "Baseline Precision at N"), (FSB, "Selected Baseline")])
-    card_text(
-        p,
-        "p10_analog_note",
-        rx,
-        456,
-        rw,
-        36,
-        ei,
-        size=12.5,
-        color_=T["accent"],
-        family="Segoe UI",
-        italic=True,
-        alt="Note on the closest analog tour",
-    )
+    ei = meas(FS, "Closest Analog Note p10")
+    card_text(p, "p10_analog_note", rx, 456, rw, 36, ei, alt="Note on the closest analog tour")
 
     # ---- from the first show on: predicted vs played, and how the chances move (empty until the first show)
-    started = ext_measure(
-        FS,
-        "Tour Started p10",
-        "CALCULATE ( [Shows Observed], REMOVEFILTERS ( dim_date ) )",
-        data_type="Integer",
-        description="Shows of the predicted tour played at the latest prediction (0 before the first show).",
-    )
-    ext_refs(None, [(FSP, "Shows Observed")])
-    tracker = ext_measure(
-        FS,
-        "Tracker Intro p10",
-        "VAR Obs = [Tour Started p10] VAR H = CALCULATE ( [Hit Rate], REMOVEFILTERS ( dim_date ) ) "
-        "RETURN \"<div style='font-family:Segoe UI;font-size:12px;line-height:1.4;color:#A3A9B3'>"
-        f"<span style='{KICKER}'>ONCE THE TOUR STARTS</span> \" & IF ( Obs = 0 || ISBLANK ( H ), "
-        '"No show of the tour yet, so these charts are empty. After each show they compare the predicted setlist '
-        'with what was played and follow how the chances move.", '
-        '"After <b style=\'color:#ECEDEF\'>" & FORMAT ( Obs, "#,0", "en-US" ) & '
-        '"</b> shows, <b style=\'color:#ECEDEF\'>" & FORMAT ( H, "0%", "en-US" ) & '
-        '"</b> of the predicted songs were played per show, on average." ) & "</div>"',
-        description="HTML: in-tour section intro, an empty-state message before the first show.",
-    )
-    ext_refs(None, [(FSP, "Hit Rate")], ["Tour Started p10"])
+    started = meas(FS, "Tour Started p10")
+    tracker = meas(FS, "Tracker Intro p10")
     html(p, "p10_tracker_intro", rx, 500, rw, 44, tracker, alt="Once the tour starts: predicted versus played")
 
     def line(vname, x, y_field, alt, title, series=None, filters=None):
@@ -3018,12 +1983,8 @@ def write_report(page_names):
     rj["resourcePackages"] = pk
     rj["publicCustomVisuals"] = sorted(set(rj.get("publicCustomVisuals", [])) | {HTML, DENEB})
     (DEF / "report.json").write_text(json.dumps(rj, indent=2, ensure_ascii=False), encoding="utf-8")
-    ext = {
-        "$schema": S_EXT,
-        "name": "extension",
-        "entities": [{"name": e, "measures": ms} for e, ms in EXT_MEASURES.items()],
-    }
-    (DEF / "reportExtensions.json").write_text(json.dumps(ext, indent=2, ensure_ascii=False), encoding="utf-8")
+    # no report-level measures (Publish to web rejects them): every measure lives in sm_u2_live
+    (DEF / "reportExtensions.json").unlink(missing_ok=True)
     pages = {"$schema": S_PAGES, "pageOrder": page_names, "activePageName": page_names[0]}
     (DEF / "pages" / "pages.json").write_text(json.dumps(pages, indent=2), encoding="utf-8")
     # remove page folders that are no longer generated
@@ -3033,15 +1994,9 @@ def write_report(page_names):
 
 
 GLYPH_PATHS = read_csv(IMAGES / "glyph_paths.csv")
-TOURS_SEED = read_csv(ROOT / "seeds" / "tours.csv")
-SPIKE_JPEG = ""
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--spike-jpeg", help="path of a tiny JPEG inlined as base64 in the spike measure")
-    a = ap.parse_args()
-    if a.spike_jpeg:
-        SPIKE_JPEG = __import__("base64").b64encode(Path(a.spike_jpeg).read_bytes()).decode()
+    argparse.ArgumentParser(description=__doc__).parse_args()
     order = []
     builders = [
         page_overview,
@@ -3058,7 +2013,7 @@ if __name__ == "__main__":
     ]
     for b in builders:
         write_page(b(), order)
-    # built last so the report measures of pages 1-9 keep their place; shown before About in the navigation
+    # shown before About in the navigation
     order.remove("p10_next_tour")
     order.insert(order.index("p09_about"), "p10_next_tour")
     write_report(order)
@@ -3067,6 +2022,4 @@ if __name__ == "__main__":
         order,
         "| registered images:",
         len(REGISTERED),
-        "| extension measures:",
-        sum(len(v) for v in EXT_MEASURES.values()),
     )

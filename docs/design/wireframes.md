@@ -255,7 +255,7 @@ column (528 px). Built straight in `scripts/gen_report.py`; Vini reviews the ren
 | Element | x, y, w, h | Tag | Fields | Q |
 | --- | --- | --- | --- | --- |
 | `p10_nav` | 40, 6, 696, 44 | NAT page navigator | page 10 appears as "2027", before About (T-52: 8 tabs, 9 pt, no cell padding; p07/p08 navs widened to 656; p10 nav 696 because 656 cut "Overview" with a selected tab, right column moved to x 736) | — |
-| `p10_headline` | 40, 54, 656, 144 | HTML | `Headline p10`, `First Glimpse p10` (report measures from `Expected Songs per Show`, `New Songs Predicted`, `Catalog Songs Predicted`, `Model/Baseline Precision at N`; **request** to promote to the model) | Q12 |
+| `p10_headline` | 40, 54, 656, 144 | HTML | `Headline p10`, `First Glimpse p10` (model measures, folder Report\p10 2027, built from `Expected Songs per Show`, `New Songs Predicted`, `Catalog Songs Predicted`, `Model/Baseline Precision at N`; **request** to promote to the model) | Q12 |
 | `p10_setlist_ticket` | 40, 208, 656, 480 | HTML (anchor) | `Ticket p10`: `fact_setlist_prediction` rows of the latest as-of date with `predicted_in_setlist`, in `predicted_position` order, set header when `predicted_set` changes; per song position, title, NEW · ALBUM/EP tag (`model_part`, `dim_song[release_role_2027]`), chance bar and % (`probability`); band with glyph, tour, as-of date, `Expected Songs per Show`, `New Songs Predicted` (album/EP split), `Catalog Songs Predicted`; footnote: order approximate, chances not rescaled, list = top N | Q12 |
 | `p10_new_songs_table` | 736, 16, 520, 216 | NAT table, all 25 rows (vertical scroll on purpose; columns 104/176/92/78 px, no horizontal scroll), data bars, picked songs in `accent` + "✓ picked" | `Release p10`, `dim_song[song_title]`, `Predicted Probability`, `In Setlist p10`; filter `release_role_2027` in (promoted_album, companion_release) | Q12 |
 | `p10_ties_note` | 736, 236, 520, 36 | HTML italic `accent` | `Ties Note p10` (tied scores among the last new-song slots, from the data) | Q12 |
@@ -353,7 +353,7 @@ To the **data-analyst** (T-51, page 10):
 
 | Name | Kind | Intent | Used on |
 | --- | --- | --- | --- |
-| `Headline p10`, `First Glimpse p10` | text measures | promote the report-level versions (same wording) to the model, folder Text | p10 |
+| `Headline p10`, `First Glimpse p10` | text measures | done (2026-10-26): all report measures now live in the model, folder Report\p10 2027 | p10 |
 | `Tour Icon SVG` / `Tour Icon` for The Greatest Show on Earth Tour | measure change | add `glyph_greatest_show_2027.svg` (and a row in `glyph_paths.csv` via `scripts/gen_glyph_paths.py`) so tour tables show the planned tour | p10, tour tables |
 | `dim_song` release of *Get Back to Now* | data | it has no `album_key` (Unknown); the report shows "Carnaval de luz (bonus)" from the tour's promoted album. A Gold fix (release from `release_track`) would remove the workaround | p10 |
 | `method_label` on `fact_setlist_backtest` (or a small method dimension) | column | optional since T-52: the HTML bars carry their own labels | p10 |
@@ -377,3 +377,10 @@ column chart (not area); p05 heatmap is songs × decade (not × year) and shows 
 "every show" shows songs per show for the 2015–2019 and Sphere eras (no measure picker); p07/p08 are hidden drill-through
 pages with a Back button and a prompt when nothing is selected; p09 has no icon strip. Details and status per item:
 `docs/design/review-t36.md`.
+
+## 10. Publish to web (2026-10-26)
+
+Power BI *Publish to web* rejects reports with report-level measures, so the report has none: the 92 measures the
+generator used to write to `reportExtensions.json` (HTML blocks and their wrappers, titles, colours, ranks, `ph`
+placeholders) are model measures with the same names (SPEC-05 "Report-support measures (Publish to web)"). Where §4,
+§7 and §8 say "report measure" or "report-level", read "model measure in folder Report\pNN".

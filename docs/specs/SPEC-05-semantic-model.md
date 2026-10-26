@@ -155,6 +155,30 @@ The report's text, HTML and icon measures (wireframes §7: headlines, "First gli
 - If the T-32 spike shows HTML Content Secure rejects data-URI images or long measure strings, `Image Data URI` is
   dropped and the native IMG fallback is used; the image tables can then be removed (SPEC-04 + SPEC-05 together).
 
+## Report-support measures (Publish to web)
+
+Power BI *Publish to web* does not support reports that contain report-level DAX measures, so `rpt_u2_live` keeps
+none: the 92 measures that `scripts/gen_report.py` used to write to `reportExtensions.json` live in the model
+(2026-10-26), with the same names, DAX, home tables and descriptions.
+
+- Display folder per report page: `Report\p00 Spike`, `Report\p01 Overview`, `Report\p02 On the Road`,
+  `Report\p03 The Songs`, `Report\p04 Albums on Stage`, `Report\p05 Setlist Evolution`, `Report\p06 Sphere vs Touring`,
+  `Report\p07 Song Detail`, `Report\p08 Show Detail`, `Report\p09 About`, `Report\p10 2027`. Every one of them is used
+  by one page only, so there is no shared folder.
+- Home table `fact_show` for all of them except `Album Share (no zeros)` and `Album Share Cell` (`fact_performance`).
+- They are presentation helpers: HTML blocks and their `<name> · <visual>` clipping/typography wrappers, visual
+  titles, colour measures for conditional formatting, exact Top N ranks (`Rank 1 song_title by Performances`,
+  `Rank 2 song_title by Opener Count`), page/visual filter flags (`Is One Song`, `Has Promoted Album`), p06 scatter
+  axes (`Show Year Decimal`, `Songs in Show p06`) and the page 10 text (`Headline p10`, `First Glimpse p10`, ...).
+  Numbers in them still come from the base measures in the same evaluation (rule above).
+- Visible (like `Report\Text`); integer helpers use `#,0`, `Show Year Decimal` `0`, `Album Share (no zeros)` `0.0%`,
+  text measures have no format string.
+- The report references them as ordinary model fields (`SourceRef` entity = home table, no `Schema: "extension"`);
+  `reportExtensions.json` must stay empty or absent. A new presentation measure is added here, not in the report.
+- Validation: each measure was evaluated in the model and as the original query-scoped definition in the same
+  contexts (no filter, Zoo TV Tour, Pride, one show, by tour, by song, plus a show sample and the e+i tours for p06/p08
+  and decade × album for p04/p05): identical results, strings compared exactly.
+
 ## Acceptance criteria
 
 - Best-practice analysis (Power BI Authoring MCP or Tabular Editor BPA rules) shows no errors.

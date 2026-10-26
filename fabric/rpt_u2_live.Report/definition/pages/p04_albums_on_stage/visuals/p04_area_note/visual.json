@@ -20,7 +20,6 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Schema": "extension",
                       "Entity": "fact_show"
                     }
                   },

@@ -10,6 +10,11 @@ Owner: dashboard-designer (design, PBIR) · data-analyst (measure needs, insight
   and tour icons, using only freely licensed images (Wikimedia Commons: CC BY, CC BY-SA, CC0, public domain) listed in
   `docs/design/images/credits.csv` and credited on page 9 "About the data". No copyrighted album art, logos or photos.
 - Accessible: text contrast ≥ 4.5:1, never color as the only encoding, alt text on every visual, tab order set.
+- No report-level measures (Power BI *Publish to web* rejects reports that have them): every measure a visual uses,
+  including presentation helpers (HTML blocks and their `<name> · <visual>` wrappers, titles, colours, Top N ranks),
+  lives in `sm_u2_live` and is owned by the data-analyst. The model is the source of their DAX: SPEC-05
+  "Report-support measures (Publish to web)". `scripts/gen_report.py` only references them by name and writes no
+  `reportExtensions.json`; a new page asks the data-analyst for its measures before the visuals are generated.
 - Interactions: slicers for era, tour, decade, continent; cross-highlight on; drill-through to Song and Show pages.
 
 ## Pages

@@ -358,7 +358,6 @@
           "Measure": {
             "Expression": {
               "SourceRef": {
-                "Schema": "extension",
                 "Entity": "fact_show"
               }
             },
@@ -372,8 +371,7 @@
             {
               "Name": "m",
               "Entity": "fact_show",
-              "Type": 0,
-              "Schema": "extension"
+              "Type": 0
             }
           ],
           "Where": [

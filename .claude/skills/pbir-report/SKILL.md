@@ -64,5 +64,10 @@ Set `altText` on every data visual (one sentence: what it shows). Set tab order 
 - Conditional-format gradients: inside `FillRule.linearGradient2`, colours are raw `{"Literal": {"Value": "'#hex'"}}` (no `expr` wrapper); with `expr` the matrix silently renders nothing.
 - Field parameters in a well: put the default field in `projections` and add `"fieldParameters": [{"parameterExpr": <param column>, "index": 0, "length": 1}]` to the same role.
 - Scatter X/Y must be measures (or unsummarised numeric columns); a date column with Min fails.
-- Report-level measures live in `definition/reportExtensions.json` (entity + measures, `Schema: "extension"` in field refs).
+- **No report-level measures** (since 2026-10-26): Power BI *Publish to web* rejects a report that has any. Every
+  measure a visual uses lives in `sm_u2_live`, presentation helpers too (HTML blocks, `<name> · <visual>` wrappers,
+  titles, colours, rank measures), in display folder `Report\pNN <page>` (SPEC-05 "Report-support measures (Publish
+  to web)"). Field refs are plain model refs (`SourceRef: {"Entity": <home table>}`, never `Schema: "extension"`);
+  `definition/reportExtensions.json` stays absent. For a new page, write the measure request (name, home table, DAX
+  intent, format) for the data-analyst, wait until it exists in the model, then reference it.
 - Verify without Desktop: Power BI REST `ExportTo` PDF (PNG export is disabled on this tenant) and scan the PDF text for visual error messages.

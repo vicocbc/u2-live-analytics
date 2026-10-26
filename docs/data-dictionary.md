@@ -337,6 +337,153 @@ Setlist prediction (SPEC-09, T-50): `fact_setlist_prediction` → `dim_date` (`a
 | `Top Song Name` | `fact_show` | | Most-performed song in context (ties: alphabetical first). Helper for text measures. Q2. |
 | `Top Song Text` | `fact_show` | | Most-performed song and its count, e.g. I Will Follow · 1,065 times. Q2. |
 
+### Report / p00 Spike
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Spike HTML` | `fact_show` | | HTML: T-32 spike that tests inline SVG, an SVG data URI, a base64 JPEG and the model photo in HTML Content Secure. |
+| `Spike HTML · p00_html_spike` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+
+### Report / p01 Overview
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Header p01` | `fact_show` | | HTML: page headline and intro paragraph from the model text measures (T-35). |
+| `Header p01 · p01_headline` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `KPI Tiles p01` | `fact_show` | | HTML: three KPI tiles (icon, number, delta vs previous era) for HTML Content Secure. |
+| `KPI Tiles p01 · p01_kpi_tiles` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Rank 1 song_title by Performances` | `fact_show` | `#,0` | Rank of song_title by [Performances] for an exact Top N (ties broken alphabetically). |
+| `Title p01 top10` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `Top Song Bar Color` | `fact_show` | | Hex colour for conditional formatting (presentation only). |
+
+### Report / p02 On the Road
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Header p02` | `fact_show` | | HTML: page headline and intro paragraph from the model text measures (T-35). |
+| `Header p02 · p02_headline` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Title p02 cities` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `Title p02 shows` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `Top City Card p02` | `fact_show` | | HTML: the most-visited city and its number of shows. |
+| `Top City Card p02 · p02_top_city` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+
+### Report / p03 The Songs
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Header p03` | `fact_show` | | HTML: page headline and intro paragraph from the model text measures (T-35). |
+| `Header p03 · p03_headline` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Title p03 covers` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `Title p03 guests` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `Title p03 rarities` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `Title p03 songs` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `ph Top Song Text` | `fact_show` | | Bound to model measure [Top Song Text] (T-35); kept so the text cards keep their binding. |
+| `ph Top Song Text · p03_top_song_callout` | `fact_show` | | Typography wrapper (presentation only). |
+
+### Report / p04 Albums on Stage
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Album Share (no zeros)` | `fact_performance` | `0.0%` | Album Share % with blanks instead of 0.0% (matrix). |
+| `Album Share Cell` | `fact_performance` | | Matrix cell text: blank before the album existed, 0% when not played, < 0.1% when tiny. |
+| `Has Promoted Album` | `fact_show` | `#,0` | 1 for tours with a promoted album (table filter). |
+| `Header p04` | `fact_show` | | HTML: page headline and intro paragraph from the model text measures (T-35). |
+| `Header p04 · p04_headline` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Photo Card p04` | `fact_show` | | HTML photo card (photo_zoo_tv_1992_kiel): base64 photo, gradient, number, caption, credit. |
+| `Promoted Album Label` | `fact_show` | | Short name of the album the tour promoted (inactive relationship, looked up by key). |
+| `Title p04 albums` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `Title p04 tours` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `ph Annotation p04` | `fact_show` | | Bound to model measure [Annotation p04] (T-35); kept so the text cards keep their binding. |
+| `ph Annotation p04 · p04_area_note` | `fact_show` | | Typography wrapper (presentation only). |
+
+### Report / p05 Setlist Evolution
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Header p05` | `fact_show` | | HTML: page headline and intro paragraph from the model text measures (T-35). |
+| `Header p05 · p05_headline` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Rank 2 song_title by Opener Count` | `fact_show` | `#,0` | Rank of song_title by [Opener Count] for an exact Top N (ties broken alphabetically). |
+| `Title p05 heatmap` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `Title p05 openers` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+| `Title p05 variety` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+
+### Report / p06 Sphere vs Touring
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Head to Head p06` | `fact_show` | | HTML: residency vs touring head-to-head with bars and differences. |
+| `Head to Head p06 · p06_head_to_head` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Header p06` | `fact_show` | | HTML: page headline and intro paragraph from the model text measures (T-35). |
+| `Header p06 · p06_headline` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Residency Callouts p06` | `fact_show` | | HTML: residency callouts on the Sphere photo. |
+| `Residency Callouts p06 · p06_residency_callouts` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Show Dot Colour p06` | `fact_show` | | Accent for residency shows, grey for touring shows (presentation only). |
+| `Show Year Decimal` | `fact_show` | `0` | Show date as a decimal year: residency shows always, other shows of the compared tours. |
+| `Songs in Show p06` | `fact_show` | `#,0` | Songs in the show: residency shows always, other shows of the compared tours (default 2015-2019). |
+| `Title p06 every show` | `fact_show` | | Dynamic title of the p06 every-show chart. |
+| `ph Annotation p06` | `fact_show` | | Bound to model measure [Annotation p06] (T-35); kept so the text cards keep their binding. |
+| `ph Annotation p06 · p06_note` | `fact_show` | | Typography wrapper (presentation only). |
+
+### Report / p07 Song Detail
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Is One Song` | `fact_show` | `#,0` | 1 when exactly one song is in context (drill-through page filter). |
+| `Position p07` | `fact_show` | | HTML: where in the night the song is played (opener, encore, closer shares). |
+| `Position p07 · p07_position` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Song Card p07` | `fact_show` | | HTML: song drill-through card, or a prompt when no single song is in context. |
+| `Song Card p07 · p07_song_card` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Title p07 shows` | `fact_show` | | Visual title with the Top N cut and the total (presentation only). |
+
+### Report / p08 Show Detail
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Setlist Link p08` | `fact_show` | | HTML: link to the selected show on setlist.fm. |
+| `Setlist Link p08 · p08_setlist_link` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Setlist URL p08` | `fact_show` | | Web link of the selected show on setlist.fm. |
+| `Ticket p08` | `fact_show` | | HTML: show ticket stub with the setlist in position order, or a prompt when no show is selected. |
+| `Ticket p08 · p08_ticket` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+
+### Report / p09 About
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Author p09` | `fact_show` | | HTML: author line with LinkedIn link. |
+| `Author p09 · p09_author` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Limitations p09` | `fact_show` | | HTML: data limitations with numbers from the model. |
+| `Limitations p09 · p09_limitations` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+
+### Report / p10 2027
+
+| Measure | Home table | Format | Description |
+| --- | --- | --- | --- |
+| `Backtest Bars p10` | `fact_show` | | HTML: backtest precision of the model and the three baselines as labelled bars. |
+| `Backtest Bars p10 · p10_backtest_bars` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Backtest Intro p10` | `fact_show` | | HTML: backtest section intro with the model's lead over the baseline as a big number. |
+| `Backtest Intro p10 · p10_backtest_intro` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Closest Analog Note p10` | `fact_show` | | Annotation: the model against the baseline on the closest analog tour (SPEC-09 honesty note). |
+| `Closest Analog Note p10 · p10_analog_note` | `fact_show` | | Typography wrapper (presentation only). |
+| `First Glimpse p10` | `fact_show` | | Intro paragraph of page 10 with the key numbers in bold (request: promote to the model). |
+| `Header p10` | `fact_show` | | HTML: page headline and intro paragraph. |
+| `Header p10 · p10_headline` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Headline p10` | `fact_show` | | Finding-style headline of page 10 (request: promote to the model, data-analyst). |
+| `In Setlist p10` | `fact_show` | | Text marker for songs in the predicted setlist (second cue next to the colour). |
+| `New Album Songs Predicted p10` | `fact_show` | `#,0` | Predicted setlist slots for songs of the promoted album. |
+| `New EP Songs Predicted p10` | `fact_show` | `#,0` | Predicted setlist slots for songs of the companion releases (the 2026 EPs). |
+| `Predicted Tour p10` | `fact_show` | | Display name of the tour the prediction is for (presentation only). |
+| `Promoted Album p10` | `fact_show` | | Title of the album the predicted tour promotes (presentation only). |
+| `Release p10` | `fact_show` | | Release of a 2026 song: its album, or the promoted album for its bonus track (presentation only). |
+| `Song Colour p10` | `fact_show` | | Accent for picked songs (presentation only). |
+| `Ticket p10` | `fact_show` | | HTML: predicted setlist ticket (tour, numbers, songs in predicted order with chance bars, notes). |
+| `Ticket p10 · p10_setlist_ticket` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+| `Ties Note p10` | `fact_show` | | Annotation: new songs whose slot is decided by a tie in the model's score (SPEC-09 honesty note). |
+| `Ties Note p10 · p10_ties_note` | `fact_show` | | Typography wrapper (presentation only). |
+| `Title p10 new songs` | `fact_show` | | Visual title with the total (presentation only). |
+| `Tour Started p10` | `fact_show` | `#,0` | Shows of the predicted tour played at the latest prediction (0 before the first show). |
+| `Tracker Intro p10` | `fact_show` | | HTML: in-tour section intro, an empty-state message before the first show. |
+| `Tracker Intro p10 · p10_tracker_intro` | `fact_show` | | Clipping wrapper so the HTML visual never scrolls (presentation only). |
+
 ### Shows
 
 | Measure | Home table | Format | Description |
@@ -871,6 +1018,569 @@ RETURN MINX ( FILTER ( Songs, [@P] = TopP && TopP > 0 ), dim_song[song_title] )
 ```dax
 VAR Song = [Top Song Name]
 RETURN IF ( NOT ISBLANK ( Song ), Song & " · " & FORMAT ( CALCULATE ( [Performances], dim_song[song_title] = Song ), "#,0", "en-US" ) & " times" )
+```
+
+**Spike HTML**
+
+```dax
+"<div style='font-family:Segoe UI;color:#ECEDEF;font-size:13px'><p><b>1 · inline SVG:</b> <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48' height='48' role='img' aria-label='Zoo TV: television set'><title>Zoo TV: television set</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><rect x='8' y='16' width='32' height='22' rx=
+    -- ... (shortened, see TMDL)
+```
+
+**Spike HTML · p00_html_spike**
+
+```dax
+"<div style='height:492px;overflow:hidden'>" & [Spike HTML] & "</div>"
+```
+
+**Header p01**
+
+```dax
+"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p01] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p01] & "</div>"
+```
+
+**Header p01 · p01_headline**
+
+```dax
+"<div style='height:144px;overflow:hidden'>" & [Header p01] & "</div>"
+```
+
+**KPI Tiles p01**
+
+```dax
+"<div style='display:flex;gap:28px'>" & "<div style='display:flex;gap:10px;align-items:flex-start'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='28' height='28' aria-hidden='true'><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M6 16h36v6a4 4 0 000 8v6H6v-6a4 4 0 000-8z'/><path d='M30 16v20' stroke-dasharray='2 3'/></g
+    -- ... (shortened, see TMDL)
+```
+
+**KPI Tiles p01 · p01_kpi_tiles**
+
+```dax
+"<div style='height:88px;overflow:hidden'>" & [KPI Tiles p01] & "</div>"
+```
+
+**Rank 1 song_title by Performances**
+
+```dax
+VAR Cur = CALCULATE ( [Performances], REMOVEFILTERS ( dim_date ) ) VAR Me = SELECTEDVALUE ( dim_song[song_title] ) RETURN IF ( NOT ISBLANK ( Cur ) && NOT ISBLANK ( Me ), COUNTROWS ( FILTER ( ALLSELECTED ( dim_song[song_title] ), VAR V = CALCULATE ( [Performances], REMOVEFILTERS ( dim_date ) ) RETURN NOT ISBLANK ( V ) && ( V > Cur || ( V = Cur && dim_song[song_title] < Me ) ) ) ) + 1 )
+```
+
+**Title p01 top10**
+
+```dax
+"The ten songs played most, of " & FORMAT ( CALCULATE ( [Distinct Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & ""
+```
+
+**Top Song Bar Color**
+
+```dax
+IF ( RANKX ( ALLSELECTED ( dim_song[song_title] ), [Performances] ) = 1, "#F2A93B", "#6FA8DC" )
+```
+
+**Header p02**
+
+```dax
+"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p02] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p02] & "</div>"
+```
+
+**Header p02 · p02_headline**
+
+```dax
+"<div style='height:88px;overflow:hidden'>" & [Header p02] & "</div>"
+```
+
+**Title p02 cities**
+
+```dax
+"All " & FORMAT ( CALCULATE ( [Cities], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " cities, most shows first"
+```
+
+**Title p02 shows**
+
+```dax
+"" & FORMAT ( CALCULATE ( [Shows], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " shows · right-click one for its setlist"
+```
+
+**Top City Card p02**
+
+```dax
+"<div style='font-family:Segoe UI'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>" & MAXX ( TOPN ( 1, VALUES ( dim_venue[city_name] ), [Shows] ), dim_venue[city_name] ) & " · " & FORMAT ( MAXX ( TOPN ( 1, VALUES ( dim_venue[city_name] ), [Shows] ), [Shows] ), "#,0", "en-US" ) & "</div><div style='color:#ECEDEF;font-size:13px;margin-top:4px'>shows in the most-visited city (photo: Croke Park, Dublin, 1987)</div></div>"
+```
+
+**Top City Card p02 · p02_top_city**
+
+```dax
+"<div style='height:68px;overflow:hidden'>" & [Top City Card p02] & "</div>"
+```
+
+**Header p03**
+
+```dax
+"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p03] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p03] & "</div>"
+```
+
+**Header p03 · p03_headline**
+
+```dax
+"<div style='height:144px;overflow:hidden'>" & [Header p03] & "</div>"
+```
+
+**Title p03 covers**
+
+```dax
+"All " & FORMAT ( CALCULATE ( [Cover Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " other people's songs, most played first"
+```
+
+**Title p03 guests**
+
+```dax
+"All " & FORMAT ( CALCULATE ( [Guest Artists], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " guests on stage, most frequent first"
+```
+
+**Title p03 rarities**
+
+```dax
+"All " & FORMAT ( CALCULATE ( [Rarities], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " rarities (played twice or less), most recent first"
+```
+
+**Title p03 songs**
+
+```dax
+"All " & FORMAT ( CALCULATE ( [Distinct Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " songs, most played first · right-click for the story"
+```
+
+**ph Top Song Text**
+
+```dax
+[Top Song Text]
+```
+
+**ph Top Song Text · p03_top_song_callout**
+
+```dax
+"<div style='font-family:DIN, Bahnschrift, Segoe UI, sans-serif;font-size:28px;line-height:1.1;color:#F2A93B;font-weight:600;max-height:68px;overflow:hidden'>" & [ph Top Song Text] & "</div>"
+```
+
+**Album Share (no zeros)**
+
+```dax
+VAR S = [Album Share %] RETURN IF ( S >= 0.0005, S )
+```
+
+**Album Share Cell**
+
+```dax
+VAR S = [Album Share %] VAR Dec = VALUE ( LEFT ( SELECTEDVALUE ( dim_date[decade] ), 4 ) ) VAR Rel = SELECTEDVALUE ( dim_album[release_year] ) RETURN IF ( S > 0, IF ( S < 0.0005, "< 0.1%", FORMAT ( S, "0.0%", "en-US" ) ), IF ( NOT ISBLANK ( Dec ) && NOT ISBLANK ( Rel ) && Dec + 9 >= Rel, "0%" ) )
+```
+
+**Has Promoted Album**
+
+```dax
+VAR K = SELECTEDVALUE ( dim_tour[album_promoted_key] ) RETURN IF ( NOT ISBLANK ( K ) && K <> -1, 1, 0 )
+```
+
+**Header p04**
+
+```dax
+"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p04] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p04] & "</div>"
+```
+
+**Header p04 · p04_headline**
+
+```dax
+"<div style='height:144px;overflow:hidden'>" & [Header p04] & "</div>"
+```
+
+**Photo Card p04**
+
+```dax
+VAR Img = [Image Data URI] RETURN "<div style='position:relative;width:100%;height:240px;overflow:hidden;background:#0F1115'>" & IF ( NOT ISBLANK ( Img ), "<img src='" & Img & "' style='width:100%;height:240px;object-fit:cover;display:block'>" ) & "<div style='position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(to bottom, rgba(15,17,21,0), rgba(15,17,21,.92) 55%)'></div><div style='position:absolute;left:20px;right:20px;bottom:12px'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:40px;line-height:1;color:#F2A93B'>" & FORMAT ( CALCULATE ( [Promoted Album Share %], dim_tour[tour_name] = "Zoo TV" ), "0%", "en-US" ) & "</div><div style='color:#ECEDEF;font-size:13px;margin-top:4px'>" & "of the songs on Zoo TV came from Achtung Baby" & "</div><div style='color:#A3A9B3;font-size:9px;margin-top:4px'>" & [Image Credit] & "</div></div></div>"
+```
+
+**Promoted Album Label**
+
+```dax
+VAR K = SELECTEDVALUE ( dim_tour[album_promoted_key] ) RETURN IF ( NOT ISBLANK ( K ) && K <> -1, LOOKUPVALUE ( dim_album[album_label], dim_album[album_key], K ) )
+```
+
+**Title p04 albums**
+
+```dax
+"Which albums stay: all " & FORMAT ( CALCULATE ( [Studio Albums], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " studio albums, share of songs per decade"
+```
+
+**Title p04 tours**
+
+```dax
+"All " & FORMAT ( CALCULATE ( [Tours with Promoted Album], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " tours with a new album: share from it"
+```
+
+**ph Annotation p04**
+
+```dax
+[Annotation p04]
+```
+
+**ph Annotation p04 · p04_area_note**
+
+```dax
+"<div style='font-family:Segoe UI;font-size:13px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:16px;overflow:hidden'>" & [ph Annotation p04] & "</div>"
+```
+
+**Header p05**
+
+```dax
+"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p05] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p05] & "</div>"
+```
+
+**Header p05 · p05_headline**
+
+```dax
+"<div style='height:144px;overflow:hidden'>" & [Header p05] & "</div>"
+```
+
+**Rank 2 song_title by Opener Count**
+
+```dax
+VAR Cur = CALCULATE ( [Opener Count], REMOVEFILTERS ( dim_date ) ) VAR Me = SELECTEDVALUE ( dim_song[song_title] ) RETURN IF ( NOT ISBLANK ( Cur ) && NOT ISBLANK ( Me ), COUNTROWS ( FILTER ( ALLSELECTED ( dim_song[song_title] ), VAR V = CALCULATE ( [Opener Count], REMOVEFILTERS ( dim_date ) ) RETURN NOT ISBLANK ( V ) && ( V > Cur || ( V = Cur && dim_song[song_title] < Me ) ) ) ) + 1 )
+```
+
+**Title p05 heatmap**
+
+```dax
+"All " & FORMAT ( CALCULATE ( [Distinct Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " songs by decade, most played first (scroll for more)"
+```
+
+**Title p05 openers**
+
+```dax
+"Top openers: 3 of " & FORMAT ( CALCULATE ( [Opener Songs], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " openers"
+```
+
+**Title p05 variety**
+
+```dax
+"All " & FORMAT ( CALCULATE ( CALCULATE ( DISTINCTCOUNT ( fact_show[tour_key] ), REMOVEFILTERS ( dim_tour ) ), REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " tours, most fixed setlist first"
+```
+
+**Head to Head p06**
+
+```dax
+"<div style='display:grid;grid-template-columns:140px 1fr 1fr 110px;row-gap:12px;align-items:center;font-family:Segoe UI'><div></div><div style='font-size:11px;font-weight:700;letter-spacing:1.5px;color:#F2A93B'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='14' height='14' role='img' aria-label='Sphere residency: globe'><title>Sphere residency: globe</title><g fill='none' stro
+    -- ... (shortened, see TMDL)
+```
+
+**Head to Head p06 · p06_head_to_head**
+
+```dax
+"<div style='height:180px;overflow:hidden'>" & [Head to Head p06] & "</div>"
+```
+
+**Header p06**
+
+```dax
+"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p06] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p06] & "</div>"
+```
+
+**Header p06 · p06_headline**
+
+```dax
+"<div style='height:144px;overflow:hidden'>" & [Header p06] & "</div>"
+```
+
+**Residency Callouts p06**
+
+```dax
+"<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#ECEDEF'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='16' height='16' role='img' aria-label='Sphere residency: globe'><title>Sphere residency: globe</title><g fill='none' stroke='#ECEDEF' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='24' cy=
+    -- ... (shortened, see TMDL)
+```
+
+**Residency Callouts p06 · p06_residency_callouts**
+
+```dax
+"<div style='height:120px;overflow:hidden'>" & [Residency Callouts p06] & "</div>"
+```
+
+**Show Dot Colour p06**
+
+```dax
+IF ( CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0, "#F2A93B", "#6E7581" )
+```
+
+**Show Year Decimal**
+
+```dax
+IF ( CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0, CALCULATE ( VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 ), REMOVEFILTERS ( dim_tour ) ), IF ( ISFILTERED ( dim_tour[tour_name_display] ), VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 ), CALCULATE ( VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) RETURN YEAR ( D ) + DIVIDE ( INT ( D - DATE ( YEAR ( D ), 1, 1 ) ), 366 ), KEEPFILTERS ( dim_tour[era] = "2015-2019 Innocence and Experience" ) ) ) )
+```
+
+**Songs in Show p06**
+
+```dax
+IF ( CALCULATE ( COUNTROWS ( fact_show ), REMOVEFILTERS ( dim_tour ), dim_tour[is_residency] = TRUE () ) > 0, CALCULATE ( [Performances], REMOVEFILTERS ( dim_tour ) ), IF ( ISFILTERED ( dim_tour[tour_name_display] ), [Performances], CALCULATE ( [Performances], KEEPFILTERS ( dim_tour[era] = "2015-2019 Innocence and Experience" ) ) ) )
+```
+
+**Title p06 every show**
+
+```dax
+"Every show, one dot: Sphere (amber) vs " & IF ( ISFILTERED ( dim_tour[tour_name_display] ), IF ( COUNTROWS ( VALUES ( dim_tour[tour_name_display] ) ) <= 2, CONCATENATEX ( VALUES ( dim_tour[tour_name_display] ), dim_tour[tour_name_display], " and " ), COUNTROWS ( VALUES ( dim_tour[tour_name_display] ) ) & " tours" ), "the 2015-2019 tours" ) & " (grey) · right-click a dot for its setlist"
+```
+
+**ph Annotation p06**
+
+```dax
+[Annotation p06]
+```
+
+**ph Annotation p06 · p06_note**
+
+```dax
+"<div style='font-family:Segoe UI;font-size:13px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:20px;overflow:hidden'>" & [ph Annotation p06] & "</div>"
+```
+
+**Is One Song**
+
+```dax
+IF ( HASONEVALUE ( dim_song[song_title] ), 1, 0 )
+```
+
+**Position p07**
+
+```dax
+IF ( HASONEVALUE ( dim_song[song_title] ), "<div style='font-family:Segoe UI'>" & "<div style='display:grid;grid-template-columns:90px 1fr 56px;align-items:center;gap:8px;margin:6px 0'><span style='color:#ECEDEF;font-size:13px'>Opener</span><div style='height:12px;border-radius:2px;background:#93C47D;width:" & FORMAT ( MAX ( 100 * COALESCE ( DIVIDE ( [Opener Count], [Performances] ), 0 ), IF ( [Op
+    -- ... (shortened, see TMDL)
+```
+
+**Position p07 · p07_position**
+
+```dax
+"<div style='height:180px;overflow:hidden'>" & [Position p07] & "</div>"
+```
+
+**Song Card p07**
+
+```dax
+IF ( HASONEVALUE ( dim_song[song_title] ), "<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>SONG · " & UPPER ( COALESCE ( CALCULATE ( SELECTEDVALUE ( dim_album[album_label] ), dim_song ), "not on a studio album" ) ) & IF ( NOT ISBLANK ( SELECTEDVALUE ( dim_song[first_release_year] ) ), " (" & SELECTEDVALUE ( dim_song[first_release_ye
+    -- ... (shortened, see TMDL)
+```
+
+**Song Card p07 · p07_song_card**
+
+```dax
+"<div style='height:136px;overflow:hidden'>" & [Song Card p07] & "</div>"
+```
+
+**Title p07 shows**
+
+```dax
+"Every time it was played: " & FORMAT ( CALCULATE ( [Shows Played], REMOVEFILTERS ( dim_song[song_title] ), REMOVEFILTERS ( dim_song[full_performances] ), REMOVEFILTERS ( dim_venue[city_name] ), REMOVEFILTERS ( fact_performance[guest_artist] ), REMOVEFILTERS ( dim_tour[tour_name_display] ) ), "#,0", "en-US" ) & " shows · right-click one for its setlist"
+```
+
+**Setlist Link p08**
+
+```dax
+IF ( NOT ISBLANK ( [Setlist URL p08] ), "<a href='" & [Setlist URL p08] & "' target='_blank' style='font-family:Segoe UI;font-size:15px;color:#F2A93B;text-decoration:none;font-weight:600'>Open this show on setlist.fm ↗</a>" )
+```
+
+**Setlist Link p08 · p08_setlist_link**
+
+```dax
+"<div style='height:20px;overflow:hidden'>" & [Setlist Link p08] & "</div>"
+```
+
+**Setlist URL p08**
+
+```dax
+IF ( HASONEVALUE ( dim_show[show_label] ), SELECTEDVALUE ( dim_show[setlist_url] ) )
+```
+
+**Ticket p08**
+
+```dax
+VAR D = CALCULATE ( MIN ( dim_date[date] ), fact_show ) VAR SetRows = CALCULATETABLE ( SUMMARIZE ( fact_performance, fact_performance[setlist_position], fact_performance[set_name], dim_song[song_title], fact_performance[is_live_debut], fact_performance[is_cover], fact_performance[guest_artist], fact_performance[is_snippet], fact_performance[is_tape] ) ) VAR Tapes = COUNTROWS ( FILTER ( SetRows, fa
+    -- ... (shortened, see TMDL)
+```
+
+**Ticket p08 · p08_ticket**
+
+```dax
+"<div style='height:608px;overflow:hidden'>" & [Ticket p08] & "</div>"
+```
+
+**Author p09**
+
+```dax
+"<div style='font-family:Segoe UI;font-size:16px;color:#ECEDEF'>Built by <b>Vinicius Baccarini</b> · <a href='https://www.linkedin.com/in/vin%C3%ADcius-baccarini/' target='_blank' style='color:#F2A93B;text-decoration:none;font-weight:600'>LinkedIn ↗</a></div>"
+```
+
+**Author p09 · p09_author**
+
+```dax
+"<div style='height:20px;overflow:hidden'>" & [Author p09] & "</div>"
+```
+
+**Limitations p09**
+
+```dax
+"<div style='font-family:Segoe UI'><div style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>LIMITATIONS</div><div style='display:flex;gap:30px;margin-top:6px'>" & "<div><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:28px;line-height:1;color:#ECEDEF'>" & FORMAT ( [Shows] - [Shows with Setlist], "#,0", "en-US" ) & "</div><div style='font-size:12px;co
+    -- ... (shortened, see TMDL)
+```
+
+**Limitations p09 · p09_limitations**
+
+```dax
+"<div style='height:192px;overflow:hidden'>" & [Limitations p09] & "</div>"
+```
+
+**Backtest Bars p10**
+
+```dax
+VAR P_model = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "model" ) VAR P_B1 = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "B1" ) VAR P_B2 = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "B2" ) VAR P_B3 = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "B3" ) RETURN "<div style='font-family:Segoe UI;font-size:12p
+    -- ... (shortened, see TMDL)
+```
+
+**Backtest Bars p10 · p10_backtest_bars**
+
+```dax
+"<div style='height:104px;overflow:hidden'>" & [Backtest Bars p10] & "</div>"
+```
+
+**Backtest Intro p10**
+
+```dax
+"<div style='display:flex;gap:14px;align-items:flex-start;font-family:Segoe UI'><div style='font-family:DIN,Bahnschrift,Segoe UI;font-weight:600;font-size:30px;line-height:1;color:#F2A93B;flex:none'>" & FORMAT ( [Model vs. Baseline] * 100, "+0.0;-0.0;0.0", "en-US" ) & " pp" & "</div><div style='font-size:12px;line-height:1.4;color:#A3A9B3'><span style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>HOW GOOD IS THIS?</span> Replayed on every album tour since Zoo TV, knowing only what came before its first show: more of its picks became core songs (played at half the shows or more) than with " & [Selected Baseline] & ", the best simple rule.</div></div>"
+```
+
+**Backtest Intro p10 · p10_backtest_intro**
+
+```dax
+"<div style='height:48px;overflow:hidden'>" & [Backtest Intro p10] & "</div>"
+```
+
+**Closest Analog Note p10**
+
+```dax
+VAR EI = "eXPERIENCE + iNNOCENCE Tour" VAR M = CALCULATE ( [Model Precision at N], dim_tour[tour_name_display] = EI ) VAR B = CALCULATE ( [Baseline Precision at N], dim_tour[tour_name_display] = EI ) RETURN IF ( NOT ISBLANK ( M ), "On the e+i tour (2018), the closest match to 2027 with a new album next to a companion record, the model " & IF ( ABS ( M - B ) < 0.005, "only tied", IF ( M > B, "beat", "lost to" ) ) & " " & [Selected Baseline] & ": " & FORMAT ( M, "0%", "en-US" ) & " vs " & FORMAT ( B, "0%", "en-US" ) & "." )
+```
+
+**Closest Analog Note p10 · p10_analog_note**
+
+```dax
+"<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:28px;overflow:hidden'>" & [Closest Analog Note p10] & "</div>"
+```
+
+**First Glimpse p10**
+
+```dax
+VAR AsOf = [Prediction As-Of Date Key] VAR Obs = [Shows Observed] VAR Opener = MAXX ( FILTER ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], fact_setlist_prediction[predicted_position], fact_setlist_prediction[as_of_date_key] ), fact_setlist_prediction[predicted_position] = 1 && fact_setlist_prediction[as_of_date_key] = AsOf ), dim_song[song_title] ) RETURN IF ( Obs = 0, "Before the first show", "After " & FORMAT ( Obs, "#,0", "en-US" ) & " shows" ) & ", our model picks <b>" & FORMAT ( [New Album Songs Predicted p10], "#,0", "en-US" ) & "</b> songs from " & [Promoted Album p10] & ", <b>" & FORMAT ( [New EP Songs Predicted p10], "#,0", "en-US" ) & "</b> from the EPs and <b>" & FORMAT ( [Catalog Songs Predicted], "#,0", "en-US" ) & "</b> older ones" & IF ( NOT ISBLANK ( Opener ), ", opening with <b>" & Opener & "</b>" ) & ". On the album tours since Elevation, <b>" & FORMAT ( [Model Precision at N], "0%", "en-US" ) & "</b> of its picks became core songs, vs <b>" & FORMAT ( [Baseline Precision at N], "0%", "en-US" ) & "</b> for repeating the last album tour."
+```
+
+**Header p10**
+
+```dax
+"<div style='font-family:DIN,Bahnschrift,Segoe UI;font-size:32px;line-height:1.1;color:#ECEDEF;font-weight:600;max-height:72px;overflow:hidden'>" & [Headline p10] & "</div><div style='font-family:Segoe UI;font-size:12.5px;line-height:1.5;color:#A3A9B3;margin-top:8px;max-height:57px;overflow:hidden'>" & [First Glimpse p10] & "</div>"
+```
+
+**Header p10 · p10_headline**
+
+```dax
+"<div style='height:136px;overflow:hidden'>" & [Header p10] & "</div>"
+```
+
+**Headline p10**
+
+```dax
+"Our guess for 2027: " & FORMAT ( [Expected Songs per Show], "#,0", "en-US" ) & " songs a night, " & FORMAT ( [New Songs Predicted], "#,0", "en-US" ) & " of them new"
+```
+
+**In Setlist p10**
+
+```dax
+IF ( HASONEVALUE ( dim_song[song_title] ), IF ( [Predicted Songs] > 0, "✓ picked", "" ) )
+```
+
+**New Album Songs Predicted p10**
+
+```dax
+CALCULATE ( [New Songs Predicted], dim_song[release_role_2027] = "promoted_album" )
+```
+
+**New EP Songs Predicted p10**
+
+```dax
+CALCULATE ( [New Songs Predicted], dim_song[release_role_2027] = "companion_release" )
+```
+
+**Predicted Tour p10**
+
+```dax
+CALCULATE ( SELECTEDVALUE ( dim_tour[tour_name_display] ), REMOVEFILTERS (), fact_setlist_prediction )
+```
+
+**Promoted Album p10**
+
+```dax
+VAR K = CALCULATE ( SELECTEDVALUE ( dim_tour[album_promoted_key] ), REMOVEFILTERS (), fact_setlist_prediction ) RETURN CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K )
+```
+
+**Release p10**
+
+```dax
+VAR K = SELECTEDVALUE ( dim_song[album_key] ) VAR A = CALCULATE ( SELECTEDVALUE ( dim_album[album_title] ), REMOVEFILTERS (), dim_album[album_key] = K ) RETURN IF ( HASONEVALUE ( dim_song[song_title] ), IF ( ISBLANK ( A ) || K = -1, [Promoted Album p10] & " (bonus)", A ) )
+```
+
+**Song Colour p10**
+
+```dax
+IF ( [Predicted Songs] > 0, "#F2A93B", "#ECEDEF" )
+```
+
+**Ticket p10**
+
+```dax
+VAR AsOf = [Prediction As-Of Date Key] VAR PickRows = CALCULATETABLE ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], dim_song[release_role_2027], fact_setlist_prediction[predicted_position], fact_setlist_prediction[predicted_set], fact_setlist_prediction[model_part], fact_setlist_prediction[probability], fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[as_of_da
+    -- ... (shortened, see TMDL)
+```
+
+**Ticket p10 · p10_setlist_ticket**
+
+```dax
+"<div style='height:472px;overflow:hidden'>" & [Ticket p10] & "</div>"
+```
+
+**Ties Note p10**
+
+```dax
+VAR AsOf = [Prediction As-Of Date Key] VAR R = CALCULATETABLE ( SUMMARIZE ( fact_setlist_prediction, dim_song[song_title], dim_song[release_role_2027], fact_setlist_prediction[predicted_position], fact_setlist_prediction[predicted_set], fact_setlist_prediction[model_part], fact_setlist_prediction[probability], fact_setlist_prediction[predicted_in_setlist] ), fact_setlist_prediction[as_of_date_key]
+    -- ... (shortened, see TMDL)
+```
+
+**Ties Note p10 · p10_ties_note**
+
+```dax
+"<div style='font-family:Segoe UI;font-size:12.5px;line-height:1.1;color:#F2A93B;font-weight:600;font-style:italic;max-height:28px;overflow:hidden'>" & [Ties Note p10] & "</div>"
+```
+
+**Title p10 new songs**
+
+```dax
+"All " & FORMAT ( CALCULATE ( [Candidate Songs], NOT ISBLANK ( dim_song[release_role_2027] ) ), "#,0", "en-US" ) & " new songs, by release: " & FORMAT ( [New Songs Predicted], "#,0", "en-US" ) & " make the setlist"
+```
+
+**Tour Started p10**
+
+```dax
+CALCULATE ( [Shows Observed], REMOVEFILTERS ( dim_date ) )
+```
+
+**Tracker Intro p10**
+
+```dax
+VAR Obs = [Tour Started p10] VAR H = CALCULATE ( [Hit Rate], REMOVEFILTERS ( dim_date ) ) RETURN "<div style='font-family:Segoe UI;font-size:12px;line-height:1.4;color:#A3A9B3'><span style='font-size:11px;letter-spacing:1.5px;font-weight:700;color:#F2A93B'>ONCE THE TOUR STARTS</span> " & IF ( Obs = 0 || ISBLANK ( H ), "No show of the tour yet, so these charts are empty. After each show they compare the predicted setlist with what was played and follow how the chances move.", "After <b style='color:#ECEDEF'>" & FORMAT ( Obs, "#,0", "en-US" ) & "</b> shows, <b style='color:#ECEDEF'>" & FORMAT ( H, "0%", "en-US" ) & "</b> of the predicted songs were played per show, on average." ) & "</div>"
+```
+
+**Tracker Intro p10 · p10_tracker_intro**
+
+```dax
+"<div style='height:36px;overflow:hidden'>" & [Tracker Intro p10] & "</div>"
 ```
 
 **Busiest Year**
