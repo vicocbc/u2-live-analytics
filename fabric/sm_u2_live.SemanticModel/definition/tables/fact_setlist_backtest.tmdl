@@ -1,0 +1,144 @@
+/// Backtest of the setlist model and baselines B1-B3 (SPEC-09 section 9.6): one row per album tour, method and metric.
+table fact_setlist_backtest
+	lineageTag: 3b8b0176-6fdf-47f0-ae7a-c0c7c55cfb40
+
+	/// Mean backtest value over tours for the method and metric in context: the backtest tours selected, or by default the album tours from Elevation (2001) on, as in the SPEC-09 acceptance test. Q12.
+	measure 'Backtest Mean' =
+			VAR ContextTours =
+			    CALCULATETABLE (
+			        VALUES ( fact_setlist_backtest[tour_key] ),
+			        REMOVEFILTERS ( fact_setlist_backtest[method], fact_setlist_backtest[metric] )
+			    )
+			VAR UseContext = ISFILTERED ( dim_tour ) && NOT ISEMPTY ( ContextTours )
+			VAR DefaultTours =
+			    CALCULATETABLE (
+			        VALUES ( dim_tour[tour_key] ),
+			        REMOVEFILTERS ( dim_tour ),
+			        dim_tour[first_show_date] >= DATE ( 2001, 1, 1 ),
+			        dim_tour[tour_type] = "album"
+			    )
+			RETURN
+			    IF (
+			        UseContext,
+			        AVERAGE ( fact_setlist_backtest[value] ),
+			        CALCULATE (
+			            AVERAGE ( fact_setlist_backtest[value] ),
+			            REMOVEFILTERS ( dim_tour ),
+			            TREATAS ( DefaultTours, dim_tour[tour_key] )
+			        )
+			    )
+		formatString: 0.000
+		displayFolder: Prediction\Backtest
+		lineageTag: 07e02c45-5f66-4cc3-a734-7f1019b32ed4
+
+	/// Mean share of the N predicted songs that were core songs of the tour (precision_at_n), per method in context. Q12.
+	measure 'Mean Precision at N' = CALCULATE ( [Backtest Mean], KEEPFILTERS ( fact_setlist_backtest[metric] = "precision_at_n" ) )
+		formatString: 0.0%
+		displayFolder: Prediction\Backtest
+		lineageTag: 49612817-691a-4557-bec1-ac0a18fc80e9
+
+	/// Mean overlap (Jaccard) of the predicted setlist with the tour's first show, per method in context. Q12.
+	measure 'Mean Jaccard First Show' = CALCULATE ( [Backtest Mean], KEEPFILTERS ( fact_setlist_backtest[metric] = "jaccard_first_show" ) )
+		formatString: 0.0%
+		displayFolder: Prediction\Backtest
+		lineageTag: 3f1d0732-ef0e-4413-90db-2cb199918c2c
+
+	/// Mean squared error of the probabilities vs. each song's play rate on the tour (lower is better), per method in context. Q12.
+	measure 'Mean Brier Score' = CALCULATE ( [Backtest Mean], KEEPFILTERS ( fact_setlist_backtest[metric] = "brier_play_rate" ) )
+		formatString: 0.000
+		displayFolder: Prediction\Backtest
+		lineageTag: 035ac09a-318a-4793-8101-cecb3c02d406
+
+	/// Baseline compared with the model: the one baseline method (B1, B2 or B3) in context, otherwise B1 (previous album tour's core set). Q12.
+	measure 'Selected Baseline' =
+			VAR Baselines =
+			    CALCULATETABLE (
+			        VALUES ( fact_setlist_backtest[method] ),
+			        KEEPFILTERS ( fact_setlist_backtest[method] IN { "B1", "B2", "B3" } )
+			    )
+			RETURN
+			    IF ( COUNTROWS ( Baselines ) = 1, MAXX ( Baselines, fact_setlist_backtest[method] ), "B1" )
+		displayFolder: Prediction\Backtest
+		lineageTag: efd93e77-2bda-46d0-9d6b-48f748552311
+
+	/// Mean precision_at_n of the model, whatever method is in context. Q12.
+	measure 'Model Precision at N' = CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = "model" )
+		formatString: 0.0%
+		displayFolder: Prediction\Backtest
+		lineageTag: 31f3e394-c903-41df-b03f-eeaf6497f4a3
+
+	/// Mean precision_at_n of the selected baseline (Selected Baseline). Q12.
+	measure 'Baseline Precision at N' =
+			VAR Baseline = [Selected Baseline]
+			RETURN
+			    CALCULATE ( [Mean Precision at N], fact_setlist_backtest[method] = Baseline )
+		formatString: 0.0%
+		displayFolder: Prediction\Backtest
+		lineageTag: b1ce15f6-dd7b-49a3-b341-6910b66bbd0f
+
+	/// Model minus selected baseline on mean precision_at_n, in percentage points (positive = the model picks more core songs); default scope the album tours from Elevation on. Q12.
+	measure 'Model vs. Baseline' = [Model Precision at N] - [Baseline Precision at N]
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Prediction\Backtest
+		lineageTag: e6c2b5a9-b6fe-4ee8-85b5-0f1d1a6c3392
+
+	/// Backtest target tour (Zoo TV to e+i).
+	column tour_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 58af071e-d25e-4576-b8b9-6b5be7926045
+		summarizeBy: none
+		sourceColumn: tour_key
+
+	/// model, B1 (previous album tour), B2 (career most played), B3 (latest tour of any type), or context (actual and predicted sizes).
+	column method
+		dataType: string
+		lineageTag: 2320026f-3de5-426a-b2b4-8e3d4845de1b
+		summarizeBy: none
+		sourceColumn: method
+
+	/// precision_at_n, jaccard_first_show, brier_play_rate, new_count_error, or a context metric.
+	column metric
+		dataType: string
+		lineageTag: 0ff2fa33-63be-4cf3-a69e-bf08259d3632
+		summarizeBy: none
+		sourceColumn: metric
+
+	/// Metric value; use the Backtest Value measure.
+	column value
+		dataType: double
+		isHidden
+		formatString: 0.0000
+		isAvailableInMdx: false
+		lineageTag: 0d9942a5-2132-4339-80ae-ca8a96d1955c
+		summarizeBy: none
+		sourceColumn: value
+
+	/// Model version that produced the row.
+	column model_version
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 521c534a-1747-4b87-8f98-08da8867a25f
+		summarizeBy: none
+		sourceColumn: model_version
+
+	/// Gold build timestamp (UTC).
+	column _built_at
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		isAvailableInMdx: false
+		lineageTag: 67698d46-ddd0-4df8-b8bb-1632e9d62de7
+		summarizeBy: none
+		sourceColumn: _built_at
+
+	partition fact_setlist_backtest = entity
+		mode: directLake
+		source
+			entityName: fact_setlist_backtest
+			schemaName: dbo
+			expressionSource: 'DirectLake - wh_gold'
+

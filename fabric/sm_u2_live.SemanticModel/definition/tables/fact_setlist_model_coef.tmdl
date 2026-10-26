@@ -1,0 +1,86 @@
+/// Coefficients of the setlist model (catalog and new-material parts) per backtest and planned tour, so the prediction can be explained (SPEC-09 section 9.7).
+table fact_setlist_model_coef
+	lineageTag: 57d160c8-8498-4065-85b9-e4aaa715df19
+
+	/// Target tour the model was trained for.
+	column tour_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 5205cb0d-fd50-48fe-81a4-d36f6817b677
+		summarizeBy: none
+		sourceColumn: tour_key
+
+	/// catalog or new.
+	column model_part
+		dataType: string
+		lineageTag: 751bfd18-472f-4038-970c-68d9c6841304
+		summarizeBy: none
+		sourceColumn: model_part
+
+	/// Model feature, including intercept.
+	column feature
+		dataType: string
+		lineageTag: 509bba9d-1327-477b-91b6-ee53a6df798c
+		summarizeBy: none
+		sourceColumn: feature
+
+	/// Coefficient on the standardised feature (comparable across features); blank for intercept.
+	column coef_standardized
+		dataType: double
+		formatString: 0.000
+		lineageTag: 513cde78-df45-4173-b12e-4ae12591722c
+		summarizeBy: none
+		sourceColumn: coef_standardized
+
+	/// Coefficient on the feature's original scale.
+	column coef_raw
+		dataType: double
+		formatString: 0.000
+		lineageTag: 6e79af2a-f9be-4491-9c0e-50e0b8bea493
+		summarizeBy: none
+		sourceColumn: coef_raw
+
+	/// Training rows of this model part.
+	column n_train
+		dataType: int64
+		formatString: #,0
+		lineageTag: bc3a348b-b745-4f51-87af-c19dcfe2ddfd
+		summarizeBy: none
+		sourceColumn: n_train
+
+	/// Positive training rows (core songs) of this model part.
+	column n_positive
+		dataType: int64
+		formatString: #,0
+		lineageTag: e991df03-d360-40c9-9130-2bf66df1a943
+		summarizeBy: none
+		sourceColumn: n_positive
+
+	/// Model version that produced the row.
+	column model_version
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: edc09500-f294-46d8-a6a3-0ba119d0b5e8
+		summarizeBy: none
+		sourceColumn: model_version
+
+	/// Gold build timestamp (UTC).
+	column _built_at
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		isAvailableInMdx: false
+		lineageTag: ed1d272b-6f20-4b0d-b028-a0dacadc3985
+		summarizeBy: none
+		sourceColumn: _built_at
+
+	partition fact_setlist_model_coef = entity
+		mode: directLake
+		source
+			entityName: fact_setlist_model_coef
+			schemaName: dbo
+			expressionSource: 'DirectLake - wh_gold'
+

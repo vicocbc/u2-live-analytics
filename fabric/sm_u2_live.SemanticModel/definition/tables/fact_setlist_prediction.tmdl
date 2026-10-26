@@ -1,0 +1,233 @@
+/// 2027 setlist prediction (SPEC-09): one row per candidate song per as-of date for the planned tour; 0 shows observed = pre-tour.
+table fact_setlist_prediction
+	lineageTag: c2acac85-2405-4877-9774-678de965d10a
+
+	/// Latest prediction date in context (yyyymmdd); every prediction measure reads only this as-of date. Q12.
+	measure 'Prediction As-Of Date Key' = MAX ( fact_setlist_prediction[as_of_date_key] )
+		formatString: 0
+		isHidden
+		displayFolder: Prediction
+		lineageTag: fe90a866-cfcc-4e9a-a29e-c1fa7455d79f
+
+	/// Date of the latest prediction in context (the pre-tour prediction until in-tour updates exist). Q12.
+	measure 'Prediction As-Of Date' =
+			VAR AsOf = [Prediction As-Of Date Key]
+			RETURN
+			    CALCULATE ( MAX ( dim_date[date] ), REMOVEFILTERS ( dim_date ), TREATAS ( { AsOf }, dim_date[date_key] ) )
+		formatString: yyyy-mm-dd
+		displayFolder: Prediction
+		lineageTag: 3eac434d-7d17-4d30-94dd-635be37089c9
+
+	/// Model probability that the song is in the tour's setlist, from the latest prediction in context; above song level it is the mean over the songs. Catalog probabilities are calibrated on core songs, so they do not add up to the slot count. Q12.
+	measure 'Predicted Probability' =
+			VAR AsOf = [Prediction As-Of Date Key]
+			RETURN
+			    CALCULATE (
+			        AVERAGE ( fact_setlist_prediction[probability] ),
+			        KEEPFILTERS ( fact_setlist_prediction[as_of_date_key] = AsOf )
+			    )
+		formatString: 0.0%
+		displayFolder: Prediction
+		lineageTag: 620534e9-fcbc-42e9-ad9f-e9c3d68d3df9
+
+	/// Songs in the predicted setlist (predicted_in_setlist), latest prediction in context; a count of picks, not a sum of probabilities. Q12.
+	measure 'Predicted Songs' =
+			VAR AsOf = [Prediction As-Of Date Key]
+			RETURN
+			    CALCULATE (
+			        COUNTROWS ( fact_setlist_prediction ),
+			        KEEPFILTERS ( fact_setlist_prediction[predicted_in_setlist] = TRUE () ),
+			        KEEPFILTERS ( fact_setlist_prediction[as_of_date_key] = AsOf )
+			    )
+		formatString: #,0
+		displayFolder: Prediction
+		lineageTag: 873f4285-4aff-4168-b729-a6d31b508573
+
+	/// Predicted setlist slots filled by 2026 releases (new-material model part). Q12.
+	measure 'New Songs Predicted' = CALCULATE ( [Predicted Songs], KEEPFILTERS ( fact_setlist_prediction[model_part] = "new" ) )
+		formatString: #,0
+		displayFolder: Prediction
+		lineageTag: 185e2699-bf71-4b3f-b6e1-f0b40a7e8607
+
+	/// Predicted setlist slots filled by songs played on earlier tours (catalog model part). Q12.
+	measure 'Catalog Songs Predicted' = CALCULATE ( [Predicted Songs], KEEPFILTERS ( fact_setlist_prediction[model_part] = "catalog" ) )
+		formatString: #,0
+		displayFolder: Prediction
+		lineageTag: 1adaadab-b491-4214-8810-a0e24fa063b3
+
+	/// Length of the predicted setlist for the tour (N), ignoring song and album filters; use it instead of a sum of probabilities. Q12.
+	measure 'Expected Songs per Show' = CALCULATE ( [Predicted Songs], REMOVEFILTERS ( dim_song ), REMOVEFILTERS ( dim_album ), REMOVEFILTERS ( fact_setlist_prediction[model_part] ) )
+		formatString: #,0
+		displayFolder: Prediction
+		lineageTag: 49372a7b-8955-4f55-9561-c953abcc5037
+
+	/// Songs scored by the model for the tour (picked or not), latest prediction in context. Q12.
+	measure 'Candidate Songs' =
+			VAR AsOf = [Prediction As-Of Date Key]
+			RETURN
+			    CALCULATE (
+			        COUNTROWS ( fact_setlist_prediction ),
+			        KEEPFILTERS ( fact_setlist_prediction[as_of_date_key] = AsOf )
+			    )
+		formatString: #,0
+		displayFolder: Prediction
+		lineageTag: 9b51c9aa-8373-4a4a-abce-747f4cfaaec8
+
+	/// Shows of the tour already played when the latest prediction was made (0 = pre-tour). Q12.
+	measure 'Shows Observed' =
+			VAR AsOf = [Prediction As-Of Date Key]
+			RETURN
+			    CALCULATE (
+			        MAX ( fact_setlist_prediction[shows_observed] ),
+			        KEEPFILTERS ( fact_setlist_prediction[as_of_date_key] = AsOf )
+			    )
+		formatString: #,0
+		displayFolder: Prediction
+		lineageTag: a33c013c-edd1-49fe-af53-88c5f17762ce
+
+	/// Share of predicted songs played in full at a show, using the latest prediction made on or before that show; mean over the tour's shows with a setlist in context. Blank before the tour's first show. Q12.
+	measure 'Hit Rate' =
+			VAR ShowsPlayed =
+			    CALCULATETABLE (
+			        SUMMARIZE ( fact_show, fact_show[show_key], fact_show[date_key] ),
+			        KEEPFILTERS ( fact_show[has_setlist] = TRUE () )
+			    )
+			RETURN
+			    IF (
+			        NOT ISEMPTY ( ShowsPlayed ),
+			        AVERAGEX (
+			            ShowsPlayed,
+			            VAR ShowKey = fact_show[show_key]
+			            VAR ShowDateKey = fact_show[date_key]
+			            VAR AsOf =
+			                CALCULATE (
+			                    MAX ( fact_setlist_prediction[as_of_date_key] ),
+			                    REMOVEFILTERS ( dim_date ),
+			                    fact_setlist_prediction[as_of_date_key] <= ShowDateKey
+			                )
+			            VAR Predicted =
+			                CALCULATETABLE (
+			                    VALUES ( fact_setlist_prediction[song_key] ),
+			                    REMOVEFILTERS ( dim_date ),
+			                    fact_setlist_prediction[as_of_date_key] = AsOf,
+			                    fact_setlist_prediction[predicted_in_setlist] = TRUE ()
+			                )
+			            VAR Hits =
+			                CALCULATE (
+			                    [Distinct Songs],
+			                    REMOVEFILTERS ( dim_date ),
+			                    TREATAS ( { ShowKey }, fact_performance[show_key] ),
+			                    TREATAS ( Predicted, fact_performance[song_key] )
+			                )
+			            RETURN
+			                DIVIDE ( Hits, COUNTROWS ( Predicted ) )
+			        )
+			    )
+		formatString: 0.0%
+		displayFolder: Prediction
+		lineageTag: 9fb791ae-488d-4e93-ba18-dd174796839d
+
+	/// Date of the prediction (yyyymmdd); the measures use the latest one in context.
+	column as_of_date_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: d7eba46c-e755-44c4-9abe-0cf7da64bf8e
+		summarizeBy: none
+		sourceColumn: as_of_date_key
+
+	/// Planned tour the prediction is for.
+	column tour_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 3de82ea0-bc67-4e23-b371-06ce8744da22
+		summarizeBy: none
+		sourceColumn: tour_key
+
+	/// Candidate song.
+	column song_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		isAvailableInMdx: false
+		lineageTag: 6e056117-040d-4674-ac77-20a0e20c5972
+		summarizeBy: none
+		sourceColumn: song_key
+
+	/// Shows of the tour already played when the prediction was made (0 = pre-tour).
+	column shows_observed
+		dataType: int64
+		formatString: #,0
+		lineageTag: 1ab47b51-6172-424d-85d5-4316d3d4eb5d
+		summarizeBy: none
+		sourceColumn: shows_observed
+
+	/// Model probability that the song is in the tour's setlist; use the Predicted Probability measure.
+	column probability
+		dataType: double
+		isHidden
+		formatString: 0.0%
+		isAvailableInMdx: false
+		lineageTag: 7b17635e-bfff-43e0-840a-c61d7fd75e39
+		summarizeBy: none
+		sourceColumn: probability
+
+	/// True for the songs in the predicted setlist (as many as the expected songs per show).
+	column predicted_in_setlist
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 23b44057-abf6-4cec-b34e-59df42f61412
+		summarizeBy: none
+		sourceColumn: predicted_in_setlist
+
+	/// Slot in the predicted setlist (1 = opener); blank for songs not picked.
+	column predicted_position
+		dataType: int64
+		formatString: 0
+		lineageTag: 1e9da7a3-2f4b-4700-97ea-7b25785a5d52
+		summarizeBy: none
+		sourceColumn: predicted_position
+
+	/// main or encore for picked songs; blank otherwise.
+	column predicted_set
+		dataType: string
+		lineageTag: 118d7f84-1051-4d02-8ef6-08d5b6675fde
+		summarizeBy: none
+		sourceColumn: predicted_set
+
+	/// catalog (songs played before) or new (2026 releases).
+	column model_part
+		dataType: string
+		lineageTag: c0c14c04-21a6-46b9-96ec-867bf6c9cbc5
+		summarizeBy: none
+		sourceColumn: model_part
+
+	/// Model version that produced the row.
+	column model_version
+		dataType: string
+		isHidden
+		isAvailableInMdx: false
+		lineageTag: 898b1208-71a5-4dec-8a97-2a828c65c8f6
+		summarizeBy: none
+		sourceColumn: model_version
+
+	/// Gold build timestamp (UTC).
+	column _built_at
+		dataType: dateTime
+		isHidden
+		formatString: General Date
+		isAvailableInMdx: false
+		lineageTag: 4a6efd8d-f814-4d45-9120-a6447525f8be
+		summarizeBy: none
+		sourceColumn: _built_at
+
+	partition fact_setlist_prediction = entity
+		mode: directLake
+		source
+			entityName: fact_setlist_prediction
+			schemaName: dbo
+			expressionSource: 'DirectLake - wh_gold'
+

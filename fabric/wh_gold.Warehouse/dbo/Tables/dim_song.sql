@@ -9,7 +9,9 @@ CREATE TABLE [dbo].[dim_song] (
     [live_debut_date]    DATE          NULL,
     [last_played_date]   DATE          NULL,
     [full_performances]  INT           NOT NULL,
-    [_built_at]          DATETIME2 (6) NOT NULL
+    [_built_at]          DATETIME2 (6) NOT NULL,
+    [release_role_2027]  VARCHAR (30)  NULL,
+    [is_single]          BIT           NULL
 );
 
 

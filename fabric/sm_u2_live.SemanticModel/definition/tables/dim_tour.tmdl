@@ -127,6 +127,21 @@ table dim_tour
 		summarizeBy: none
 		sourceColumn: show_type
 
+	/// album, anniversary, residency, promo, benefit or early (seeds/tours.csv); only album tours train the setlist model. Blank for (No tour) and Unknown.
+	column tour_type
+		dataType: string
+		lineageTag: 461e6f71-3a30-48c8-85f9-67844bd38996
+		summarizeBy: none
+		sourceColumn: tour_type
+
+	/// True for an announced tour with no show played yet (the 2027 tour); sorted after every played tour.
+	column is_planned
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 8d9fd15d-2cc4-4e09-9f9d-42b499172661
+		summarizeBy: none
+		sourceColumn: is_planned
+
 	partition dim_tour = entity
 		mode: directLake
 		source

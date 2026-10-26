@@ -1,4 +1,4 @@
--- Rebuilds fact_performance and fact_show from lk_silver (SPEC-04). Run after usp_build_dimensions, inside the
+-- Rebuilds fact_performance, fact_show and the setlist prediction facts (SPEC-09 9.7) from lk_silver (SPEC-04). Run after usp_build_dimensions, inside the
 -- transaction of dbo.usp_build_gold. Unmatched foreign keys become -1 (Unknown).
 -- "Full" performance = not a tape, not a snippet (fragments are their own song, so they count for their own debut).
 CREATE   PROCEDURE dbo.usp_build_facts
@@ -71,6 +71,37 @@ BEGIN
     LEFT JOIN dbo.dim_tour  AS t ON t.tour_name = s.tour_name
     LEFT JOIN dbo.dim_venue AS v ON v.venue_id = s.venue_id
     LEFT JOIN counts AS c ON c.show_key = sh.show_key;
+
+    ---------------------------------------------------------------- setlist prediction (SPEC-09 9.7, T-49)
+    -- Only the planned / current tour's predictions (is_backtest = 0); backtest predictions stay in Silver.
+    DELETE FROM dbo.fact_setlist_prediction;
+    INSERT INTO dbo.fact_setlist_prediction (as_of_date_key, tour_key, song_key, shows_observed, probability,
+                                             predicted_in_setlist, predicted_position, predicted_set, model_part,
+                                             model_version, _built_at)
+    SELECT YEAR(p.as_of_date) * 10000 + MONTH(p.as_of_date) * 100 + DAY(p.as_of_date),
+           ISNULL(t.tour_key, -1),
+           ISNULL(sg.song_key, -1),
+           p.shows_observed, p.probability, p.predicted_in_setlist, p.predicted_position, p.predicted_set,
+           p.model_part, p.model_version,
+           @built_at
+    FROM lk_silver.dbo.setlist_prediction AS p
+    LEFT JOIN dbo.dim_tour AS t  ON t.tour_name = p.target_tour_name
+    LEFT JOIN dbo.dim_song AS sg ON sg.song_id = p.song_id
+    WHERE p.is_backtest = 0;
+
+    DELETE FROM dbo.fact_setlist_backtest;
+    INSERT INTO dbo.fact_setlist_backtest (tour_key, method, metric, value, model_version, _built_at)
+    SELECT ISNULL(t.tour_key, -1), b.method, b.metric, b.value, b.model_version, @built_at
+    FROM lk_silver.dbo.setlist_backtest AS b
+    LEFT JOIN dbo.dim_tour AS t ON t.tour_name = b.target_tour_name;
+
+    DELETE FROM dbo.fact_setlist_model_coef;
+    INSERT INTO dbo.fact_setlist_model_coef (tour_key, model_part, feature, coef_standardized, coef_raw, n_train,
+                                             n_positive, model_version, _built_at)
+    SELECT ISNULL(t.tour_key, -1), c.model_part, c.feature, c.coef_standardized, c.coef_raw, c.n_train, c.n_positive,
+           c.model_version, @built_at
+    FROM lk_silver.dbo.setlist_model_coef AS c
+    LEFT JOIN dbo.dim_tour AS t ON t.tour_name = c.target_tour_name;
 END;
 
 GO

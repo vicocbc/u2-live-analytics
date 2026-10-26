@@ -27,4 +27,7 @@ ref table 'p03 Y axis'
 ref table 'p03 X axis'
 ref table 'p05 Setlist position'
 ref table 'p06 Every show measure'
+ref table fact_setlist_prediction
+ref table fact_setlist_backtest
+ref table fact_setlist_model_coef
 

@@ -9,7 +9,9 @@ CREATE TABLE [dbo].[dim_tour] (
     [last_show_date]     DATE          NULL,
     [tour_order]         INT           NOT NULL,
     [_built_at]          DATETIME2 (6) NOT NULL,
-    [show_type]          VARCHAR (20)  NULL
+    [show_type]          VARCHAR (20)  NULL,
+    [tour_type]          VARCHAR (20)  NULL,
+    [is_planned]         BIT           NULL
 );
 
 

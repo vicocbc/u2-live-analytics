@@ -131,6 +131,21 @@ table dim_song
 
 		annotation SummarizationSetBy = Automatic
 
+	/// promoted_album (Carnaval de Luz) or companion_release (Days of Ash, Easter Lily) for the 25 tracks released in 2026; blank for catalog songs.
+	column release_role_2027
+		dataType: string
+		lineageTag: 8a9c4777-5c14-4254-a846-0f3ce4d64e59
+		summarizeBy: none
+		sourceColumn: release_role_2027
+
+	/// True if the song was released as a single (setlist model feature).
+	column is_single
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 571f9b59-7fc0-480e-badd-5a22b5b3d96c
+		summarizeBy: none
+		sourceColumn: is_single
+
 	partition dim_song = entity
 		mode: directLake
 		source

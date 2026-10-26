@@ -42,3 +42,23 @@ relationship report_image_chunk_image_id_report_image_image_id
 	fromColumn: report_image_chunk.image_id
 	toColumn: report_image.image_id
 
+relationship fact_setlist_prediction_as_of_date_key_dim_date_date_key
+	fromColumn: fact_setlist_prediction.as_of_date_key
+	toColumn: dim_date.date_key
+
+relationship fact_setlist_prediction_tour_key_dim_tour_tour_key
+	fromColumn: fact_setlist_prediction.tour_key
+	toColumn: dim_tour.tour_key
+
+relationship fact_setlist_prediction_song_key_dim_song_song_key
+	fromColumn: fact_setlist_prediction.song_key
+	toColumn: dim_song.song_key
+
+relationship fact_setlist_backtest_tour_key_dim_tour_tour_key
+	fromColumn: fact_setlist_backtest.tour_key
+	toColumn: dim_tour.tour_key
+
+relationship fact_setlist_model_coef_tour_key_dim_tour_tour_key
+	fromColumn: fact_setlist_model_coef.tour_key
+	toColumn: dim_tour.tour_key
+

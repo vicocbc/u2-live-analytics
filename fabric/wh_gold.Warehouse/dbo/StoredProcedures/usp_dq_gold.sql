@@ -122,9 +122,99 @@ BEGIN
     SET @dq += CONCAT(',{"check_name":"gold_report_image_total_base64_le_600000","value":"', @v2,
                       '","status":"', CASE WHEN @v2 <= 600000 THEN 'pass' ELSE 'warning' END, '"}');
 
+    -- Setlist prediction (SPEC-09 9.7, 9.9; T-49)
+    DECLARE @n_sp int, @n_sp_silver int, @n_bt int, @n_bt_silver int, @n_co int, @n_co_silver int, @v3 int, @v4 int;
+    SELECT @n_sp = COUNT(*) FROM dbo.fact_setlist_prediction;
+    SELECT @n_sp_silver = COUNT(*) FROM lk_silver.dbo.setlist_prediction WHERE is_backtest = 0;
+    SELECT @n_bt = COUNT(*) FROM dbo.fact_setlist_backtest;
+    SELECT @n_bt_silver = COUNT(*) FROM lk_silver.dbo.setlist_backtest;
+    SELECT @n_co = COUNT(*) FROM dbo.fact_setlist_model_coef;
+    SELECT @n_co_silver = COUNT(*) FROM lk_silver.dbo.setlist_model_coef;
+    SET @dq += CONCAT(',{"check_name":"gold_setlist_facts_eq_silver","value":"prediction ', @n_sp, '/', @n_sp_silver,
+                      ', backtest ', @n_bt, '/', @n_bt_silver, ', coef ', @n_co, '/', @n_co_silver, '","status":"',
+                      CASE WHEN @n_sp = @n_sp_silver AND @n_bt = @n_bt_silver AND @n_co = @n_co_silver
+                           THEN 'pass' ELSE 'fail' END, '"}');
+
+    -- Every key resolves: no Unknown tour/song, every as_of_date in dim_date
+    SELECT @v1 = COUNT(*) FROM dbo.fact_setlist_prediction AS f
+    WHERE f.tour_key = -1 OR f.song_key = -1
+       OR NOT EXISTS (SELECT 1 FROM dbo.dim_date AS d WHERE d.date_key = f.as_of_date_key);
+    SELECT @v2 = COUNT(*) FROM dbo.fact_setlist_backtest WHERE tour_key = -1;
+    SELECT @v3 = COUNT(*) FROM dbo.fact_setlist_model_coef WHERE tour_key = -1;
+    SET @dq += CONCAT(',{"check_name":"gold_setlist_keys_resolve","value":"prediction ', @v1, ', backtest ', @v2,
+                      ', coef ', @v3, '","status":"', CASE WHEN @v1 + @v2 + @v3 = 0 THEN 'pass' ELSE 'fail' END, '"}');
+
+    -- Grain unique
+    SELECT @v1 = COUNT(*) - (SELECT COUNT(*) FROM (SELECT DISTINCT as_of_date_key, tour_key, song_key
+                                                   FROM dbo.fact_setlist_prediction) AS g)
+    FROM dbo.fact_setlist_prediction;
+    SELECT @v2 = COUNT(*) - (SELECT COUNT(*) FROM (SELECT DISTINCT tour_key, method, metric
+                                                   FROM dbo.fact_setlist_backtest) AS g)
+    FROM dbo.fact_setlist_backtest;
+    SELECT @v3 = COUNT(*) - (SELECT COUNT(*) FROM (SELECT DISTINCT tour_key, model_part, feature
+                                                   FROM dbo.fact_setlist_model_coef) AS g)
+    FROM dbo.fact_setlist_model_coef;
+    SET @dq += CONCAT(',{"check_name":"gold_setlist_grain_unique","value":"dup prediction ', @v1, ', backtest ', @v2,
+                      ', coef ', @v3, '","status":"', CASE WHEN @v1 + @v2 + @v3 = 0 THEN 'pass' ELSE 'fail' END, '"}');
+
+    -- Pre-tour prediction (shows_observed = 0): one row per candidate (= setlist_feature rows of the target tour),
+    -- and the predicted setlist is positions 1..N with N = songs predicted in the setlist.
+    WITH pre AS (
+        SELECT f.tour_key, COUNT(*) AS n_rows, COUNT(DISTINCT f.song_key) AS n_songs,
+               SUM(CAST(f.predicted_in_setlist AS int)) AS n_picked,
+               COUNT(DISTINCT f.predicted_position) AS n_positions, MAX(f.predicted_position) AS max_position,
+               SUM(CASE WHEN f.predicted_in_setlist = 1 AND f.predicted_position IS NULL THEN 1
+                        WHEN f.predicted_in_setlist = 0 AND f.predicted_position IS NOT NULL THEN 1
+                        ELSE 0 END) AS n_position_mismatch
+        FROM dbo.fact_setlist_prediction AS f
+        WHERE f.shows_observed = 0
+        GROUP BY f.tour_key
+    ),
+    cand AS (
+        SELECT t.tour_key, COUNT(*) AS n_candidates
+        FROM lk_silver.dbo.setlist_feature AS sf
+        JOIN dbo.dim_tour AS t ON t.tour_name = sf.target_tour_name
+        GROUP BY t.tour_key
+    )
+    SELECT @v1 = COUNT(*),
+           @v2 = SUM(CASE WHEN p.n_rows = p.n_songs AND p.n_rows = ISNULL(c.n_candidates, -1) THEN 0 ELSE 1 END),
+           @v3 = SUM(CASE WHEN p.n_picked = p.n_positions AND p.n_picked = p.max_position AND p.n_position_mismatch = 0
+                          THEN 0 ELSE 1 END),
+           @frag = STRING_AGG(CAST(CONCAT(p.n_rows, '/', ISNULL(c.n_candidates, 0), ' rows, ', p.n_picked, ' picked')
+                                   AS varchar(max)), '; ')
+    FROM pre AS p
+    LEFT JOIN cand AS c ON c.tour_key = p.tour_key;
+    SET @dq += CONCAT(',{"check_name":"gold_setlist_prediction_one_row_per_candidate","value":"', @v1, ' tour(s): ',
+                      LEFT(ISNULL(@frag, ''), 120), '","status":"',
+                      CASE WHEN @v1 > 0 AND ISNULL(@v2, 1) = 0 THEN 'pass' ELSE 'fail' END, '"}');
+    SET @dq += CONCAT(',{"check_name":"gold_setlist_prediction_length_eq_positions","value":"', ISNULL(@v3, 0),
+                      ' bad of ', @v1, ' tour(s)","status":"',
+                      CASE WHEN @v1 > 0 AND ISNULL(@v3, 1) = 0 THEN 'pass' ELSE 'fail' END, '"}');
+
+    -- dim_song.release_role_2027: every 2026 trilogy track (release_track) has a dim_song row with a role, no other song
+    SELECT @v1 = COUNT(DISTINCT rt.song_id) FROM lk_silver.dbo.release_track AS rt;
+    SELECT @v2 = COUNT(*) FROM dbo.dim_song AS s
+    WHERE s.release_role_2027 IN ('promoted_album', 'companion_release')
+      AND EXISTS (SELECT 1 FROM lk_silver.dbo.release_track AS rt WHERE rt.song_id = s.song_id);
+    SELECT @v3 = COUNT(*) FROM dbo.dim_song WHERE release_role_2027 IS NOT NULL;
+    SET @dq += CONCAT(',{"check_name":"gold_dim_song_release_role_2027","value":"', @v2, '/', @v1, ' tracks, ', @v3,
+                      ' with role","status":"', CASE WHEN @v1 > 0 AND @v2 = @v1 AND @v3 = @v1 THEN 'pass' ELSE 'fail' END, '"}');
+
+    -- dim_tour.tour_order unique; planned tours after every tour with shows, "(No tour)" after them
+    SELECT @v1 = COUNT(*) - COUNT(DISTINCT tour_order) FROM dbo.dim_tour;
+    SELECT @v2 = COUNT(*) FROM dbo.dim_tour AS p
+    WHERE p.is_planned = 1
+      AND EXISTS (SELECT 1 FROM dbo.dim_tour AS t
+                  WHERE t.first_show_date IS NOT NULL AND t.tour_name <> '(No tour)' AND t.tour_order > p.tour_order);
+    SELECT @v3 = COUNT(*) FROM dbo.dim_tour WHERE is_planned IS NULL;
+    SET @dq += CONCAT(',{"check_name":"gold_dim_tour_order_planned_last","value":"dup ', @v1, ', planned misplaced ', @v2,
+                      ', null is_planned ', @v3, '","status":"', CASE WHEN @v1 + @v2 + @v3 = 0 THEN 'pass' ELSE 'fail' END, '"}');
+
     -- Counts for the run log
     SET @dq += CONCAT(',{"check_name":"gold_count_fact_performance","value":"', @n_fp, '","status":"pass"}');
     SET @dq += CONCAT(',{"check_name":"gold_count_fact_show","value":"', @n_fs, '","status":"pass"}');
+    SET @dq += CONCAT(',{"check_name":"gold_count_fact_setlist","value":"prediction ', @n_sp, ', backtest ', @n_bt,
+                      ', coef ', @n_co, '","status":"pass"}');
 
     IF @force_fail = 1
         SET @dq += ',{"check_name":"gold_forced_failure","value":"forced by @force_fail = 1","status":"fail"}';
